@@ -1,0 +1,2 @@
+obj/Debug/net9.0/Mcp.cs \
+obj/Debug/net9.0/McpGrpc.cs: ../MCPServer/Protos/mcp.proto

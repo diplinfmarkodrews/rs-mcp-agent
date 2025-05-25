@@ -1,0 +1,6 @@
+com/example/reportserver/MockReportServer.class
+com/example/reportserver/bridge/ReportResult.class
+com/example/reportserver/bridge/ReportTemplate.class
+com/example/reportserver/bridge/ReportServerJniBridge.class
+com/example/reportserver/bridge/ParameterDefinition.class
+com/example/reportserver/bridge/ReportServerInterface.class

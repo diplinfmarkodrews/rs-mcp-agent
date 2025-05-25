@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+option csharp_namespace = "MCPServer.ReportServer";
+
+package reportserver;
+
+// ReportServer service definition
+service ReportService {
+  // Generate a report based on a template and parameters
+  rpc GenerateReport (ReportRequest) returns (ReportResponse);
+  
+  // Get a list of available report templates
+  rpc GetAvailableReportTemplates (Empty) returns (ReportTemplatesResponse);
+  
+  // Check the health of the ReportServer
+  rpc CheckHealth (Empty) returns (HealthResponse);
+}
+
+// Empty message for requests that don't need parameters
+message Empty {
+}
+
+// Request to generate a report
+message ReportRequest {
+  string template_id = 1;
+  map<string, string> parameters = 2;
+  OutputFormat output_format = 3;
+  bool include_charts = 4;
+}
+
+// Response with the generated report
+message ReportResponse {
+  bool success = 1;
+  string error_message = 2;
+  bytes report_data = 3;
+  string report_mime_type = 4;
+  string report_filename = 5;
+}
+
+// Response with available report templates
+message ReportTemplatesResponse {
+  repeated ReportTemplate templates = 1;
+}
+
+// Individual report template information
+message ReportTemplate {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated ParameterDefinition required_parameters = 4;
+  repeated OutputFormat supported_formats = 5;
+}
+
+// Parameter definition for a report template
+message ParameterDefinition {
+  string name = 1;
+  string description = 2;
+  ParameterType type = 3;
+  bool required = 4;
+  string default_value = 5;
+}
+
+// Parameter type enum
+enum ParameterType {
+  STRING = 0;
+  NUMBER = 1;
+  DATE = 2;
+  BOOLEAN = 3;
+  ARRAY = 4;
+}
+
+// Output format enum
+enum OutputFormat {
+  PDF = 0;
+  HTML = 1;
+  EXCEL = 2;
+  CSV = 3;
+  JSON = 4;
+}
+
+// Health check response
+message HealthResponse {
+  HealthStatus status = 1;
+  string message = 2;
+  map<string, string> metrics = 3;
+}
+
+// Health status enum
+enum HealthStatus {
+  UNKNOWN = 0;
+  HEALTHY = 1;
+  DEGRADED = 2;
+  UNHEALTHY = 3;
+}
