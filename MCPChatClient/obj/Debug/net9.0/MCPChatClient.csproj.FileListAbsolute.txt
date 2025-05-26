@@ -28,3 +28,4 @@
 /home/markomoto/source/repos/mcp-server-javarpc/MCPChatClient/obj/Debug/net9.0/ref/MCPChatClient.dll
 /home/markomoto/source/repos/mcp-server-javarpc/MCPChatClient/bin/Debug/net9.0/MCPChatClient.staticwebassets.runtime.json
 /home/markomoto/source/repos/mcp-server-javarpc/MCPChatClient/obj/Debug/net9.0/compressed/49gc8ly69h-10pl6d7gmc.gz
+/home/markomoto/source/repos/mcp-server-javarpc/MCPChatClient/obj/Debug/net9.0/MCPChatClient.sourcelink.json

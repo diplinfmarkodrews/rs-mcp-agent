@@ -1,16 +1,78 @@
 # MCP Server with Java RPC Client
 
-This project demonstrates how to implement a Model Context Protocol (MCP) server in .NET that can connect to a Java-based ReportServer via Java RMI with JNI.
+This workspace contains multiple implementations of Model Context Protocol (MCP) servers and clients, showcasing different architectural approaches:
+
+## 🎯 Quick Start (Recommended)
+
+### Microsoft Extensions AI MCP SDK Implementation
+
+The fastest way to get started is with the modern SDK-based implementation:
+
+```bash
+# Terminal 1: Start the MCP Server
+cd MCPServerSDK
+dotnet run
+
+# Terminal 2: Run the Interactive Client
+cd MCPClientSDK
+dotnet run
+```
+
+This provides a rich interactive console with report generation capabilities.
+
+## Implementation Options
+
+### 1. 🚀 Microsoft Extensions AI MCP SDK (Recommended)
+
+- **MCPServerSDK/**: Modern MCP server using Microsoft Extensions AI framework
+- **MCPClientSDK/**: Interactive console client with rich UI
+- ✅ Uses official Microsoft MCP SDK
+- ✅ Full .NET 9.0 integration with hosted services  
+- ✅ Rich interactive console interface
+- ✅ Comprehensive logging and error handling
+
+### 2. ⚙️ Custom gRPC Implementation (Legacy)
+
+- **MCPServer/**: Custom gRPC-based MCP server with Java bridge
+- **MCPChatClient/**: gRPC client with AI chat features
+- ⚠️ Custom protocol implementation
+- Uses JNI bridge to Java ReportServer via RMI
+
+### 3. ☕ Java Client
+
+- **JavaClient/**: Standalone Java client for testing
 
 ## Project Structure
 
-- **MCPServer/**: A .NET implementation of an MCP server using gRPC with JNI bridge to Java
+### Microsoft Extensions AI SDK Implementation
+
+- **MCPServerSDK/**: Modern MCP server implementation
+  - **Program.cs**: Entry point with hosted service configuration
+  - **Services/McpReportServer.cs**: MCP server with decorated functions
+  - **Services/McpServerHostedService.cs**: Background service host
+  - **appsettings.json**: Configuration file
+  - **README.md**: Detailed SDK documentation
+
+- **MCPClientSDK/**: Interactive MCP client
+  - **Program.cs**: Client entry point with dependency injection
+  - **Services/McpClientService.cs**: MCP client service implementation
+  - **Services/InteractiveClient.cs**: Rich console UI
+  - **README.md**: Client usage documentation
+
+### Legacy gRPC Implementation
+
+- **MCPServer/**: Custom gRPC-based MCP server with JNI bridge to Java
   - **Program.cs**: Main entry point for the server
   - **Services/MCPServiceImpl.cs**: Implementation of the MCP service
   - **Services/ReportServerClient.cs**: Client for communicating with Java ReportServer via JNI
   - **Protos/mcp.proto**: Protocol Buffer definition for the MCP service
 
-- **JavaClient/**: A Java client library with JNI bridge for RMI communication
+- **MCPChatClient/**: gRPC-based chat client
+  - **Program.cs**: Console and web interface entry point
+  - **Services/**: Chat AI service and MCP client implementation
+  - **UI/**: Console user interface
+
+- **JavaClient/**: Java client library with JNI bridge for RMI communication
   - **src/main/java/com/example/reportserver/bridge/**: JNI bridge implementation
     - **ReportServerJniBridge.java**: Main bridge class between C# and Java RMI
     - **ReportServerInterface.java**: RMI interface for the ReportServer
@@ -158,7 +220,6 @@ You can customize the MCP server by modifying the settings in `appsettings.json`
 - Ensure your OpenAI API key is correctly set
 - Check the logs for any errors related to the Semantic Kernel configuration
 - Verify that the gRPC endpoints are properly configured and accessible
-```
 
 ## Extending the Project
 

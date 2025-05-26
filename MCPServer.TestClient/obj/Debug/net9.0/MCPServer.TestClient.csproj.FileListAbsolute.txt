@@ -19,3 +19,4 @@
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer.TestClient/obj/Debug/net9.0/MCPServer.TestClient.pdb
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer.TestClient/obj/Debug/net9.0/MCPServer.TestClient.genruntimeconfig.cache
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer.TestClient/obj/Debug/net9.0/ref/MCPServer.TestClient.dll
+/home/markomoto/source/repos/mcp-server-javarpc/MCPServer.TestClient/obj/Debug/net9.0/MCPServer.TestClient.sourcelink.json

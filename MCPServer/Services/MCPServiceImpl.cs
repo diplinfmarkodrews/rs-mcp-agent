@@ -1,11 +1,14 @@
 using Grpc.Core;
 using MCPServer.Protos;
 using MCPServer.Models;
+using MCPServer.Attributes;
+using System.ComponentModel;
 using ChatMessage = MCPServer.Protos.ChatMessage;
 using ChatResponse = MCPServer.Protos.ChatResponse;
 
 namespace MCPServer.Services;
 
+[Description("MCP (Model Context Protocol) service implementation providing chat-based report generation and AI interactions via gRPC")]
 public class MCPServiceImpl : MCPService.MCPServiceBase
 {
     private readonly ILogger<MCPServiceImpl> _logger;
@@ -19,7 +22,21 @@ public class MCPServiceImpl : MCPService.MCPServiceBase
         _reportServerClient = reportServerClient;
     }
 
-    public override async Task<ChatResponse> Chat(ChatRequest request, ServerCallContext context)
+    /// <summary>
+    /// Handles chat requests for report generation and AI interactions
+    /// </summary>
+    /// <param name="request">The chat request containing user message and parameters</param>
+    /// <param name="context">The server call context for gRPC</param>
+    /// <returns>A chat response with AI-generated content or report information</returns>
+    [Description("Processes natural language chat requests for report generation and analysis. Supports queries for report templates, generation requests, and data analysis.")]
+    [McpMethod("Processes natural language chat requests for report generation and analysis",
+        Parameters = new[] { "request: Chat request with user messages", "context: gRPC server call context" },
+        ReturnDescription = "Chat response with report information or AI-generated content",
+        Examples = new[] { "Generate a monthly sales report", "Show me available report templates", "Create a quarterly performance analysis" })]
+    public override async Task<ChatResponse> Chat(
+        [Description("Chat request containing user messages and optional parameters")]
+        [McpParameter("Chat request containing user messages and parameters", Required = true)] ChatRequest request, 
+        ServerCallContext context)
     {
         _logger.LogInformation("Received chat request");
         
@@ -35,7 +52,24 @@ public class MCPServiceImpl : MCPService.MCPServiceBase
         }
     }
 
-    public override async Task ChatStream(ChatRequest request, IServerStreamWriter<ChatResponseChunk> responseStream, ServerCallContext context)
+    /// <summary>
+    /// Handles streaming chat requests for real-time report generation and AI interactions
+    /// </summary>
+    /// <param name="request">The chat request containing user message and parameters</param>
+    /// <param name="responseStream">The stream writer for sending chunked responses</param>
+    /// <param name="context">The server call context for gRPC</param>
+    /// <returns>A task representing the streaming operation</returns>
+    [Description("Processes streaming chat requests for real-time report generation with chunked responses. Ideal for large reports or live data analysis.")]
+    [McpMethod("Processes streaming chat requests for real-time report generation with chunked responses",
+        Parameters = new[] { "request: Chat request with user messages", "responseStream: Stream for chunked responses", "context: gRPC server call context" },
+        ReturnDescription = "Streaming task that sends chunked responses",
+        Examples = new[] { "Generate large report with progress updates", "Stream live data analysis results" })]
+    public override async Task ChatStream(
+        [Description("Chat request containing user messages and optional parameters")]
+        [McpParameter("Chat request containing user messages and parameters", Required = true)] ChatRequest request, 
+        [Description("Response stream for sending chunked data to the client")]
+        [McpParameter("Response stream for sending chunked data", Required = true)] IServerStreamWriter<ChatResponseChunk> responseStream, 
+        ServerCallContext context)
     {
         _logger.LogInformation("Received streaming chat request");
         
@@ -67,7 +101,21 @@ public class MCPServiceImpl : MCPService.MCPServiceBase
         }
     }
 
-    public override async Task<HealthCheckResponse> HealthCheck(HealthCheckRequest request, ServerCallContext context)
+    /// <summary>
+    /// Performs a health check on the MCP service and its dependencies
+    /// </summary>
+    /// <param name="request">The health check request with optional service name</param>
+    /// <param name="context">The server call context for gRPC</param>
+    /// <returns>A health check response indicating service status</returns>
+    [Description("Performs a comprehensive health check on the MCP service and all its dependencies including the report server backend.")]
+    [McpMethod("Checks the health status of the MCP service and its dependencies",
+        Parameters = new[] { "request: Health check request with optional service name", "context: gRPC server call context" },
+        ReturnDescription = "Health check response indicating overall service status",
+        Examples = new[] { "Check if MCP service is running", "Verify report server connectivity", "Monitor service health" })]
+    public override async Task<HealthCheckResponse> HealthCheck(
+        [Description("Health check request with optional service name to check")]
+        [McpParameter("Health check request with optional service name", Required = true)] HealthCheckRequest request, 
+        ServerCallContext context)
     {
         try
         {
@@ -99,7 +147,13 @@ public class MCPServiceImpl : MCPService.MCPServiceBase
         }
     }
     
-    // Handle report-related queries
+    /// <summary>
+    /// Handles report-related queries by parsing user intent and routing to appropriate report operations
+    /// </summary>
+    /// <param name="request">The chat request containing user messages</param>
+    /// <param name="context">The server call context for gRPC</param>
+    /// <returns>A chat response with report information or instructions</returns>
+    [Description("Internal method that handles report-related queries by parsing user intent and routing to appropriate report operations")]
     private async Task<ChatResponse> HandleReportQuery(ChatRequest request, ServerCallContext context)
     {
         var lastMessage = request.Messages.Last();
@@ -199,4 +253,6 @@ public class MCPServiceImpl : MCPService.MCPServiceBase
             throw new RpcException(new Status(StatusCode.Internal, $"Error processing report request: {ex.Message}"));
         }
     }
+
+
 }

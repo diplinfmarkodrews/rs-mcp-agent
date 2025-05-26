@@ -35,3 +35,4 @@
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer/obj/Debug/net9.0/MCPServer.pdb
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer/obj/Debug/net9.0/MCPServer.genruntimeconfig.cache
 /home/markomoto/source/repos/mcp-server-javarpc/MCPServer/obj/Debug/net9.0/ref/MCPServer.dll
+/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/obj/Debug/net9.0/MCPServer.sourcelink.json

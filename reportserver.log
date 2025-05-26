@@ -1,0 +1,17 @@
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m-----------------------< [0;36mcom.example:mcp-client[0;1m >-----------------------[m
+[[1;34mINFO[m] [1mBuilding mcp-client 1.0-SNAPSHOT[m
+[[1;34mINFO[m]   from pom.xml
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mexec:3.0.0:java[m [1m(default-cli)[m @ [36mmcp-client[0;1m ---[m
+RMI registry created on port 1099
+MockReportServer bound to registry
+Server ready at rmi://localhost:1099/ReportServer
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  0.471 s
+[[1;34mINFO[m] Finished at: 2025-05-26T21:36:51+02:00
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m

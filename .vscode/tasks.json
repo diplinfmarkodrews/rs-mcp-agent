@@ -5,37 +5,12 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/MCPChatClient/MCPChatClient.csproj"
+                "${workspaceFolder}/MCPClientSDK/MCPClientSDK.csproj"
             ],
             "command": "dotnet",
             "group": "test",
             "isBackground": false,
-            "label": "run-mcp-chat-client-console",
-            "type": "shell"
-        },
-        {
-            "args": [
-                "run",
-                "--project",
-                "${workspaceFolder}/MCPChatClient/MCPChatClient.csproj",
-                "--",
-                "--web"
-            ],
-            "command": "dotnet",
-            "group": "test",
-            "isBackground": true,
-            "label": "run-mcp-chat-client-web",
-            "type": "shell"
-        },
-        {
-            "args": [
-                "build",
-                "${workspaceFolder}/MCPChatClient/MCPChatClient.csproj"
-            ],
-            "command": "dotnet",
-            "group": "build",
-            "label": "build-mcp-chat-client",
-            "problemMatcher": ["$tsc"],
+            "label": "run-mcp-client-sdk",
             "type": "shell"
         }
     ]
