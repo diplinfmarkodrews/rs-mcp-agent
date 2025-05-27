@@ -1,26 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/MCPServer.csproj": {}
+    "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPServer\\MCPServer.csproj": {}
   },
   "projects": {
-    "/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/MCPServer.csproj": {
+    "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPServer\\MCPServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/MCPServer.csproj",
+        "projectUniqueName": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPServer\\MCPServer.csproj",
         "projectName": "MCPServer",
-        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/MCPServer.csproj",
-        "packagesPath": "/home/markomoto/.nuget/packages/",
-        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/MCPServer/obj/",
+        "projectPath": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPServer\\MCPServer.csproj",
+        "packagesPath": "C:\\Users\\InfofFabrikBenutzer1\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPServer\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\InfofFabrikBenutzer1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "https://api.nuget.org/v3/index.json": {}
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://nuget.telerik.com/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
@@ -37,36 +44,11 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "dependencies": {
-            "Google.Protobuf": {
-              "target": "Package",
-              "version": "[3.31.0, )"
-            },
-            "Grpc.AspNetCore": {
-              "target": "Package",
-              "version": "[2.71.0, )"
-            },
-            "Grpc.AspNetCore.Server.Reflection": {
-              "target": "Package",
-              "version": "[2.71.0, )"
-            },
-            "Grpc.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.72.0, )"
-            },
-            "Microsoft.AspNetCore.OpenApi": {
-              "target": "Package",
-              "version": "[9.0.5, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -78,15 +60,7 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "frameworkReferences": {
-            "Microsoft.AspNetCore.App": {
-              "privateAssets": "none"
-            },
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.428\\RuntimeIdentifierGraph.json"
         }
       }
     }

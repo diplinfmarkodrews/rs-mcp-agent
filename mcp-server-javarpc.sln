@@ -6,6 +6,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCPServer.TestClient", "MCP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCPServer", "MCPServer\MCPServer.csproj", "{8B3A187B-DF59-EFF4-34F3-CA37CC868C80}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCPServerSDK", "MCPServerSDK\MCPServerSDK.csproj", "{14B68C53-53DF-1375-5C67-F9E30D83CBA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCPClientSDK", "MCPClientSDK\MCPClientSDK.csproj", "{F916243A-5883-A2FE-69FE-9097F9A3A47C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.AppHost", "RSChatApp\RSChatApp.AppHost\RSChatApp.AppHost.csproj", "{4D8AA32F-3562-A652-E548-089C20450402}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.ServiceDefaults", "RSChatApp\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj", "{318B0366-D561-63F9-7C68-7ED37A06DFDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Web", "RSChatApp\RSChatApp.Web\RSChatApp.Web.csproj", "{4EF54C85-F8EA-B5D7-867E-5890DFAD94B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +30,26 @@ Global
 		{8B3A187B-DF59-EFF4-34F3-CA37CC868C80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B3A187B-DF59-EFF4-34F3-CA37CC868C80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B3A187B-DF59-EFF4-34F3-CA37CC868C80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14B68C53-53DF-1375-5C67-F9E30D83CBA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14B68C53-53DF-1375-5C67-F9E30D83CBA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14B68C53-53DF-1375-5C67-F9E30D83CBA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14B68C53-53DF-1375-5C67-F9E30D83CBA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F916243A-5883-A2FE-69FE-9097F9A3A47C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F916243A-5883-A2FE-69FE-9097F9A3A47C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F916243A-5883-A2FE-69FE-9097F9A3A47C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F916243A-5883-A2FE-69FE-9097F9A3A47C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D8AA32F-3562-A652-E548-089C20450402}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D8AA32F-3562-A652-E548-089C20450402}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D8AA32F-3562-A652-E548-089C20450402}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D8AA32F-3562-A652-E548-089C20450402}.Release|Any CPU.Build.0 = Release|Any CPU
+		{318B0366-D561-63F9-7C68-7ED37A06DFDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{318B0366-D561-63F9-7C68-7ED37A06DFDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{318B0366-D561-63F9-7C68-7ED37A06DFDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{318B0366-D561-63F9-7C68-7ED37A06DFDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EF54C85-F8EA-B5D7-867E-5890DFAD94B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EF54C85-F8EA-B5D7-867E-5890DFAD94B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EF54C85-F8EA-B5D7-867E-5890DFAD94B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EF54C85-F8EA-B5D7-867E-5890DFAD94B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

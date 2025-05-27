@@ -1,0 +1,34 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{31C87548-1436-4E98-A8D7-C5A3E0F3D823}") = "RSChatApp.AppHost", "RSChatApp.AppHost\RSChatApp.AppHost.csproj", "{02B281B5-DD56-46B2-9ADA-B2E5366EC8B0}"
+EndProject
+Project("{31C87548-1436-4E98-A8D7-C5A3E0F3D823}") = "RSChatApp.ServiceDefaults", "RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj", "{B78AF8FD-0815-4568-8069-92AE7125FB06}"
+EndProject
+Project("{31C87548-1436-4E98-A8D7-C5A3E0F3D823}") = "RSChatApp.Web", "RSChatApp.Web\RSChatApp.Web.csproj", "{240300F8-871F-47E1-A2F4-D4343128D311}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02B281B5-DD56-46B2-9ADA-B2E5366EC8B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02B281B5-DD56-46B2-9ADA-B2E5366EC8B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02B281B5-DD56-46B2-9ADA-B2E5366EC8B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02B281B5-DD56-46B2-9ADA-B2E5366EC8B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B78AF8FD-0815-4568-8069-92AE7125FB06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B78AF8FD-0815-4568-8069-92AE7125FB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B78AF8FD-0815-4568-8069-92AE7125FB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B78AF8FD-0815-4568-8069-92AE7125FB06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{240300F8-871F-47E1-A2F4-D4343128D311}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{240300F8-871F-47E1-A2F4-D4343128D311}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{240300F8-871F-47E1-A2F4-D4343128D311}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{240300F8-871F-47E1-A2F4-D4343128D311}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
