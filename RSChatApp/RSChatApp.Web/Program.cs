@@ -12,6 +12,7 @@ builder.AddOllamaApiClient("chat")
     .UseFunctionInvocation()
     .UseOpenTelemetry(configure: c =>
         c.EnableSensitiveData = builder.Environment.IsDevelopment());
+
 builder.AddOllamaApiClient("embeddings")
     .AddEmbeddingGenerator();
 

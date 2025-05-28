@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MCPServerSDK.Services;
 
 namespace MCPServerSDK;
@@ -28,7 +25,7 @@ class Program
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to initialize ReportServer client, falling back to stub implementation");
+                logger.LogWarning(ex, "Failed to initialize ReportServer client, bye!");
                 throw new InvalidOperationException("ReportServer client initialization failed", ex);
             }
         });
