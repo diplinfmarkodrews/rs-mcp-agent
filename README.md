@@ -254,3 +254,88 @@ The project is set up to use OpenAI models by default, but you can modify it to 
 - [Semantic Kernel Documentation](https://github.com/microsoft/semantic-kernel)
 - [Model Context Protocol Specification](https://modelcontextprotocol.io/llms-full.txt)
 - [Java gRPC Documentation](https://grpc.io/docs/languages/java/)
+
+## ReportServer
+
+## Starting ReportServer
+ReportServer is a Java web application that can be started in several ways:
+
+1. Using Bitnami Stack (Recommended for quick start)
+   Download from: https://bitnami.com/stack/reportserver
+   This provides a pre-configured environment with all dependencies
+2. Manual Deployment
+   Build the WAR file from source
+   Deploy to a Java application server (Tomcat, JBoss, etc.)
+   Configure database connection in hibernate.properties
+   Ensure all required dependencies are in the classpath
+3. Development Environment
+   Use Maven/Gradle to build: mvn clean install
+   Deploy to your development server
+   The application will be available at http://localhost:8080/reportserver (default)
+   RPC Interface Details
+   Based on the codebase analysis, ReportServer has an extensive RPC interface system. Here are the main RPC services:
+
+## Core RPC Services
+1. Report Management
+   ReportManagerTreeHandlerImpl - Report tree operations
+   ReportExecutorRpcService (@RemoteServiceRelativePath("executor"))
+   executeAs() - Execute report in specific format
+   createNewVariant() - Create report variants
+   loadFullReportForExecution() - Load complete report data
+2. Report Export
+   ReportExportRpcServiceImpl
+   storeInSessionForExport() - Prepare reports for export
+   Multiple export format handlers
+3. Report Properties
+   ReportPropertiesRpcService (@RemoteServiceRelativePath("reportproperties"))
+   getPropertyKeys() - Get available property keys
+   updateProperties() - Update report properties
+   getInheritedProperties() - Get inherited properties
+   Data Source Management
+   DatasourceManagerTreeHandlerRpcServiceImpl
+   BaseDatasourceRpcServiceImpl
+   Remote Server Management
+   RemoteServerManagerTreeHandlerRpcServiceImpl
+   RemoteRsRestServerRpcServiceImpl
+   test() - Test remote server connection
+   Scheduler Services
+   SchedulerRpcService (@RemoteServiceRelativePath("scheduler"))
+   schedule() - Schedule report execution
+   unschedule() - Remove scheduled jobs
+   getReportJobList() - Get scheduled jobs
+   reschedule() - Modify existing schedules
+   File Server
+   FileServerRpcService (@RemoteServiceRelativePath("fileserver"))
+   updateFile() - Update file content
+   uploadFiles() - Upload new files
+   loadFileDataAsString() - Load file content
+   Cloud Integration Services
+   BoxRpcServiceImpl - Box.com integration
+   GoogleDriveRpcServiceImpl - Google Drive integration
+   OneDriveRpcServiceImpl - Microsoft OneDrive integration
+   Security & User Management
+   UserManagerRpcService - User management operations
+   SecurityRpcService - Security and permissions
+   Import/Export Services
+   RemoteServerManagerExportRpcServiceImpl
+   ReportManagerExportRpcServiceImpl - Report export/import
+   DatasourceManagerExportRpcServiceImpl - Datasource export/import
+   Additional Services
+   ParameterRpcServiceImpl - Report parameter handling
+   ConditionRpcServiceImpl - Report conditions
+   ComputedColumnsRpcServiceImpl - Computed columns
+   GlobalConstantsRpcServiceImpl - Global constants management
+   RPC Configuration
+   The RPC services are configured in ReportServerServiceConfig.java, which shows the complete service binding configuration.
+
+## Access Points
+Web Interface: http://localhost:8080/reportserver
+REST API: Various endpoints for programmatic access
+Documentation Servlet: ReportDocumentationServlet at /reportserver/reportdocumentation
+Database Setup
+The initial database setup is handled by PrepareDbForReportServer, which creates:
+
+Root user and organizational structure
+Report, datasource, and file server trees
+Security targets and permissions
+Remote server management structure

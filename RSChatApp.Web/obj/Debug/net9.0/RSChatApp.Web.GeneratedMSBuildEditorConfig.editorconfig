@@ -1,0 +1,77 @@
+is_global = true
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = RSChatApp.Web
+build_property.RootNamespace = RSChatApp.Web
+build_property.ProjectDir = /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/App.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Error.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Routes.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9fSW1wb3J0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Layout/LoadingSpinner.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTG9hZGluZ1NwaW5uZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-7bushche9i
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-jfu6func4n
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Layout/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvU3VydmV5UHJvbXB0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-ddp1s91vrg
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/Chat.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-3fe0d7io2g
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatCitation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRDaXRhdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-4n2jqi3htq
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatHeader.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRIZWFkZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-yzm8s2igpj
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatInput.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRJbnB1dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-hosohzaub8
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatMessageItem.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRNZXNzYWdlSXRlbS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-410gxl0ckk
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatMessageList.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRNZXNzYWdlTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-otnhs9j0jg
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/Components/Pages/Chat/ChatSuggestions.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRTdWdnZXN0aW9ucy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-rknajfaxz4

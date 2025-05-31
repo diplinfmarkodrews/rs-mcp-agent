@@ -1,2 +1,0 @@
-obj/Debug/net9.0/Protos/Mcp.cs \
-obj/Debug/net9.0/Protos/McpGrpc.cs: Protos/mcp.proto

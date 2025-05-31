@@ -1,0 +1,16 @@
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.csproj.AssemblyReference.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.GeneratedMSBuildEditorConfig.editorconfig
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.AssemblyInfoInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.AssemblyInfo.cs
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.csproj.CoreCompileInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.sourcelink.json
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/bin/Debug/net8.0/ReportServerPort.deps.json
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/bin/Debug/net8.0/ReportServerPort.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/bin/Debug/net8.0/ReportServerPort.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/bin/Debug/net8.0/Newtonsoft.Json.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/bin/Debug/net8.0/Newtonsoft.Json.xml
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportSe.78CDC86C.Up2Date
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/refint/ReportServerPort.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ReportServerPort.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/Debug/net8.0/ref/ReportServerPort.dll

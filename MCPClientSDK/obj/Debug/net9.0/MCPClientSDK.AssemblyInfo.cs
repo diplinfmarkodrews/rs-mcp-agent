@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MCPClientSDK")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e4faa1c638a4b624576b21eb399eea8e00482098")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5c6c30c2b532165f650c8f6eda572da06ca4072c")]
 [assembly: System.Reflection.AssemblyProductAttribute("MCPClientSDK")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MCPClientSDK")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

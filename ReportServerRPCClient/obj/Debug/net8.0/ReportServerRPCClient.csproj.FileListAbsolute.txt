@@ -1,0 +1,16 @@
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/bin/Debug/net8.0/ReportServerRPCClient.deps.json
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/bin/Debug/net8.0/ReportServerRPCClient.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/bin/Debug/net8.0/ReportServerRPCClient.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/bin/Debug/net8.0/ReportServerPort.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/bin/Debug/net8.0/ReportServerPort.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.csproj.AssemblyReference.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.GeneratedMSBuildEditorConfig.editorconfig
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.AssemblyInfoInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.AssemblyInfo.cs
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.csproj.CoreCompileInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.sourcelink.json
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportSe.B9DB935A.Up2Date
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/refint/ReportServerRPCClient.dll
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ReportServerRPCClient.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/Debug/net8.0/ref/ReportServerRPCClient.dll

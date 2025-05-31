@@ -1,2 +1,0 @@
-obj/Debug/net9.0/Protos/Reportserver.cs \
-obj/Debug/net9.0/Protos/ReportserverGrpc.cs: Protos/reportserver.proto

@@ -1,5 +1,9 @@
+using System.ClientModel;
+using Microsoft.Extensions.AI;
+using OpenAI;
 using RSChatAppFileStore.Services;
 using RSChatAppFileStore.Services.Ingestion;
+using RSChatAppFileStore.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();

@@ -1,4 +1,10 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MCPServerSDK.Services;
+// using MCPServerSDK.Controller;
+using ReportServerRPCClient.Extensions;
 
 namespace MCPServerSDK;
 
@@ -6,7 +12,7 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        var builder = Host.CreateApplicationBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
         
         // Configure logging
         builder.Logging.ClearProviders();
@@ -14,26 +20,13 @@ class Program
         builder.Logging.SetMinimumLevel(LogLevel.Information);
 
         // Register MCP server services
-        builder.Services.AddSingleton<IReportServer, ReportServerClient>(sp =>
-        {
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-            var logger = loggerFactory.CreateLogger<ReportServerClient>();
-            var reportServerAddress = builder.Configuration["ReportServer:Address"] ?? "http://localhost:1099/ReportServer";
-            try
-            {
-                return new ReportServerClient(loggerFactory, reportServerAddress);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to initialize ReportServer client, bye!");
-                throw new InvalidOperationException("ReportServer client initialization failed", ex);
-            }
-        });
+        var reportServerAddress = builder.Configuration["ReportServer:Address"] ?? "http://localhost:1099/";
+        builder.Services.AddReportServerRpcClient(reportServerAddress); 
         builder.Services.AddSingleton<McpReportServer>();
         builder.Services.AddHostedService<McpServerHostedService>();
         
         var host = builder.Build();
-        
+  
         try
         {
             await host.RunAsync();

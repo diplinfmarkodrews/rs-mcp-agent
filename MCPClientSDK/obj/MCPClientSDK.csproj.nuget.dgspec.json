@@ -1,37 +1,119 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPClientSDK\\MCPClientSDK.csproj": {}
+    "/home/markomoto/source/repos/mcp-server-javarpc/MCPClientSDK/MCPClientSDK.csproj": {}
   },
   "projects": {
-    "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPClientSDK\\MCPClientSDK.csproj": {
+    "/home/markomoto/source/repos/mcp-server-javarpc/MCPClientSDK/MCPClientSDK.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPClientSDK\\MCPClientSDK.csproj",
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/MCPClientSDK/MCPClientSDK.csproj",
         "projectName": "MCPClientSDK",
-        "projectPath": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPClientSDK\\MCPClientSDK.csproj",
-        "packagesPath": "C:\\Users\\InfofFabrikBenutzer1\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\InfofFabrikBenutzer1\\source\\repos\\rs-mcp-agent\\MCPClientSDK\\obj\\",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/MCPClientSDK/MCPClientSDK.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/MCPClientSDK/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\InfofFabrikBenutzer1\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://nuget.telerik.com/v3/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.Extensions.AI": {
+              "target": "Package",
+              "version": "[9.0.0-preview.9.24556.5, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Console": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj",
+        "projectName": "ReportServerPort",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {}
           }
         },
@@ -44,11 +126,12 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "imports": [
             "net461",
             "net462",
@@ -60,7 +143,196 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.428\\RuntimeIdentifierGraph.json"
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj",
+        "projectName": "ReportServerRPCClient",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[14.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Http.Polly": {
+              "target": "Package",
+              "version": "[8.0.3, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
+        "projectName": "RsMcpServerSDK.Web",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "Microsoft.Extensions.AI": {
+              "target": "Package",
+              "version": "[9.5.0, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "ModelContextProtocol": {
+              "target": "Package",
+              "version": "[0.2.0-preview.2, )"
+            },
+            "ModelContextProtocol.AspNetCore": {
+              "target": "Package",
+              "version": "[0.2.0-preview.1, )"
+            },
+            "ModelContextProtocolServer.Sse": {
+              "target": "Package",
+              "version": "[0.0.1-preview-06, )"
+            },
+            "OpenAPISwaggerUI": {
+              "target": "Package",
+              "version": "[9.2024.1215.2209, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
