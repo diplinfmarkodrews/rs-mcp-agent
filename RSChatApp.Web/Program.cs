@@ -5,28 +5,44 @@ using RSChatApp.Web.Services;
 using RSChatApp.Web.Services.Ingestion;
 
 var builder = WebApplication.CreateBuilder(args);
+// builder.Services.AddReportServerRpcClient(baseUrl: "http://localhost:1099");
+// builder.Services.AddScoped<RsMCPServerSDK.Web.Services.McpReportServer>();
 builder.AddServiceDefaults();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-
-builder.AddOllamaApiClient("chat")
+var ollamaConnectionString = builder.Configuration["Ollama:Address"];
+builder.AddOllamaApiClient("chat"
+    , config =>
+    {
+        config.Endpoint = !string.IsNullOrEmpty(ollamaConnectionString) ? new Uri(ollamaConnectionString) : null; 
+        config.Models = [builder.Configuration["Ollama:Model"] ?? "llama3"];
+    })
     .AddChatClient()
-    
     .UseFunctionInvocation() 
     .UseKernelFunctionInvocation()
     .UseOpenTelemetry(configure: c =>
         c.EnableSensitiveData = builder.Environment.IsDevelopment());
 
-builder.AddOllamaApiClient("embeddings")
+builder.AddOllamaApiClient("embeddings",config =>
+    {
+        config.Endpoint = !string.IsNullOrEmpty(ollamaConnectionString) 
+            ? new Uri(ollamaConnectionString) 
+            : null;
+        config.Models = [builder.Configuration["Ollama:EmbeddingModel"] ?? "llama3.2:1b"];
+    })
     .AddEmbeddingGenerator();
 
-builder.AddQdrantClient("vectordb");
+builder.AddQdrantClient("vectordb", config =>
+{
+    config.Endpoint = builder.Configuration["Qdrant:Address"] is { Length: > 0 }
+        ? new Uri(builder.Configuration["Qdrant:Address"])
+        : null;
+    config.Key = builder.Configuration["Qdrant:ApiKey"];
+});
+    
 builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
 builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
-builder.Services.AddMcpServer()
-    .WithHttpTransport()
-    .WithToolsFromAssembly(typeof(RsMCPServerSDK.Web.Services.McpReportServer).Assembly);
 
 var app = builder.Build();
 
