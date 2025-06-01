@@ -5770,11 +5770,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
-      "projectName": "TestRsMcpServer.Web",
-      "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
+      "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/TestRsMcpServer.csproj",
+      "projectName": "TestRsMcpServer",
+      "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/TestRsMcpServer.csproj",
       "packagesPath": "/home/markomoto/.nuget/packages/",
-      "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/obj/",
+      "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/markomoto/.nuget/NuGet/NuGet.Config"

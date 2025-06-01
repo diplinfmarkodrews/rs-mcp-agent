@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using ReportServerRPCClient.DTOs.Authentication;
 
 // Make the Program accessible to the test project
-[assembly: InternalsVisibleTo("TestRsMcpServer.Web")]
+[assembly: InternalsVisibleTo("TestRsMcpServer")]
 
 var builder = WebApplication.CreateBuilder(args);
 

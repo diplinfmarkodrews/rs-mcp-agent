@@ -8,13 +8,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServerPort", "ReportS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServerSDK.Web", "RsMcpServerSDK.Web\RsMcpServerSDK.Web.csproj", "{1ECAB3A2-ABAD-41B4-AF14-E87930324658}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRsMcpServer.Web", "TestRsMcpServer.Web\TestRsMcpServer.Web.csproj", "{40BB5E51-94C3-413A-84E6-1FF3E909B013}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.AppHost", "RSChatApp.AppHost\RSChatApp.AppHost.csproj", "{79AB773D-B79B-445F-8146-DD15C4E11A93}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.ServiceDefaults", "RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj", "{85BA51FD-7163-463B-81BF-37EEB5E4B46B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Web", "RSChatApp.Web\RSChatApp.Web.csproj", "{17FC1298-1220-4104-BA88-C54AE023B851}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRsMcpServer", "TestRsMcpServer\TestRsMcpServer.csproj", "{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,10 +34,6 @@ Global
 		{1ECAB3A2-ABAD-41B4-AF14-E87930324658}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ECAB3A2-ABAD-41B4-AF14-E87930324658}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1ECAB3A2-ABAD-41B4-AF14-E87930324658}.Release|Any CPU.Build.0 = Release|Any CPU
-		{40BB5E51-94C3-413A-84E6-1FF3E909B013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40BB5E51-94C3-413A-84E6-1FF3E909B013}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40BB5E51-94C3-413A-84E6-1FF3E909B013}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40BB5E51-94C3-413A-84E6-1FF3E909B013}.Release|Any CPU.Build.0 = Release|Any CPU
 		{79AB773D-B79B-445F-8146-DD15C4E11A93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79AB773D-B79B-445F-8146-DD15C4E11A93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79AB773D-B79B-445F-8146-DD15C4E11A93}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -50,6 +46,10 @@ Global
 		{17FC1298-1220-4104-BA88-C54AE023B851}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17FC1298-1220-4104-BA88-C54AE023B851}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17FC1298-1220-4104-BA88-C54AE023B851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

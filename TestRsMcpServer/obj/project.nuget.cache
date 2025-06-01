@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "sKcGsfe/PHk=",
+  "dgSpecHash": "rLBqVNaEgZw=",
   "success": true,
-  "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
+  "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/TestRsMcpServer.csproj",
   "expectedPackageFiles": [
     "/home/markomoto/.nuget/packages/automapper/14.0.0/automapper.14.0.0.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.applicationinsights/2.22.0/microsoft.applicationinsights.2.22.0.nupkg.sha512",

@@ -8,5 +8,5 @@
   &lt;Assembly Path="/home/markomoto/.nuget/packages/modelcontextprotocol/0.2.0-preview.2/lib/net9.0/ModelContextProtocol.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=debe0f1b_002D3324_002D4fb3_002Da5da_002Db5e7cd95b03c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestAuthentication" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;ProjectFile&gt;40BB5E51-94C3-413A-84E6-1FF3E909B013/f:TestRsClient.cs&lt;/ProjectFile&gt;
+  &lt;Project Location="/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer" Presentation="&amp;lt;TestRsMcpServer&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
