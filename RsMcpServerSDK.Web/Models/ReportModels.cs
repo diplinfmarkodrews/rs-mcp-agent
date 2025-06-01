@@ -1,4 +1,4 @@
-namespace MCPServerSDK.Web.Models;
+namespace RsMCPServerSDK.Web.Models;
 
 /// <summary>
 /// Represents a report template

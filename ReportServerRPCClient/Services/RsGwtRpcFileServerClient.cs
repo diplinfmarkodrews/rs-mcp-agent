@@ -6,8 +6,8 @@ namespace ReportServerRPCClient.Services;
 
 public class RsGwtRpcFileServerClient : ReportServerGwtRpcClientBase
 {
-    public RsGwtRpcFileServerClient(HttpClient httpClient, CookieAccessibleHttpMessageHandler httpMessageHandler) 
-        : base(httpClient, httpMessageHandler)
+    public RsGwtRpcFileServerClient(HttpClient httpClient, CookieContainerProvider cookieProvider) 
+        : base(httpClient, cookieProvider)
     {
     }
     
@@ -44,3 +44,4 @@ public class RsGwtRpcFileServerClient : ReportServerGwtRpcClientBase
         return await PostGwtRpcAsync("fileserver", payload);
     }
 }
+

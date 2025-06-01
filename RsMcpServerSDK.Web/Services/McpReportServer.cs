@@ -3,9 +3,10 @@ using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Text.Json;
 using System.Linq;
+using ModelContextProtocol.Server;
 using ReportServerPort;
 
-namespace MCPServerSDK.Web.Services;
+namespace RsMCPServerSDK.Web.Services;
 
 /// <summary>
 /// MCP Server implementation for report generation using Microsoft.Extensions.AI MCP SDK
@@ -24,117 +25,15 @@ public class McpReportServer
     /// <summary>
     /// Gets available report templates
     /// </summary>
-    // [Description("Gets a list of all available report templates")]
-    // public async Task<GetTemplatesResult> GetReportTemplatesAsync(CancellationToken cancellationToken = default)
-    // {
-    //     _logger.LogInformation("Getting available report templates");        
-    //     var response = await _reportServer. GetAvailableReportTemplatesAsync(cancellationToken);
-    //     
-    //     // Convert the ReportServer.ReportTemplate to the McpReportServer.ReportTemplate format
-    //     var templates = response.Templates.Select(t => new ReportTemplate
-    //     {
-    //         Id = t.Id,
-    //         Name = t.Name,
-    //         Description = t.Description,
-    //         RequiredParameters = t.RequiredParameters.Select(p => new ParameterDefinition
-    //         {
-    //             Name = p.Name,
-    //             Description = p.Description,
-    //             Type = p.Type.ToString(),
-    //             Required = p.Required
-    //         }).ToList(),
-    //         SupportedFormats = t.SupportedFormats
-    //     }).ToList();
-    //     
-    //     return new GetTemplatesResult { Templates = templates };
-    // }
-
-    /// <summary>
-    /// Generates a report based on template and parameters
-    /// </summary>
-    // [Description("Generates a report using the specified template and parameters")]
-    // public async Task<GenerateReportResult> GenerateReportAsync(
-    //     [Description("The ID of the report template to use")] string templateId,
-    //     [Description("Parameters for the report generation")] Dictionary<string, object> parameters,
-    //     [Description("Output format (pdf, html, excel)")] string format = "pdf",
-    //     [Description("Whether to include charts and visualizations")] bool includeCharts = true)
-    // {
-    //     _logger.LogInformation("Generating report: Template={TemplateId}, Format={Format}, Parameters={@Parameters}", 
-    //         templateId, format, parameters);
-    //
-    //     // Validate template exists
-    //     var templatesResult = await GetReportTemplatesAsync();
-    //     var template = templatesResult.Templates.FirstOrDefault(t => t.Id == templateId);
-    //     if (template == null)
-    //     {
-    //         return new GenerateReportResult
-    //         {
-    //             Success = false,
-    //             ErrorMessage = $"Template '{templateId}' not found"
-    //         };
-    //     }
-    //
-    //     // Validate required parameters
-    //     var missingParams = template.RequiredParameters
-    //         .Where(p => p.Required && !parameters.ContainsKey(p.Name))
-    //         .ToList();
-    //
-    //     if (missingParams.Any())
-    //     {
-    //         return new GenerateReportResult
-    //         {
-    //             Success = false,
-    //             ErrorMessage = $"Missing required parameters: {string.Join(", ", missingParams.Select(p => p.Name))}"
-    //         };
-    //     }
-    //
-    //     // Validate format
-    //     if (!template.SupportedFormats.Contains(format.ToLower()))
-    //     {
-    //         return new GenerateReportResult
-    //         {
-    //             Success = false,
-    //             ErrorMessage = $"Format '{format}' not supported for template '{templateId}'. Supported formats: {string.Join(", ", template.SupportedFormats)}"
-    //         };
-    //     }
-    //
-    //     // Convert parameters from object to string
-    //     var stringParameters = parameters.ToDictionary(
-    //         kvp => kvp.Key, 
-    //         kvp => kvp.Value?.ToString() ?? string.Empty
-    //     );
-    //     
-    //     // Convert format string to OutputFormat enum
-    //     if (!Enum.TryParse<OutputFormat>(format, true, out var outputFormat))
-    //     {
-    //         outputFormat = OutputFormat.Pdf; // Default to PDF
-    //     }
-    //
-    //     var reportResult = await _reportServer.GenerateReportAsync(templateId, stringParameters, outputFormat, includeCharts);
-    //     
-    //     if (!reportResult.Success)
-    //     {
-    //         return new GenerateReportResult
-    //         {
-    //             Success = false,
-    //             ErrorMessage = reportResult.ErrorMessage
-    //         };
-    //     }
-    //     
-    //     var mimeType = GetMimeType(format);
-    //     var filename = $"{templateId}_{DateTime.Now:yyyyMMdd_HHmmss}.{format.ToLower()}";
-    //
-    //     return new GenerateReportResult
-    //     {
-    //         Success = true,
-    //         ReportData = reportResult.ReportData,
-    //         MimeType = mimeType,
-    //         Filename = filename,
-    //         Size = reportResult.ReportData?.Length ?? 0,
-    //         GeneratedAt = DateTime.UtcNow
-    //     };
-    // }
-
+    [McpServerTool, Description("Gets a list of all available report templates")]
+    public async Task<GetTemplatesResult> GetReportTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Getting available report templates");        
+        
+        
+        return new GetTemplatesResult { Templates = [new ReportTemplate{Description = "sdjfhasjkdf", Id = "123", Name = "sfdkajsd"}] }; 
+    }
+    
     /// <summary>
     /// Gets the health status of the report server
     /// </summary>

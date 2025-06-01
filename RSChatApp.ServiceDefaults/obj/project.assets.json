@@ -2029,11 +2029,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj",
+      "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj",
       "projectName": "RSChatApp.ServiceDefaults",
-      "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj",
+      "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj",
       "packagesPath": "/home/markomoto/.nuget/packages/",
-      "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.ServiceDefaults/obj/",
+      "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/markomoto/.nuget/NuGet/NuGet.Config"

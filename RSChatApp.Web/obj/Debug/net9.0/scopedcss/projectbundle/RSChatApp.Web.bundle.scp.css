@@ -1,0 +1,420 @@
+/* _content/RSChatApp.Web/Components/Layout/LoadingSpinner.razor.rz.scp.css */
+/* Used under CC0 license */
+
+.lds-ellipsis[b-7bushche9i] {
+    color: #666;
+    animation: fade-in-b-7bushche9i 1s;
+}
+
+@keyframes fade-in-b-7bushche9i {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+    .lds-ellipsis[b-7bushche9i],
+    .lds-ellipsis div[b-7bushche9i] {
+        box-sizing: border-box;
+    }
+
+.lds-ellipsis[b-7bushche9i] {
+    margin: auto;
+    display: block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+    .lds-ellipsis div[b-7bushche9i] {
+        position: absolute;
+        top: 33.33333px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        animation-timing-function: cubic-bezier(0, 1, 1, 0);
+    }
+
+        .lds-ellipsis div:nth-child(1)[b-7bushche9i] {
+            left: 8px;
+            animation: lds-ellipsis1-b-7bushche9i 0.6s infinite;
+        }
+
+        .lds-ellipsis div:nth-child(2)[b-7bushche9i] {
+            left: 8px;
+            animation: lds-ellipsis2-b-7bushche9i 0.6s infinite;
+        }
+
+        .lds-ellipsis div:nth-child(3)[b-7bushche9i] {
+            left: 32px;
+            animation: lds-ellipsis2-b-7bushche9i 0.6s infinite;
+        }
+
+        .lds-ellipsis div:nth-child(4)[b-7bushche9i] {
+            left: 56px;
+            animation: lds-ellipsis3-b-7bushche9i 0.6s infinite;
+        }
+
+@keyframes lds-ellipsis1-b-7bushche9i {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes lds-ellipsis3-b-7bushche9i {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(0);
+    }
+}
+
+@keyframes lds-ellipsis2-b-7bushche9i {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(24px, 0);
+    }
+}
+/* _content/RSChatApp.Web/Components/Layout/MainLayout.razor.rz.scp.css */
+#blazor-error-ui[b-jfu6func4n] {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss[b-jfu6func4n] {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+/* _content/RSChatApp.Web/Components/Layout/SurveyPrompt.razor.rz.scp.css */
+.surveyContainer[b-ddp1s91vrg] {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9em;
+    margin: 0.5rem auto -0.7rem auto;
+    max-width: 1024px;
+    color: #444;
+}
+
+    .surveyContainer a[b-ddp1s91vrg] {
+        text-decoration: underline;
+    }
+
+    .surveyContainer .tool-icon[b-ddp1s91vrg] {
+        margin-top: 0.15rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        flex-shrink: 0;
+    }
+/* _content/RSChatApp.Web/Components/Pages/Chat/Chat.razor.rz.scp.css */
+.chat-container[b-3fe0d7io2g] {
+    position: sticky; 
+    bottom: 0; 
+    padding-left: 1.5rem;
+    padding-right: 1.5rem; 
+    padding-top: 0.75rem; 
+    padding-bottom: 1.5rem; 
+    border-top-width: 1px; 
+    background-color: #F3F4F6; 
+    border-color: #E5E7EB;
+}
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatCitation.razor.rz.scp.css */
+.citation[b-4n2jqi3htq] {
+    display: inline-flex;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    margin-top: 1rem;
+    margin-right: 1rem;
+    border-bottom: 2px solid #a770de;
+    gap: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    background-color: #ffffff;
+}
+
+    .citation[href]:hover[b-4n2jqi3htq] {
+        outline: 1px solid #865cb1;
+    }
+
+    .citation svg[b-4n2jqi3htq] {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .citation:active[b-4n2jqi3htq] {
+        background-color: rgba(0,0,0,0.05);
+    }
+
+.citation-content[b-4n2jqi3htq] {
+    display: flex;
+    flex-direction: column;
+}
+
+.citation-file[b-4n2jqi3htq] {
+    font-weight: 600;
+}
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatHeader.razor.rz.scp.css */
+.chat-header-container[b-yzm8s2igpj] {
+    top: 0; 
+    padding: 1.5rem; 
+}
+
+.chat-header-controls[b-yzm8s2igpj] {
+    margin-bottom: 1.5rem; 
+}
+
+h1[b-yzm8s2igpj] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.new-chat-icon[b-yzm8s2igpj] {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgb(55, 65, 81);
+}
+
+@media (min-width: 768px) {
+    .chat-header-container[b-yzm8s2igpj] {
+        position: sticky;
+    }
+}
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatInput.razor.rz.scp.css */
+.input-box[b-hosohzaub8] {
+    display: flex; 
+    flex-direction: column; 
+    background: white;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.75rem; 
+}
+
+    .input-box:focus-within[b-hosohzaub8] {
+        outline: 2px solid #4152d5;
+    }
+
+textarea[b-hosohzaub8] {
+    resize: none;
+    border: none;
+    outline: none;
+    flex-grow: 1;
+}
+
+    textarea:placeholder-shown + .tools[b-hosohzaub8] {
+        --send-button-color: #aaa;
+    }
+
+.tools[b-hosohzaub8] {
+    display: flex; 
+    margin-top: 1rem; 
+    align-items: center;
+}
+
+.tool-icon[b-hosohzaub8] {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.send-button[b-hosohzaub8] {
+    color: var(--send-button-color);
+    margin-left: auto;
+}
+
+    .send-button:hover[b-hosohzaub8] {
+        color: black;
+    }
+
+.attach[b-hosohzaub8] {
+    background-color: white;
+    border-style: dashed;
+    color: #888;
+    border-color: #888;
+    padding: 3px 8px;
+}
+
+    .attach:hover[b-hosohzaub8] {
+        background-color: #f0f0f0;
+        color: black;
+    }
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatMessageItem.razor.rz.scp.css */
+.user-message[b-410gxl0ckk] {
+    background: rgb(182 215 232);
+    align-self: flex-end;
+    min-width: 25%;
+    max-width: calc(100% - 5rem);
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.25rem; 
+    color: #1F2937; 
+    white-space: pre-wrap; 
+}
+
+.assistant-message[b-410gxl0ckk], .assistant-search[b-410gxl0ckk] {
+    display: grid;
+    grid-template-rows: min-content;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.25rem; 
+}
+
+.assistant-message-header[b-410gxl0ckk] {
+    font-weight: 600;
+}
+
+.assistant-message-text[b-410gxl0ckk] {
+    grid-column-start: 2;
+}
+
+.assistant-message-icon[b-410gxl0ckk] {
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    border-radius: 9999px; 
+    width: 1.5rem; 
+    height: 1.5rem; 
+    color: #ffffff; 
+    background: #9b72ce;
+}
+
+    .assistant-message-icon svg[b-410gxl0ckk] {
+        width: 1rem; 
+        height: 1rem; 
+    }
+
+.assistant-search[b-410gxl0ckk] {
+    font-size: 0.875rem;
+    line-height: 1.25rem; 
+}
+
+.assistant-search-icon[b-410gxl0ckk] {
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    width: 1.5rem; 
+    height: 1.5rem; 
+}
+
+    .assistant-search-icon svg[b-410gxl0ckk] {
+        width: 1rem; 
+        height: 1rem; 
+    }
+
+.assistant-search-content[b-410gxl0ckk] {
+    align-content: center;
+}
+
+.assistant-search-phrase[b-410gxl0ckk] {
+    font-weight: 600;
+}
+
+/* Default styling for markdown-formatted assistant messages */
+[b-410gxl0ckk] ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+}
+
+[b-410gxl0ckk] ol {
+    list-style-type: decimal;
+    margin-left: 1.5rem;
+}
+
+[b-410gxl0ckk] li {
+    margin: 0.5rem 0;
+}
+
+[b-410gxl0ckk] strong {
+    font-weight: 600;
+}
+
+[b-410gxl0ckk] h3 {
+    margin: 1rem 0;
+    font-weight: 600;
+}
+
+[b-410gxl0ckk] p + p {
+    margin-top: 1rem;
+}
+
+[b-410gxl0ckk] table {
+    margin: 1rem 0;
+}
+
+[b-410gxl0ckk] th {
+    text-align: left;
+    border-bottom: 1px solid silver;
+}
+
+[b-410gxl0ckk] th, [b-410gxl0ckk] td {
+    padding: 0.1rem 0.5rem;
+}
+
+[b-410gxl0ckk] th, [b-410gxl0ckk] tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[b-410gxl0ckk] pre > code {
+    background-color: white;
+    display: block;
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatMessageList.razor.rz.scp.css */
+.message-list-container[b-otnhs9j0jg] {
+    margin: 2rem 1.5rem;
+    flex-grow: 1;
+}
+
+.message-list[b-otnhs9j0jg] {
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.25rem; 
+}
+
+.no-messages[b-otnhs9j0jg] {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #999;
+    margin-top: calc(40vh - 18rem);
+}
+
+chat-messages[b-otnhs9j0jg] >  div:last-of-type {
+    /* Adds some vertical buffer to so that suggestions don't overlap the output when they appear */
+    margin-bottom: 2rem;
+}
+/* _content/RSChatApp.Web/Components/Pages/Chat/ChatSuggestions.razor.rz.scp.css */
+.suggestions[b-rknajfaxz4] {
+    text-align: right;
+    white-space: nowrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    display: flex;
+    margin-bottom: 0.75rem;
+}

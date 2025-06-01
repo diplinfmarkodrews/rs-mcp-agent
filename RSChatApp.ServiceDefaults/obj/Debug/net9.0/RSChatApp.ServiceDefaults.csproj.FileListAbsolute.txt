@@ -1,0 +1,13 @@
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/RSChatApp.ServiceDefaults.deps.json
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/RSChatApp.ServiceDefaults.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/RSChatApp.ServiceDefaults.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.csproj.AssemblyReference.cache
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.GeneratedMSBuildEditorConfig.editorconfig
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.AssemblyInfoInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.AssemblyInfo.cs
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.csproj.CoreCompileInputs.cache
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.sourcelink.json
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/refint/RSChatApp.ServiceDefaults.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/ref/RSChatApp.ServiceDefaults.dll

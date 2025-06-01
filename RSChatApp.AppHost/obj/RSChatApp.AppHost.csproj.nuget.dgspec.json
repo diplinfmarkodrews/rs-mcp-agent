@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/RSChatApp.AppHost.csproj": {}
+    "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/RSChatApp.AppHost.csproj": {}
   },
   "projects": {
-    "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/RSChatApp.AppHost.csproj": {
+    "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/RSChatApp.AppHost.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
         "projectName": "RSChatApp.AppHost",
-        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
         "packagesPath": "/home/markomoto/.nuget/packages/",
-        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/obj/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/markomoto/.nuget/NuGet/NuGet.Config"

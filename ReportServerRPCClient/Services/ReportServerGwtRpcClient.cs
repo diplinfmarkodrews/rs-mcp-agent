@@ -20,31 +20,44 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     private readonly IMapper _mapper;
 
     public ReportServerGwtRpcClient(IHttpClientFactory httpClientFactory, 
-        CookieAccessibleHttpMessageHandler httpMessageHandler, 
+        CookieContainerProvider cookieProvider, 
         IMapper mapper) 
-        : base(httpClientFactory.CreateClient("ReportServerGwtRpcClient"), httpMessageHandler)
+        : base(httpClientFactory.CreateClient("ReportServerGwtRpcClient"), cookieProvider)
     {
-        _authenticationClient = new RsGwtRpcAuthenticationClient(_httpClient, httpMessageHandler);
-        _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, httpMessageHandler);
-        _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, httpMessageHandler);
+        _authenticationClient = new RsGwtRpcAuthenticationClient(_httpClient, cookieProvider);
+        _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, cookieProvider);
+        _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, cookieProvider);
         _mapper = mapper;
     }
     
     public async Task<Result<AuthenticationResult>> AuthenticateAsync(string username, string password)
     {
-        var rsResponse = await _authenticationClient.AuthenticateAsync(username, password);
-        if (rsResponse.Success)
+        try
         {
-            return new Result<AuthenticationResult>(new AuthenticationResult
+            var rsResponse = await _authenticationClient.AuthenticateAsync(username, password);
+            if (rsResponse.Success)
             {
-                SessionId = rsResponse.SessionId,
-                User = _mapper.Map<User>(rsResponse.User)
-            })
+                return new Result<AuthenticationResult>(new AuthenticationResult
+                {
+                    SessionId = rsResponse.SessionId,
+                    User = _mapper.Map<User>(rsResponse.User)
+                })
+                {
+                    IsSuccess = true
+                };
+            }
+
+            return new Result<AuthenticationResult>(rsResponse.ErrorMessage);
+        }
+        catch(Exception exception)
+        {
+            return new Result<AuthenticationResult>(exception.Message)
             {
-                IsSuccess = true
+                IsSuccess = false,
+                Error = new SerializableException(exception),
+                Message = exception.Message
             };
         }
-
-        return new Result<AuthenticationResult>(rsResponse.ErrorMessage);
     }
-}
+        }
+

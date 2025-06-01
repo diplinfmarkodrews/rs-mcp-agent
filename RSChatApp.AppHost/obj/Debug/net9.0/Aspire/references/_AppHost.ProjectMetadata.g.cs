@@ -8,5 +8,5 @@ namespace Projects;
 public class RSChatApp_AppHost
 {
     private RSChatApp_AppHost() { }
-    public static string ProjectPath => """/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost""";
+    public static string ProjectPath => """/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost""";
 }

@@ -13,10 +13,10 @@ public class ReportServerGwtRpcClientBase : IDisposable
     protected readonly CookieContainer _cookieContainer;
 
     public ReportServerGwtRpcClientBase(HttpClient httpClient, 
-        CookieAccessibleHttpMessageHandler httpMessageHandler)
+        CookieContainerProvider cookieProvider)
     {
         _httpClient = httpClient;
-        _cookieContainer = httpMessageHandler.CookieContainer;
+        _cookieContainer = cookieProvider.CookieContainer;
         if (_httpClient.BaseAddress is null)
             throw new InvalidOperationException("BaseAddress not set in HTTP client.");
         
@@ -60,14 +60,34 @@ public class ReportServerGwtRpcClientBase : IDisposable
 
     protected async Task<string> PostGwtRpcAsync(string servicePath, string payload)
     {
-        var url = $"{_moduleBaseUrl}{servicePath}";
-        var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
+        // Ensure we have a proper URL with scheme
+        Uri uri;
+        if (Uri.TryCreate(_moduleBaseUrl, UriKind.Absolute, out uri))
+        {
+            // We have a complete URL with scheme
+            var url = $"{_moduleBaseUrl}{servicePath}";
+            var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
 
-        var response = await _httpClient.PostAsync(url, content);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsync(url, content);
+            response.EnsureSuccessStatusCode();
         
-        return await response.Content.ReadAsStringAsync();
+            return await response.Content.ReadAsStringAsync();
+        }
+        else
+        {
+            // The URL doesn't have a scheme, use the HttpClient.BaseAddress instead
+            var baseUrl = _httpClient.BaseAddress?.ToString().TrimEnd('/') ?? 
+                         throw new InvalidOperationException("No valid base URL available");
+            var url = $"{baseUrl}/reportserver/{servicePath}";
+            var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
+
+            var response = await _httpClient.PostAsync(url, content);
+            response.EnsureSuccessStatusCode();
+        
+            return await response.Content.ReadAsStringAsync();
+        }
     }
+
     protected T ParseGwtResponse<T>(string gwtResponse)
     {
         // GWT responses start with //OK or //EX

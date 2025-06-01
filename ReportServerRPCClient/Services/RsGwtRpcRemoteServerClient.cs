@@ -6,8 +6,8 @@ namespace ReportServerRPCClient.Services;
 
 public class RsGwtRpcRemoteServerClient : ReportServerGwtRpcClientBase
 {
-    public RsGwtRpcRemoteServerClient(HttpClient httpClient, CookieAccessibleHttpMessageHandler httpMessageHandler) 
-        : base(httpClient, httpMessageHandler)
+    public RsGwtRpcRemoteServerClient(HttpClient httpClient, CookieContainerProvider cookieProvider) 
+        : base(httpClient, cookieProvider)
     {
     }
     // Remote Server Manager Import - loadTree
@@ -46,3 +46,4 @@ public class RsGwtRpcRemoteServerClient : ReportServerGwtRpcClientBase
     }
 
 }
+

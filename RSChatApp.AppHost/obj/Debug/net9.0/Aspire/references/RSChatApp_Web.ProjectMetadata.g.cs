@@ -7,5 +7,5 @@ namespace Projects;
 [global::System.Diagnostics.DebuggerDisplay("Type = {GetType().Name,nq}, ProjectPath = {ProjectPath}")]
 public class RSChatApp_Web : global::Aspire.Hosting.IProjectMetadata
 {
-    public string ProjectPath => """/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.Web/RSChatApp.Web.csproj""";
+    public string ProjectPath => """/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj""";
 }

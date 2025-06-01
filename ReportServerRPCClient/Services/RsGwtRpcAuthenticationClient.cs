@@ -11,12 +11,11 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     private readonly CookieContainer _cookieContainer;
     
     // Constructor
-    public RsGwtRpcAuthenticationClient(HttpClient httpClient, 
-        CookieAccessibleHttpMessageHandler httpHandler) 
-        : base(httpClient, httpHandler)
+    public RsGwtRpcAuthenticationClient(HttpClient httpClient, CookieContainerProvider cookieProvider)
+        : base(httpClient, cookieProvider)
     {
         _httpClient = httpClient;
-        _cookieContainer = httpHandler.CookieContainer;
+        _cookieContainer = cookieProvider.CookieContainer;
 
         if (_httpClient.BaseAddress is null)
             throw new InvalidOperationException("BaseAddress not set in HTTP client.");

@@ -1,4 +1,4 @@
-namespace MCPServerSDK.Web.Services;
+namespace RsMCPServerSDK.Web.Services;
 
 /// <summary>
 /// Hosted service that runs the MCP server

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "n974LcTe49I=",
+  "dgSpecHash": "IFtQTSb1d+w=",
   "success": true,
-  "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
+  "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/RSChatApp.AppHost.csproj",
   "expectedPackageFiles": [
     "/home/markomoto/.nuget/packages/aspire.dashboard.sdk.linux-x64/9.3.0/aspire.dashboard.sdk.linux-x64.9.3.0.nupkg.sha512",
     "/home/markomoto/.nuget/packages/aspire.hosting/9.3.0/aspire.hosting.9.3.0.nupkg.sha512",

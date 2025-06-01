@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Microsoft.SemanticKernel;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Services;
 using RSChatApp.Web.Services.Ingestion;
@@ -9,7 +10,9 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.AddOllamaApiClient("chat")
     .AddChatClient()
+    
     .UseFunctionInvocation() 
+    .UseKernelFunctionInvocation()
     .UseOpenTelemetry(configure: c =>
         c.EnableSensitiveData = builder.Environment.IsDevelopment());
 
@@ -22,6 +25,9 @@ builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-doc
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
 builder.Services.AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly(typeof(RsMCPServerSDK.Web.Services.McpReportServer).Assembly);
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();

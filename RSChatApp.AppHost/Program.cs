@@ -15,7 +15,7 @@ var webApp = builder.AddProject<Projects.RSChatApp_Web>("aichatweb-app");
 webApp
     .WithReference(chat)
     .WithReference(embeddings)
-    // .withReference(mcpServer)
+    .WithReference(mcpServer)
     .WaitFor(chat)
     .WaitFor(embeddings)
     .WaitFor(mcpServer);

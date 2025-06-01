@@ -17,15 +17,15 @@ using System.Reflection;
     "s/ext/"))]
 [assembly: System.Reflection.AssemblyMetadata("dcpbinpath", ("/home/markomoto/.nuget/packages/aspire.hosting.orchestration.linux-x64/9.3.0/tool" +
     "s/ext/bin/"))]
-[assembly: System.Reflection.AssemblyMetadata("apphostprojectpath", "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost")]
+[assembly: System.Reflection.AssemblyMetadata("apphostprojectpath", "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyMetadata("apphostprojectname", "RSChatApp.AppHost.csproj")]
 [assembly: System.Reflection.AssemblyMetadata("aspiredashboardpath", ("/home/markomoto/.nuget/packages/aspire.dashboard.sdk.linux-x64/9.3.0/tools/Aspire" +
     ".Dashboard"))]
-[assembly: System.Reflection.AssemblyMetadataAttribute("apphostprojectbaseintermediateoutputpath", "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp/RSChatApp.AppHost/obj/")]
+[assembly: System.Reflection.AssemblyMetadataAttribute("apphostprojectbaseintermediateoutputpath", "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/obj/")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5c6c30c2b532165f650c8f6eda572da06ca4072c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e458f19a8a8d1958f673ff2a0a21f41dfd8b5d89")]
 [assembly: System.Reflection.AssemblyProductAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

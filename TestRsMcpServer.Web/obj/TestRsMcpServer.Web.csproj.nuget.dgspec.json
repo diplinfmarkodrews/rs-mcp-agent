@@ -148,14 +148,14 @@
         }
       }
     },
-    "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj": {
+    "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
-        "projectName": "TestRsMcpServer.Web",
-        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
+        "projectName": "RsMcpServerSDK.Web",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
         "packagesPath": "/home/markomoto/.nuget/packages/",
-        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/obj/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/markomoto/.nuget/NuGet/NuGet.Config"
@@ -195,9 +195,115 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "Microsoft.Extensions.AI": {
+              "target": "Package",
+              "version": "[9.5.0, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[9.0.5, )"
+            },
+            "ModelContextProtocol": {
+              "target": "Package",
+              "version": "[0.2.0-preview.2, )"
+            },
+            "ModelContextProtocol.AspNetCore": {
+              "target": "Package",
+              "version": "[0.2.0-preview.1, )"
+            },
+            "ModelContextProtocolServer.Sse": {
+              "target": "Package",
+              "version": "[0.0.1-preview-06, )"
+            },
+            "OpenAPISwaggerUI": {
+              "target": "Package",
+              "version": "[9.2024.1215.2209, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
+        "projectName": "TestRsMcpServer.Web",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/TestRsMcpServer.Web.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer.Web/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
             "MSTest": {
               "target": "Package",
               "version": "[3.6.4, )"
+            },
+            "Microsoft.AspNetCore.Mvc.Testing": {
+              "target": "Package",
+              "version": "[9.0.5, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
