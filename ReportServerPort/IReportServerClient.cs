@@ -1,10 +1,14 @@
-﻿using ReportServerPort.Contracts;
+﻿using ReportServerPort.Authentication.Contracts;
+using ReportServerPort.Contracts;
+using ReportServerPort.Contracts.Terminal;
+using ReportServerPort.FileServer.Contracts;
 
 namespace ReportServerPort;
 
 public interface IReportServerClient : 
     IRsAuthenticationClient,
     // IRsFileServerClient,
+    IRsTerminalClient,
     IDisposable
 {
     
@@ -23,7 +27,17 @@ public interface IRsAuthenticationClient
 
 public interface IRsFileServerClient
 {
-    Task<Result<List<FileTreeNodeResult>>> LoadFileTreeAsync();
+    Task<Result<List<FileTreeNode>>> LoadFileTreeAsync();
     Task<Result<string>> LoadFileDataAsStringAsync(long fileId);
     // Task<Result<string>> UpdateFileAsync(FileDto fileDto, string content);
+}
+public interface IRsTerminalClient
+{
+    Task<Result> CloseSessionAsync(string sessionId);
+
+    Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null,
+        Dictionary<string, string> mapper = null);
+    Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command);
+    Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId);
+    //ToDo: Add AutoComplete 
 }

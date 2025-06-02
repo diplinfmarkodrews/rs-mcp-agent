@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ReportServerRPCClient")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d7cfc54f3e329befc604809d718206ac572c5f9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0e5c43b8ae6aaa5e775070e0cdd0fccb1d047fcb")]
 [assembly: System.Reflection.AssemblyProductAttribute("ReportServerRPCClient")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ReportServerRPCClient")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

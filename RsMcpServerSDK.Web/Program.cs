@@ -58,5 +58,4 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 
-// First, create a request DTO
 public record AuthenticationRequest(string user, string password);

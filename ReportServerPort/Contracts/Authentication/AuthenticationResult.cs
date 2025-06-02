@@ -1,4 +1,6 @@
-namespace ReportServerPort.Contracts;
+using ReportServerPort.Contracts;
+
+namespace ReportServerPort.Authentication.Contracts;
 
 public class AuthenticationResult : IContract
 {

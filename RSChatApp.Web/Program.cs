@@ -7,6 +7,8 @@ using RSChatApp.Web.Services.Ingestion;
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddReportServerRpcClient(baseUrl: "http://localhost:1099");
 // builder.Services.AddScoped<RsMCPServerSDK.Web.Services.McpReportServer>();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 builder.AddServiceDefaults();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 var ollamaConnectionString = builder.Configuration["Ollama:Address"];
@@ -47,7 +49,6 @@ builder.Services.AddSingleton<SemanticSearch>();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -58,7 +59,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAntiforgery();
-
+app.UseSession();
 app.UseStaticFiles();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

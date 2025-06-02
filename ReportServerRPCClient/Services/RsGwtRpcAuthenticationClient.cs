@@ -1,5 +1,6 @@
 using System.Net;
 using AutoMapper;
+using ReportServerRPCClient.DTOs;
 using ReportServerRPCClient.DTOs.Authentication;
 using ReportServerRPCClient.Infrastructure;
 
@@ -22,7 +23,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     }
 
     // Authentication
-    public async Task<AuthenticationResultDto> AuthenticateAsync(string username, string password)
+    public async Task<GwtRpcResponse<AuthenticationResultDto>> AuthenticateAsync(string username, string password)
     {
         var payload = BuildGwtRpcPayload(
             "net.datenwerke.security.client.security.rpc.SecurityRpcService",
@@ -30,7 +31,17 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             username, password
         );
         var response = await PostGwtRpcAsync("security", payload);
-        return ParseAuthenticationResponse(response);
+        var parsedResult = ParseAuthenticationResponse(response);
+        if (parsedResult.Success)
+        {
+            return GwtRpcResponse<AuthenticationResultDto>.Successful(response, parsedResult);
+        }
+        return new GwtRpcResponse<AuthenticationResultDto>
+        {
+            Success = false,
+            Error = parsedResult.ErrorMessage,
+            Exception = new Exception(parsedResult.ErrorMessage)
+        };
     }
 
     private AuthenticationResultDto ParseAuthenticationResponse(string gwtResponse)

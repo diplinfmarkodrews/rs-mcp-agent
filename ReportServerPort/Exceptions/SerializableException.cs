@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace ReportServerPort.Contracts;
+namespace ReportServerPort.Exceptions;
 
 // Inline SerializableException definition to avoid resolution issues
 [Serializable]

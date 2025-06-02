@@ -1,12 +1,19 @@
 # MCP Server for ReportServer Java Application
 
-This workspace contains a Model Context Protocol (MCP) server implementation for connecting to a Java ReportServer application, with a chat agent interface.
+This workspace contains a Model Context Protocol (MCP) server implementation for connecting to a Java ReportServer application, with a chat agent interface. The project leverages Microsoft's latest technologies for AI integration and cloud-native application development.
 
-## 🎯 Quick Start (Recommended)
+## 🚧 Project Status: Under Development
+
+This project is under development. The following components are being implemented:
+- ReportServer RPC interface integration
+- MCP Client connection
+- Independent MCP server deployment for VS Code integration
+
+## 🎯 Quick Start (Development)
 
 ### Aspire App Host with MCP Server SDK
 
-The fastest way to get started is with the Aspire AppHost implementation that runs all components:
+The fastest way to get started with the development environment is using Aspire AppHost:
 
 ```bash
 # Start the Aspire AppHost
@@ -14,33 +21,26 @@ cd RSChatApp.AppHost
 dotnet run
 ```
 
-This will start:
+This will start the following containerized services:
 - MCP Server (RsMcpServerSDK.Web)
 - Chat Web Application (RSChatApp.Web)
 - Ollama for AI models
 - Qdrant for vector search
 
-## Implementation Components
+## Core Components
 
-### 1. 🚀 MCP Server SDK with ReportServer Integration
+### 🚀 MCP Server with ReportServer Integration
 
 - **RsMcpServerSDK.Web/**: Modern MCP server using Microsoft Extensions AI framework
-- **RSChatApp.Web/**: Interactive web client with chat UI
+- **RSChatApp.Web/**: Interactive Blazor web client with chat UI
+- **ReportServerRPCClient/**: Direct RPC client for Java ReportServer integration
+- **RSChatApp.AppHost/**: .NET Aspire orchestration for cloud-native deployment
+
+#### Key Features
 - ✅ Uses official Microsoft Extensions AI SDK
 - ✅ Full .NET 9.0 integration with Aspire orchestration
-- ✅ Direct ReportServer RPC integration (without JNI bridge)
+- ✅ Direct ReportServer RPC integration
 - ✅ Comprehensive logging and error handling
-
-### 2. ⚙️ Custom gRPC Implementation (Legacy - Obsolete)
-
-- **MCPServer/**: Custom gRPC-based MCP server with Java bridge
-- **MCPChatClient/**: gRPC client with AI chat features
-- ⚠️ Custom protocol implementation
-- ⚠️ Uses JNI bridge to Java ReportServer via RMI (obsolete)
-
-### 3. ☕ Java Client for Testing
-
-- **JavaClient/**: Standalone Java client for testing RPC functionality
 
 ## Project Structure
 
@@ -64,24 +64,9 @@ This will start:
   - **Services/**: Implementation of RPC client
   - **DTOs/**: Data transfer objects for RPC communication
 
-### Legacy gRPC Implementation (Obsolete)
-
-- **MCPServer/**: Custom gRPC-based MCP server with JNI bridge to Java
-  - **Program.cs**: Main entry point for the server
-  - **Services/MCPServiceImpl.cs**: Implementation of the MCP service
-  - **Services/ReportServerClient.cs**: Client for communicating with Java ReportServer via JNI
-  - **Protos/mcp.proto**: Protocol Buffer definition for the MCP service
-
-- **MCPChatClient/**: gRPC-based chat client
-  - **Program.cs**: Console and web interface entry point
-  - **Services/**: Chat AI service and MCP client implementation
-  - **UI/**: Console user interface
-
-- **JavaClient/**: Java client library with JNI bridge for RMI communication
-  - **src/main/java/com/example/reportserver/bridge/**: JNI bridge implementation
-    - **ReportServerJniBridge.java**: Main bridge class between C# and Java RMI
-    - **ReportServerInterface.java**: RMI interface for the ReportServer
-    - **ReportResult.java**, **ReportTemplate.java**, etc.: Model classes for RMI communication
+- **ReportServerPort/**: Interface definitions for Report Server communication
+  - **IReportServerClient.cs**: Main interface for communicating with ReportServer
+  - **Contracts/**: Data contracts for the ReportServer API
 
 ## Prerequisites
 
@@ -174,6 +159,25 @@ You can customize the MCP server by modifying the settings in `appsettings.json`
 }
 ```
 
+## Roadmap
+
+### Current Development Focus
+
+1. Completing the ReportServer RPC interface implementation
+   - Adding full support for report generation
+   - Implementing authentication and session management
+   - Adding data source integration
+
+2. Enhancing the MCP Client connection
+   - Improving tool definitions for AI model integration
+   - Extending the chat context with report metadata
+   - Adding support for complex parameter handling
+
+3. Enabling independent MCP server deployment
+   - Creating standalone deployment options
+   - Adding VS Code extension integration
+   - Supporting containerized deployments
+
 ## Troubleshooting
 
 ### ReportServer Connection Issues
@@ -204,12 +208,6 @@ The project is set up to use Ollama models by default, but you can modify it to 
 
 1. Update the RSChatApp.Web/Program.cs file to use a different model provider
 2. Add the necessary packages for your preferred AI model
-
-## Troubleshooting
-
-- For ReportServer connection issues, verify the ReportServer is running and accessible
-- If services fail to start in Aspire, check the Docker service status
-- For Ollama model issues, verify that the specified models are available
 
 ## License
 
@@ -245,70 +243,26 @@ ReportServer is a Java web application that can be started in several ways:
 
 ### RPC Interface Details
 
-Based on the codebase analysis, ReportServer has an extensive RPC interface system. Here are the main RPC services:
-
-### Core RPC Services
+Based on the codebase analysis, ReportServer has an extensive RPC interface system. Here are the main RPC services that will be integrated:
 
 1. Report Management
    - ReportManagerTreeHandlerImpl - Report tree operations
    - ReportExecutorRpcService (@RemoteServiceRelativePath("executor"))
    - executeAs() - Execute report in specific format
-   - createNewVariant() - Create report variants
-   - loadFullReportForExecution() - Load complete report data
-
+   
 2. Report Export
    - ReportExportRpcServiceImpl
    - storeInSessionForExport() - Prepare reports for export
-   - Multiple export format handlers
 
 3. Report Properties
    - ReportPropertiesRpcService (@RemoteServiceRelativePath("reportproperties"))
    - getPropertyKeys() - Get available property keys
    - updateProperties() - Update report properties
-   - getInheritedProperties() - Get inherited properties
 
 4. Data Source Management
    - DatasourceManagerTreeHandlerRpcServiceImpl
    - BaseDatasourceRpcServiceImpl
 
-5. Remote Server Management
-   - RemoteServerManagerTreeHandlerRpcServiceImpl
-   - RemoteRsRestServerRpcServiceImpl
-   - test() - Test remote server connection
-
-6. Scheduler Services
-   - SchedulerRpcService (@RemoteServiceRelativePath("scheduler"))
-   - schedule() - Schedule report execution
-   - unschedule() - Remove scheduled jobs
-   - getReportJobList() - Get scheduled jobs
-   - reschedule() - Modify existing schedules
-
-7. File Server
-   - FileServerRpcService (@RemoteServiceRelativePath("fileserver"))
-   - updateFile() - Update file content
-   - uploadFiles() - Upload new files
-   - loadFileDataAsString() - Load file content
-
-8. Additional Services
-   - ParameterRpcServiceImpl - Report parameter handling
-   - ConditionRpcServiceImpl - Report conditions
-   - ComputedColumnsRpcServiceImpl - Computed columns
-   - GlobalConstantsRpcServiceImpl - Global constants management
-### RPC Configuration
-
-The RPC services are configured in ReportServerServiceConfig.java, which shows the complete service binding configuration.
-
-### Access Points
-
-- Web Interface: http://localhost:8080/reportserver
-- REST API: Various endpoints for programmatic access
-- Documentation Servlet: ReportDocumentationServlet at /reportserver/reportdocumentation
-
-### Database Setup
-
-The initial database setup is handled by PrepareDbForReportServer, which creates:
-
-- Root user and organizational structure
-- Report, datasource, and file server trees
-- Security targets and permissions
-- Remote server management structure
+5. Access Points
+   - Web Interface: http://localhost:8080/reportserver
+   - REST API: Various endpoints for programmatic access
