@@ -1,21 +1,59 @@
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using ModelContextProtocol.Client;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Services;
 using RSChatApp.Web.Services.Ingestion;
 
 var builder = WebApplication.CreateBuilder(args);
-// builder.Services.AddReportServerRpcClient(baseUrl: "http://localhost:1099");
-// builder.Services.AddScoped<RsMCPServerSDK.Web.Services.McpReportServer>();
+
+#region McpClientConfiguration
+// Creating McpClient with SSE transport
+await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(
+    new SseClientTransport(
+        new SseClientTransportOptions
+        {
+            Endpoint = new Uri(builder.Configuration["McpServer:Address"] ?? "http://localhost:1099/"),
+        },
+        httpClient: builder.Services.BuildServiceProvider()
+            .GetRequiredService<IHttpClientFactory>()
+            .CreateClient(),
+        loggerFactory: builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>()
+    ));
+builder.Services.AddSingleton(mcpClient);
+
+var tools = await mcpClient.ListToolsAsync();
+IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
+#pragma warning disable SKEXP0001
+kernelBuilder.Plugins.AddFromFunctions("Tools", tools.Select(aiFunction => aiFunction.AsKernelFunction()));
+#pragma warning restore SKEXP0001
+#endregion
+
+Kernel kernel = kernelBuilder.Build();
+builder.Services.AddSingleton(kernel);
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
+
 builder.AddServiceDefaults();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddSingleton(new OpenAIPromptExecutionSettings
+{
+    MaxTokens = 4096,
+    Temperature = 0.7f,
+    TopP = 0.9f,
+    FrequencyPenalty = 0.0f,
+    PresencePenalty = 0.0f,
+    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+});
+
 var ollamaConnectionString = builder.Configuration["Ollama:Address"];
 builder.AddOllamaApiClient("chat"
     , config =>
     {
-        config.Endpoint = !string.IsNullOrEmpty(ollamaConnectionString) ? new Uri(ollamaConnectionString) : null; 
+        config.Endpoint = !string.IsNullOrEmpty(ollamaConnectionString) 
+            ? new Uri(ollamaConnectionString) 
+            : throw new InvalidProgramException("Ollama API url is not configured.");
         config.Models = [builder.Configuration["Ollama:Model"] ?? "llama3"];
     })
     .AddChatClient()
@@ -28,7 +66,7 @@ builder.AddOllamaApiClient("embeddings",config =>
     {
         config.Endpoint = !string.IsNullOrEmpty(ollamaConnectionString) 
             ? new Uri(ollamaConnectionString) 
-            : null;
+            : throw new InvalidProgramException("Ollama API url is not configured.");
         config.Models = [builder.Configuration["Ollama:EmbeddingModel"] ?? "llama3.2:1b"];
     })
     .AddEmbeddingGenerator();
@@ -37,7 +75,7 @@ builder.AddQdrantClient("vectordb", config =>
 {
     config.Endpoint = builder.Configuration["Qdrant:Address"] is { Length: > 0 }
         ? new Uri(builder.Configuration["Qdrant:Address"])
-        : null;
+        : throw new InvalidProgramException("Qdrant url is not configured.");
     config.Key = builder.Configuration["Qdrant:ApiKey"];
 });
     

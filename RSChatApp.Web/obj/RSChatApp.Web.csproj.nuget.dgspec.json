@@ -161,11 +161,19 @@
             },
             "Microsoft.SemanticKernel.Core": {
               "target": "Package",
-              "version": "[1.53.0, )"
+              "version": "[1.54.0, )"
+            },
+            "ModelContextProtocol-SemanticKernel": {
+              "target": "Package",
+              "version": "[0.0.1-preview-15, )"
             },
             "ModelContextProtocol.AspNetCore": {
               "target": "Package",
               "version": "[0.2.0-preview.2, )"
+            },
+            "ModelContextProtocolServer.Sse": {
+              "target": "Package",
+              "version": "[0.0.1-preview-06, )"
             },
             "OllamaSharp": {
               "target": "Package",
@@ -405,6 +413,10 @@
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
               "version": "[9.0.5, )"
+            },
+            "Microsoft.SemanticKernel.Core": {
+              "target": "Package",
+              "version": "[1.54.0, )"
             },
             "ModelContextProtocol": {
               "target": "Package",

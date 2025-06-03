@@ -207,6 +207,10 @@
               "target": "Package",
               "version": "[9.0.5, )"
             },
+            "Microsoft.SemanticKernel.Core": {
+              "target": "Package",
+              "version": "[1.54.0, )"
+            },
             "ModelContextProtocol": {
               "target": "Package",
               "version": "[0.2.0-preview.2, )"
