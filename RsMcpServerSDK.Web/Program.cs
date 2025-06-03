@@ -46,7 +46,6 @@ app.MapPost("/rs-authenticate", async ([FromBody]AuthenticationRequest request, 
         }
         var rsResponse = await rsClient.AuthenticateAsync(request.user, request.password);
         // Todo properly handle authentication response
-        // later, register clients
         if (rsResponse.IsSuccess)
         {
             // Register RsSessionId, on clientSessionId in CookieContainerProvider
