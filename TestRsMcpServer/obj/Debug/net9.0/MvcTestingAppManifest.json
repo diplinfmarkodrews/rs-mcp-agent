@@ -1,5 +1,6 @@
 {
   "ReportServerPort, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/markomoto\/source\/repos\/mcp-server-javarpc\/ReportServerPort",
   "ReportServerRPCClient, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/markomoto\/source\/repos\/mcp-server-javarpc\/ReportServerRPCClient",
-  "RsMcpServerSDK.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/markomoto\/source\/repos\/mcp-server-javarpc\/RsMcpServerSDK.Web"
+  "RSChatApp.ServiceDefaults, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/markomoto\/source\/repos\/mcp-server-javarpc\/RSChatApp.ServiceDefaults",
+  "RsMcpServer.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/markomoto\/source\/repos\/mcp-server-javarpc\/RsMcpServer.Web"
 }

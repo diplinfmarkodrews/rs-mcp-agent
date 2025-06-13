@@ -1,5 +1,7 @@
 ﻿@page "/"
+@attribute [Authorize]
 @using System.ComponentModel
+@using Microsoft.AspNetCore.Authorization
 @inject IChatClient ChatClient
 @inject NavigationManager Nav
 @inject SemanticSearch Search

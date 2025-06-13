@@ -1,31 +1,92 @@
-# MCP Server for ReportServer Java Application
+# Enterprise MCP Server for ReportServer Integration
 
-This workspace contains a Model Context Protocol (MCP) server implementation for connecting to a Java ReportServer application, with a chat agent interface. The project leverages Microsoft's latest technologies for AI integration and cloud-native application development.
+A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer applications. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development and enterprise-grade authentication.
 
-## 🚧 Project Status: Under Development
+## 🏗️ Architecture Overview
 
-This project is under development. The following components are being implemented:
-- ReportServer RPC interface integration
-- MCP Client connection
-- Independent MCP server deployment for VS Code integration
-
-## 🎯 Quick Start (Development)
-
-### Aspire App Host with MCP Server SDK
-
-The fastest way to get started with the development environment is using Aspire AppHost:
-
-```bash
-# Start the Aspire AppHost
-cd RSChatApp.AppHost
-dotnet run
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   RSChatApp     │    │ RsMcpServer.Web │    │   ReportServer  │
+│     .Web        │◄──►│    (MCP API)    │◄──►│   (Java/GWT)    │
+│  (Blazor UI)    │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐              │
+         └─────────────►│   Keycloak      │◄─────────────┘
+                        │ (Auth Provider) │
+                        └─────────────────┘
+                                 │
+                        ┌─────────────────┐
+                        │ Service Stack   │
+                        │ ┌─────────────┐ │
+                        │ │   Ollama    │ │
+                        │ │  (AI/LLM)   │ │
+                        │ └─────────────┘ │
+                        │ ┌─────────────┐ │
+                        │ │   Qdrant    │ │
+                        │ │ (VectorDB)  │ │
+                        │ └─────────────┘ │
+                        └─────────────────┘
 ```
 
-This will start the following containerized services:
-- MCP Server (RsMcpServerSDK.Web)
-- Chat Web Application (RSChatApp.Web)
-- Ollama for AI models
-- Qdrant for vector search
+## 🚀 Key Features
+
+### **Enterprise Authentication & Security**
+- ✅ **Centralized Keycloak OIDC Authentication** with PKCE support
+- ✅ **Seamless ReportServer Integration** through session bridging
+- ✅ **JWT Token Management** with automatic refresh
+- ✅ **Cross-System Session Synchronization**
+- ✅ **Role-Based Access Control (RBAC)**
+
+### **AI-Powered Chat Interface**
+- ✅ **Modern Blazor Web UI** with real-time chat capabilities
+- ✅ **Ollama Integration** for local LLM inference
+- ✅ **Qdrant Vector Database** for semantic search and RAG
+- ✅ **Document Ingestion Pipeline** with PDF support
+- ✅ **Semantic Search** across ingested documents
+
+### **MCP Server Integration**
+- ✅ **Microsoft Extensions AI Framework** for MCP protocol
+- ✅ **Direct ReportServer RPC Client** for Java interoperability
+- ✅ **Tool Integration** for AI agent functionality
+- ✅ **Terminal Operations** support for ReportServer CLI
+- ✅ **HTTP & SSE Transport** protocols
+
+### **Cloud-Native Deployment**
+- ✅ **.NET Aspire Orchestration** for microservices
+- ✅ **Docker Containerization** with persistent volumes
+- ✅ **Health Checks & Monitoring** with OpenTelemetry
+- ✅ **Service Discovery** and load balancing
+- ✅ **Configuration Management** with environment-specific settings
+
+## 🚀 Quick Start
+
+### **1. Using .NET Aspire (Recommended)**
+
+Start the entire application stack with one command:
+
+```bash
+# Navigate to the Aspire host directory
+cd RSChatApp.AppHost
+
+# Start all services (Ollama, Qdrant, MCP Server, Web App)
+dotnet run
+```
+0--Requires setup reportserver
+
+This will automatically:
+- ✅ Start **Ollama** with GPU support (if available)
+- ✅ Pull required AI models (configurable)
+- ✅ Start **Qdrant** vector database with persistent storage
+- ✅ Launch the **MCP Server** with authentication
+- ✅ Start the **Blazor Web Application**
+- ✅ Open the **Aspire Dashboard** for monitoring
+
+**Access Points:**
+- 📱 **Chat Application**: `http://localhost:5123` (or as shown in Aspire dashboard)
+- 🔧 **Aspire Dashboard**: `http://localhost:15986`
+- 🤖 **MCP Server API**: `http://localhost:5002`
+- 📊 **Qdrant Dashboard**: `http://localhost:6333/dashboard`
 
 ## Core Components
 
@@ -72,8 +133,10 @@ This will start the following containerized services:
 
 - .NET 9.0 SDK or later
 - Java JDK 17 or later (for ReportServer)
-- An Ollama-compatible AI model (default: mistral-nemo:12b for chat, all-minilm for embeddings)
 - Docker (for Aspire containerized resources)
+- Keycloak 22+ (for authentication)
+- Ollama (for AI model inference)
+- An Ollama-compatible AI model (default: iamcoder18/acemath-instruct:7b for chat, llama3.2:1b for embeddings)
 
 ## Getting Started
 
@@ -114,155 +177,358 @@ chmod +x test-mcp-server.sh
 
 Or test directly using the Aspire dashboard to monitor service health and interactions.
 
-## How It Works
+## ⚙️ Configuration
 
-### Direct ReportServer RPC Client
+### **Keycloak Authentication Setup**
 
-The .NET MCP server communicates with the Java-based ReportServer using a direct RPC client:
+The system uses Keycloak for centralized authentication across all components. Here's how to set it up:
 
-1. **ReportServerRPCClient**: Contains the C# code that directly communicates with the ReportServer
-   - Implements a client for the ReportServer's RPC protocol
-   - Handles authentication and session management
-   - Provides strongly-typed methods for report operations
+#### **1. Keycloak Installation & Setup**
 
-2. **RsMcpServerSDK.Web**: The MCP server that exposes the functionality via the Model Context Protocol
-   - Implements the Microsoft.Extensions.AI MCP server framework
-   - Provides tool functions that can be called by AI agents
-   - Maps between MCP requests and ReportServer operations
+**Using Docker (Recommended for Development):**
 
-### Model Context Protocol (MCP) Integration
+```bash
+# Start Keycloak with Docker
+docker run -d \
+  --name keycloak \
+  -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:22.0 \
+  start-dev
+```
 
-The MCP server provides an HTTP API for AI models and integrates with the ReportServer for generating reports:
+**Access Keycloak Admin Console:**
+- URL: `http://localhost:8080`
+- Username: `admin`
+- Password: `admin`
 
-1. Users can ask the AI about available reports through the chat interface
-2. The AI detects report-related queries and leverages MCP tools
-3. For report queries, the MCP service uses the ReportServerRPCClient to communicate with the Java ReportServer
-4. Reports are generated on the Java side and provided back to the user via the AI-powered chat interface
+#### **2. Realm Configuration**
 
-## Customizing the MCP Server
+Create a new realm called `reportserver`:
 
-You can customize the MCP server by modifying the settings in `appsettings.json`:
+1. **Create Realm:**
+   - Go to Administration Console
+   - Click "Create Realm"
+   - Name: `reportserver`
+   - Display Name: `ReportServer Realm`
+   - Enable: `true`
 
-- Change the Ollama model used for chat completions
-- Configure the embedding model
-- Set the ReportServer address
+2. **Realm Settings:**
+   ```json
+   {
+     "realm": "reportserver",
+     "enabled": true,
+     "displayName": "ReportServer Realm",
+     "registrationAllowed": false,
+     "resetPasswordAllowed": true,
+     "editUsernameAllowed": false,
+     "bruteForceProtected": true
+   }
+   ```
+
+#### **3. Client Configuration**
+
+Create a client for the MCP Server applications:
+
+1. **Client Settings:**
+   - **Client ID:** `reportserver-app`
+   - **Client Name:** `ReportServer Application`
+   - **Protocol:** `openid-connect`
+   - **Client Authentication:** `ON` (Confidential)
+   - **Standard Flow:** `ON`
+   - **Direct Access Grants:** `ON`
+
+2. **Client Configuration JSON:**
+   ```json
+   {
+     "clientId": "reportserver-app",
+     "name": "ReportServer Application",
+     "description": "MCP Server and Chat Application Client",
+     "enabled": true,
+     "protocol": "openid-connect",
+     "publicClient": false,
+     "standardFlowEnabled": true,
+     "implicitFlowEnabled": false,
+     "directAccessGrantsEnabled": true,
+     "serviceAccountsEnabled": false,
+     "authorizationServicesEnabled": false,
+     "redirectUris": [
+       "http://localhost:5123/*",
+       "http://localhost:5002/*",
+       "https://yourdomain.com/signin-oidc"
+     ],
+     "webOrigins": ["+"],
+     "attributes": {
+       "pkce.code.challenge.method": "S256"
+     }
+   }
+   ```
+
+3. **Valid Redirect URIs:**
+   - `http://localhost:5123/*` (RSChatApp.Web)
+   - `http://localhost:5002/*` (RsMcpServer.Web)
+   - `https://yourdomain.com/signin-oidc` (Production)
+
+#### **4. User Management**
+
+1. **Create Users:**
+   - Go to Users → Add user
+   - Set username, email, first name, last name
+   - Enable user and set temporary password
+
+2. **Assign Roles:**
+   - Create roles: `rs-admin`, `rs-user`, `mcp-user`
+   - Assign appropriate roles to users
+
+### **ReportServer Setup**
+
+ReportServer is a Java-based reporting platform that integrates with the MCP system.
+
+#### **1. Installation Options**
+
+**Option A: Bitnami Stack (Recommended for Quick Start)**
+```bash
+# Download from: https://bitnami.com/stack/reportserver
+wget https://downloads.bitnami.com/files/stacks/reportserver/[version]/bitnami-reportserver-[version]-linux-x64-installer.run
+chmod +x bitnami-reportserver-[version]-linux-x64-installer.run
+sudo ./bitnami-reportserver-[version]-linux-x64-installer.run
+```
+
+**Option B: Manual WAR Deployment**
+```bash
+# Build from source
+git clone https://github.com/infofabrik/reportserver.git
+cd reportserver
+mvn clean install
+
+# Deploy to Tomcat
+cp target/reportserver.war $TOMCAT_HOME/webapps/
+```
+
+**Option C: Docker Deployment**
+```bash
+# Using custom Docker image (if available)
+docker run -d \
+  --name reportserver \
+  -p 8081:8080 \
+  -e DB_HOST=localhost \
+  -e DB_PORT=3306 \
+  -e DB_NAME=reportserver \
+  -e DB_USER=reportserver \
+  -e DB_PASS=password \
+  reportserver:latest
+```
+
+#### **2. ReportServer Configuration**
+
+**Database Setup:**
+```properties
+# hibernate.properties
+hibernate.connection.driver_class=com.mysql.cj.jdbc.Driver
+hibernate.connection.url=jdbc:mysql://localhost:3306/reportserver?useSSL=false
+hibernate.connection.username=reportserver
+hibernate.connection.password=password
+hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+```
+
+**Keycloak Integration:**
+Configure ReportServer to use Keycloak for authentication by updating the security configuration.
+
+#### **3. Access Points**
+
+- **Web Interface:** `http://localhost:8081/reportserver`
+- **REST API:** `http://localhost:8081/reportserver/api`
+- **RPC Interface:** Available via HTTP for MCP integration
+
+### **Application Configuration (appsettings.json)**
+
+#### **RSChatApp.Web Configuration**
 
 ```json
 {
-  "Ollama": {
-    "Model": "mistral-nemo:12b",
-    "EmbeddingModel": "all-minilm"
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning",
+      "RSChatApp.ServiceDefaults.Authentication": "Information"
+    }
+  },
+  "AllowedHosts": "*",
+  "Keycloak": {
+    "Authority": "http://localhost:8080/realms/reportserver",
+    "ClientId": "reportserver-app",
+    "ClientSecret": "your-client-secret-here",
+    "Realm": "reportserver",
+    "Scopes": [
+      "openid",
+      "profile",
+      "email",
+      "roles"
+    ],
+    "RequireHttpsMetadata": false,
+    "TokenRefreshThreshold": "00:05:00"
   },
   "ReportServer": {
-    "Address": "localhost:1099"
+    "Address": "http://localhost:8081",
+    "SessionTimeout": "01:00:00",
+    "CookieDomain": "localhost",
+    "EnableSessionBridge": true
+  },
+  "Ollama": {
+    "Address": "http://0.0.0.0:11434",
+    "Model": "mistral-nemo:12b",
+    "EmbeddingModel": "llama3.2:1b",
+    "MaxTokens": 4096,
+    "Temperature": 0.7
+  },
+  "Qdrant": {
+    "Address": "http://localhost:6334"
+  },
+  "RsMcpServer": {
+    "Address": "http://localhost:5002"
   }
 }
 ```
 
-## Roadmap
+#### **RsMcpServer.Web Configuration**
 
-### Current Development Focus
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information",
+      "RSChatApp.ServiceDefaults.Authentication": "Information"
+    }
+  },
+  "Keycloak": {
+    "Authority": "http://localhost:8080/realms/reportserver",
+    "ClientId": "reportserver-app",
+    "ClientSecret": "your-client-secret-here",
+    "Realm": "reportserver",
+    "Scopes": [
+      "openid",
+      "profile",
+      "email",
+      "roles"
+    ],
+    "RequireHttpsMetadata": false,
+    "TokenRefreshThreshold": "00:05:00"
+  },
+  "ReportServer": {
+    "Address": "http://localhost:8081/",
+    "SessionTimeout": "01:00:00",
+    "CookieDomain": "localhost",
+    "EnableSessionBridge": true
+  }
+}
+```
 
-1. Completing the ReportServer RPC interface implementation
-   - Adding full support for report generation
-   - Implementing authentication and session management
-   - Adding data source integration
+#### **Configuration Parameters Explained**
 
-2. Enhancing the MCP Client connection
-   - Improving tool definitions for AI model integration
-   - Extending the chat context with report metadata
-   - Adding support for complex parameter handling
+**Keycloak Settings:**
+- `Authority`: Keycloak realm URL
+- `ClientId`: Client identifier in Keycloak
+- `ClientSecret`: Client secret (get from Keycloak admin console)
+- `Realm`: Keycloak realm name
+- `Scopes`: OpenID Connect scopes to request
+- `RequireHttpsMetadata`: Set to `false` for development, `true` for production
+- `TokenRefreshThreshold`: Time before token expiry to refresh
 
-3. Enabling independent MCP server deployment
-   - Creating standalone deployment options
-   - Adding VS Code extension integration
-   - Supporting containerized deployments
+**ReportServer Settings:**
+- `Address`: ReportServer base URL
+- `SessionTimeout`: Session timeout duration
+- `CookieDomain`: Domain for session cookies
+- `EnableSessionBridge`: Enable session bridging between Keycloak and ReportServer
 
-## Troubleshooting
+**Ollama Settings:**
+- `Address`: Ollama server URL
+- `Model`: Chat completion model
+- `EmbeddingModel`: Text embedding model
+- `MaxTokens`: Maximum tokens per response
+- `Temperature`: Response randomness (0.0-1.0)
 
-### ReportServer Connection Issues
+**Qdrant Settings:**
+- `Address`: Qdrant vector database URL
 
-- Verify that your Java ReportServer is running and accessible at the configured address
-- Check connectivity from the ReportServerRPCClient
-- Use the test-mcp-server.sh script to verify the connection to the ReportServer
+#### **Environment-Specific Configuration**
 
-### MCP Server Issues
+**Development Environment:**
+```json
+{
+  "Keycloak": {
+    "RequireHttpsMetadata": false,
+    "Authority": "http://localhost:8080/realms/reportserver"
+  },
+  "ReportServer": {
+    "Address": "http://localhost:8081"
+  }
+}
+```
 
-- Ensure Docker is running for the Aspire containerized services
-- Check the logs in the Aspire dashboard for any errors
-- Verify that Ollama is properly initialized with the required models
+**Production Environment:**
+```json
+{
+  "Keycloak": {
+    "RequireHttpsMetadata": true,
+    "Authority": "https://keycloak.yourdomain.com/realms/reportserver",
+    "ClientSecret": "${KEYCLOAK_CLIENT_SECRET}"
+  },
+  "ReportServer": {
+    "Address": "https://reportserver.yourdomain.com"
+  }
+}
+```
 
-## Extending the Project
+### **2. Individual Service Setup**
 
-### Adding More Report Types
+If you prefer to run services individually instead of using Aspire:
 
-You can extend the report capabilities by:
+#### **Start Keycloak**
+```bash
+docker run -d --name keycloak -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:22.0 start-dev
+```
 
-1. Updating the ReportServerRPCClient with new methods
-2. Adding corresponding functions to the McpReportServer class
-3. Decorating new functions with the [McpServerTool] attribute
+#### **Start Qdrant**
+```bash
+docker run -d --name qdrant -p 6333:6333 -p 6334:6334 \
+  -v qdrant_storage:/qdrant/storage \
+  qdrant/qdrant:latest
+```
 
-### Supporting Other AI Models
+#### **Start Ollama**
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
 
-The project is set up to use Ollama models by default, but you can modify it to use other models:
+# Pull required models
+ollama pull iamcoder18/acemath-instruct:7b
+ollama pull llama3.2:1b
 
-1. Update the RSChatApp.Web/Program.cs file to use a different model provider
-2. Add the necessary packages for your preferred AI model
+# Start Ollama server
+ollama serve
+```
 
-## License
+#### **Start ReportServer**
+```bash
+# Assuming Bitnami installation
+sudo /opt/bitnami/reportserver/ctlscript.sh start
+```
 
-[MIT License](LICENSE)
+#### **Start MCP Server**
+```bash
+cd RsMcpServer.Web
+dotnet run
+```
 
-## Further Resources
-
-- [Microsoft Extensions AI Documentation](https://github.com/microsoft/microsoft-extensions-ai)
-- [Model Context Protocol Specification](https://modelcontextprotocol.io/llms-full.txt)
-- [.NET Aspire Documentation](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
-- [Ollama Documentation](https://ollama.ai/docs)
-
-## ReportServer
-
-### Starting ReportServer
-
-ReportServer is a Java web application that can be started in several ways:
-
-1. Using Bitnami Stack (Recommended for quick start)
-   - Download from: https://bitnami.com/stack/reportserver
-   - This provides a pre-configured environment with all dependencies
-
-2. Manual Deployment
-   - Build the WAR file from source
-   - Deploy to a Java application server (Tomcat, JBoss, etc.)
-   - Configure database connection in hibernate.properties
-   - Ensure all required dependencies are in the classpath
-
-3. Development Environment
-   - Use Maven/Gradle to build: `mvn clean install`
-   - Deploy to your development server
-   - The application will be available at http://localhost:8080/reportserver (default)
-
-### RPC Interface Details
-
-Based on the codebase analysis, ReportServer has an extensive RPC interface system. Here are the main RPC services that will be integrated:
-
-1. Report Management
-   - ReportManagerTreeHandlerImpl - Report tree operations
-   - ReportExecutorRpcService (@RemoteServiceRelativePath("executor"))
-   - executeAs() - Execute report in specific format
-   
-2. Report Export
-   - ReportExportRpcServiceImpl
-   - storeInSessionForExport() - Prepare reports for export
-
-3. Report Properties
-   - ReportPropertiesRpcService (@RemoteServiceRelativePath("reportproperties"))
-   - getPropertyKeys() - Get available property keys
-   - updateProperties() - Update report properties
-
-4. Data Source Management
-   - DatasourceManagerTreeHandlerRpcServiceImpl
-   - BaseDatasourceRpcServiceImpl
-
-5. Access Points
-   - Web Interface: http://localhost:8080/reportserver
-   - REST API: Various endpoints for programmatic access
+#### **Start Chat Application**
+```bash
+cd RSChatApp.Web
+dotnet run
+```

@@ -5,21 +5,34 @@ using ModelContextProtocol.Client;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Services;
 using RSChatApp.Web.Services.Ingestion;
+using RsMcpServer.Identity.Extensions;
+using RsMcpServer.Identity.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Keycloak authentication
+builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
+
+builder.Services.AddHttpClient("RsMcpServer", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Address"] 
+                                 ?? throw new InvalidOperationException("RsMcpServer:Address"));
+    client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
+});
 #region McpClientConfiguration
 // Creating McpClient with SSE transport
 await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(
     new SseClientTransport(
         new SseClientTransportOptions
         {
-            Endpoint = new Uri(builder.Configuration["McpServer:Address"] ?? "http://localhost:1099/"),
+            Endpoint = new Uri(builder.Configuration["RsMcpServer:Address"] 
+                               ?? throw new InvalidOperationException("RsMcpServer:Address")),
         },
         httpClient: builder.Services.BuildServiceProvider()
             .GetRequiredService<IHttpClientFactory>()
-            .CreateClient(),
-        loggerFactory: builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>()
+            .CreateClient("RsMcpServer"),
+        loggerFactory: builder.Services.BuildServiceProvider()
+            .GetRequiredService<ILoggerFactory>()
     ));
 builder.Services.AddSingleton(mcpClient);
 
@@ -73,8 +86,9 @@ builder.AddOllamaApiClient("embeddings",config =>
 
 builder.AddQdrantClient("vectordb", config =>
 {
-    config.Endpoint = builder.Configuration["Qdrant:Address"] is { Length: > 0 }
-        ? new Uri(builder.Configuration["Qdrant:Address"])
+    var qdrantAddress = builder.Configuration["Qdrant:Address"];
+    config.Endpoint = !string.IsNullOrEmpty(qdrantAddress)
+        ? new Uri(qdrantAddress)
         : throw new InvalidProgramException("Qdrant url is not configured.");
     config.Key = builder.Configuration["Qdrant:ApiKey"];
 });
@@ -87,6 +101,12 @@ builder.Services.AddSingleton<SemanticSearch>();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+
+// Use Keycloak authentication
+app.UseAuthentication();
+app.UseSession();
+app.UseAuthenticationSession();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -97,10 +117,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAntiforgery();
-app.UseSession();
+
 app.UseStaticFiles();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .RequireAuthorization(); // Require authentication for the main app
 
 // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
 // other sources by implementing IIngestionSource.
@@ -111,3 +132,6 @@ await DataIngestor.IngestDataAsync(
     new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
 app.Run();
+
+
+// record LoginRequest(string Username, string Password);

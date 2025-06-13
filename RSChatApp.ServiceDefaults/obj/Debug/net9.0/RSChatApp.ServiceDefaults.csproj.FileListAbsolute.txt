@@ -11,3 +11,8 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/refint/RSChatApp.ServiceDefaults.dll
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatApp.ServiceDefaults.pdb
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/ref/RSChatApp.ServiceDefaults.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/ReportServerPort.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/ReportServerRPCClient.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/ReportServerRPCClient.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/bin/Debug/net9.0/ReportServerPort.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/obj/Debug/net9.0/RSChatAp.30A53E8D.Up2Date

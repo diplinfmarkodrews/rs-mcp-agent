@@ -25,7 +25,14 @@
         "frameworks": {
           "net9.0": {
             "targetAlias": "net9.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj"
+              }
+            }
           }
         },
         "warningProperties": {
@@ -44,6 +51,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
             "Microsoft.Extensions.Http.Resilience": {
               "target": "Package",
               "version": "[9.5.0, )"
@@ -71,6 +82,10 @@
             "OpenTelemetry.Instrumentation.Runtime": {
               "target": "Package",
               "version": "[1.12.0, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.0.1, )"
             }
           },
           "imports": [
@@ -92,7 +107,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -121,8 +136,8 @@
               "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj"
               },
-              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
-                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj"
+              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj"
               }
             }
           }
@@ -207,7 +222,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -266,7 +281,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -351,18 +366,18 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj": {
+    "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
-        "projectName": "RsMcpServerSDK.Web",
-        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/RsMcpServerSDK.Web.csproj",
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj",
+        "projectName": "RsMcpServer.Identity",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj",
         "packagesPath": "/home/markomoto/.nuget/packages/",
-        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServerSDK.Web/obj/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/markomoto/.nuget/NuGet/NuGet.Config"
@@ -377,11 +392,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
-                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
-              },
-              "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
-                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj"
+              "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj"
               }
             }
           }
@@ -402,37 +414,37 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
+            "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
               "version": "[9.0.5, )"
             },
-            "Microsoft.Extensions.AI": {
-              "target": "Package",
-              "version": "[9.5.0, )"
-            },
-            "Microsoft.Extensions.Hosting": {
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
               "target": "Package",
               "version": "[9.0.5, )"
             },
-            "Microsoft.SemanticKernel.Core": {
+            "Microsoft.Extensions.Hosting.Abstractions": {
               "target": "Package",
-              "version": "[1.54.0, )"
+              "version": "[9.0.5, )"
             },
-            "ModelContextProtocol": {
+            "Microsoft.Extensions.Http": {
               "target": "Package",
-              "version": "[0.2.0-preview.2, )"
+              "version": "[9.0.5, )"
             },
-            "ModelContextProtocol.AspNetCore": {
+            "Microsoft.Extensions.Logging.Abstractions": {
               "target": "Package",
-              "version": "[0.2.0-preview.1, )"
+              "version": "[9.0.5, )"
             },
-            "ModelContextProtocolServer.Sse": {
+            "Microsoft.Extensions.Options": {
               "target": "Package",
-              "version": "[0.0.1-preview-06, )"
+              "version": "[9.0.5, )"
             },
-            "OpenAPISwaggerUI": {
+            "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
-              "version": "[9.2024.1215.2209, )"
+              "version": "[8.0.1, )"
             }
           },
           "imports": [
@@ -454,7 +466,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.301/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

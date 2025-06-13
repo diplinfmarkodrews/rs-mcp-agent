@@ -1,0 +1,51 @@
+@inject NavigationManager Navigation
+@inject ILogger<LoginModal> Logger
+@using Microsoft.Extensions.Logging
+
+@if (Show)
+{
+    <div class="loading-overlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading Keycloak...</span>
+            </div>
+            <div class="mt-2">Connecting to Keycloak...</div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public EventCallback OnLoginSuccess { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // When the component is shown, automatically redirect to Keycloak
+        if (Show)
+        {
+            RedirectToKeycloak();
+        }
+    }
+
+    // Directly redirect to the Keycloak login page
+    private void RedirectToKeycloak()
+    {
+        try
+        {
+            // Get the current URL to use as a return URL after authentication
+            var returnUrl = Navigation.Uri;
+            
+            // Use the OIDC challenge endpoint defined in KeycloakAuthenticationExtensions
+            Logger.LogInformation("Redirecting to Keycloak authentication");
+            Navigation.NavigateTo($"/auth/challenge?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+            
+            // Note: Code after NavigateTo with forceLoad:true won't execute
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error redirecting to Keycloak");
+        }
+    }
+}
+

@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\RsMcpServerSDK.Web\RsMcpServerSDK.Web.csproj" />
+    <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
   </ItemGroup>
 
 </Project>

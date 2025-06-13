@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServerRPCClient", "Re
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServerPort", "ReportServerPort\ReportServerPort.csproj", "{58EB89E4-3E33-443E-A4DC-969880EC0258}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServerSDK.Web", "RsMcpServerSDK.Web\RsMcpServerSDK.Web.csproj", "{1ECAB3A2-ABAD-41B4-AF14-E87930324658}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Web", "RsMcpServer.Web\RsMcpServer.Web.csproj", "{1ECAB3A2-ABAD-41B4-AF14-E87930324658}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.AppHost", "RSChatApp.AppHost\RSChatApp.AppHost.csproj", "{79AB773D-B79B-445F-8146-DD15C4E11A93}"
 EndProject
@@ -15,6 +15,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Web", "RSChatApp.Web\RSChatApp.Web.csproj", "{17FC1298-1220-4104-BA88-C54AE023B851}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRsMcpServer", "TestRsMcpServer\TestRsMcpServer.csproj", "{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Identity", "RsMcpServer.Identity\RsMcpServer.Identity.csproj", "{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +52,10 @@ Global
 		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FC0E6D5-AC93-44EC-85C2-40254A4CC429}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
