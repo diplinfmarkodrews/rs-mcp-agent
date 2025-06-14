@@ -16,16 +16,16 @@ namespace RsMcpServer.Web.McpTools;
 /// </summary>
 public class TerminalTool
 {
-    // private readonly ILogger<TerminalTool> _logger;
+    private readonly ILogger<TerminalTool> _logger;
     private readonly IReportServerClient _reportServer;
     private readonly ISessionBridgeService _sessionBridge;
 
     public TerminalTool(
-        // ILogger<TerminalTool> logger, 
+        ILogger<TerminalTool> logger, 
         IReportServerClient reportServer,
         ISessionBridgeService sessionBridge)
     {
-        // _logger = logger;
+        _logger = logger;
         _reportServer = reportServer;
         _sessionBridge = sessionBridge;
     }
@@ -34,23 +34,32 @@ public class TerminalTool
     /// Executes a terminal command on the report server
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server")]
-    public async Task<Result<CommandResult>> ExecuteCommandAsync(string command,
+    public async Task<Result<CommandResult>> ExecuteCommandAsync(
+        [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
-        // _logger.LogInformation("Executing terminal command: {Command}", command);
+        _logger.LogInformation("Executing terminal command: {Command}", command);
         
         // Get the session information from the session bridge service
         var sessionInfo = await _sessionBridge.GetSessionInfoAsync();
         
         if (sessionInfo?.ReportServerSessionId == null)
         {
-            // _logger.LogWarning("No active ReportServer session available. Authentication required.");
+            _logger.LogWarning("No active ReportServer session available. Authentication required.");
             return new Result<CommandResult>(new AuthenticationException("Authentication required. Please authenticate with the Report Server first."));
         }
+
+        // var terminalSessionInfo = await _reportServer.InitSessionAsync();
+        // if (!terminalSessionInfo.IsSuccess)
+        // {
+        //     _logger.LogError("Failed to initialize terminal session: {Error}", terminalSessionInfo.Error?.Message);
+        //     return new Result<CommandResult>(new InvalidOperationException($"Failed to initialize terminal session.{terminalSessionInfo.Error?.Message}"));
+        // }
         
         // Execute the command with the session ID
         // TODO: make it long running
-        var cmdResult = await _reportServer.ExecuteAsync(sessionInfo.ReportServerSessionId, command);
+        var cmdResult = await _reportServer.ExecuteAsync(sessionInfo.ReportServerSessionId, command, cancellationToken);
+        
         return cmdResult;
     }
 }

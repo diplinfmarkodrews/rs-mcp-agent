@@ -37,7 +37,7 @@ public interface IRsTerminalClient
 
     Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null,
         Dictionary<string, string> mapper = null);
-    Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command);
+    Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default);
     Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId);
     //ToDo: Add AutoComplete 
 }

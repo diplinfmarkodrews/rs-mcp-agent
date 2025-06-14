@@ -131,6 +131,12 @@ await DataIngestor.IngestDataAsync(
     app.Services,
     new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
+// Ingest text files from the /wwwroot/Data directory.
+// Only supports .txt files, no subfolders
+await DataIngestor.IngestDataAsync(
+    app.Services,
+    new TextDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
+
 app.Run();
 
 

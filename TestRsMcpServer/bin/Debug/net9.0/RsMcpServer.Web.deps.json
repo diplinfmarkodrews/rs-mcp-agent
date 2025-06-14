@@ -19,7 +19,8 @@
           "OpenAPISwaggerUI": "9.2024.1215.2209",
           "RSChatApp.ServiceDefaults": "1.0.0",
           "ReportServerPort": "1.0.0",
-          "ReportServerRPCClient": "1.0.0"
+          "ReportServerRPCClient": "1.0.0",
+          "RsMcpServer.Identity": "1.0.0"
         },
         "runtime": {
           "RsMcpServer.Web.dll": {}
@@ -1354,6 +1355,25 @@
             "fileVersion": "1.0.0.0"
           }
         }
+      },
+      "RsMcpServer.Identity/1.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Authentication.OpenIdConnect": "9.0.6",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.5",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.5",
+          "Microsoft.Extensions.Hosting.Abstractions": "9.0.5",
+          "Microsoft.Extensions.Http": "9.0.5",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.5",
+          "Microsoft.Extensions.Options": "9.0.5",
+          "RSChatApp.ServiceDefaults": "1.0.0",
+          "System.IdentityModel.Tokens.Jwt": "8.0.1"
+        },
+        "runtime": {
+          "RsMcpServer.Identity.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -2207,6 +2227,11 @@
       "sha512": ""
     },
     "RSChatApp.ServiceDefaults/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "RsMcpServer.Identity/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -110,9 +110,9 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         return new Result<TerminalSessionInfo>(response.Exception);
     }
 
-    public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command)
+    public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
     {
-        var response = await _terminalClient.ExecuteAsync(sessionId, command);
+        var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken);
         if (response.Success)
         {
             return new Result<CommandResult>(

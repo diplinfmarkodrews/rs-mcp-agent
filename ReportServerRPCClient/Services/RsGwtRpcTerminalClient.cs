@@ -142,7 +142,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
         }
     }
 
-    public async Task<GwtRpcResponse<CommandResultDto>> ExecuteAsync(string sessionId, string command)
+    public async Task<GwtRpcResponse<CommandResultDto>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken)
     {
         try
         {
@@ -155,7 +155,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
             );
 
             var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
-            var response = await _httpClient.PostAsync("/reportserver/terminal", content);
+            var response = await _httpClient.PostAsync("/reportserver/terminal", content, cancellationToken);
 
             response.EnsureSuccessStatusCode();
             var responseText = await response.Content.ReadAsStringAsync();

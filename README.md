@@ -5,29 +5,102 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   RSChatApp     │    │ RsMcpServer.Web │    │   ReportServer  │
-│     .Web        │◄──►│    (MCP API)    │◄──►│   (Java/GWT)    │
-│  (Blazor UI)    │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │              ┌─────────────────┐              │
-         └─────────────►│   Keycloak      │◄─────────────┘
-                        │ (Auth Provider) │
-                        └─────────────────┘
-                                 │
-                        ┌─────────────────┐
-                        │ Service Stack   │
-                        │ ┌─────────────┐ │
-                        │ │   Ollama    │ │
-                        │ │  (AI/LLM)   │ │
-                        │ └─────────────┘ │
-                        │ ┌─────────────┐ │
-                        │ │   Qdrant    │ │
-                        │ │ (VectorDB)  │ │
-                        │ └─────────────┘ │
-                        └─────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          RSChatApp.Web (Browser-Based Workspace)               │
+│                                   (Blazor UI)                                  │
+│                                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────────────┐ │
+│  │     Ollama      │    │     Qdrant      │    │    Session Management      │ │
+│  │   (AI/LLM)      │    │   (VectorDB)    │    │                             │ │
+│  │                 │    │                 │    │  Current: In-Memory         │ │
+│  │ • Chat Response │    │ • Vector Search │    │  • Browser Session         │ │
+│  │ • Code Analysis │    │ • Embeddings    │    │  • Conversation Context    │ │
+│  └─────────────────┘    │ • Semantic RAG  │    │                             │ │
+│                         └─────────────────┘    │  Future: Persistent         │ │
+│                                 ▲              │  • Topic-Based History     │ │
+│                    Knowledge     │              │  • Cross-Session Context   │ │
+│                    Base          │              └─────────────────────────────┘ │
+│                    Ingestion     │                                              │
+│  ┌─────────────────────────────────────────────┐                              │
+│  │           Ingested Content                   │                              │
+│  │                                             │                              │
+│  │  📚 Documentation    🔧 Groovy Scripts     │                              │
+│  │  • PDFs, Markdown   • .groovy files        │                              │
+│  │  • API Docs         • Build scripts        │                              │
+│  │  • User Manuals     • Automation scripts   │                              │
+│  │                                             │                              │
+│  │  💻 Terminal Commands                       │                              │
+│  │  • CLI usage examples                      │                              │
+│  │  • Command syntax                          │                              │
+│  │  • Shell scripts                           │                              │
+│  └─────────────────────────────────────────────┘                              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      │ MCP Protocol
+                                      ▼
+                    ┌─────────────────────────────────────────┐
+                    │         RsMcpServer.Web                 │
+                    │         (MCP Server)                    │
+                    │                                         │
+                    │  Current Implementation:                │
+                    │  ┌─────────────────────────────────┐    │
+                    │  │     Basic Terminal Tool         │    │
+                    │  │   • Command execution           │    │
+                    │  │   • Process management          │    │
+                    │  └─────────────────────────────────┘    │
+                    │                                         │
+                    │  Future Extensions:                     │
+                    │  ┌─────────────────────────────────┐    │
+                    │  │ • Advanced Report Tool          │    │
+                    │  │ • File Management Tool          │    │
+                    │  │ • Database Query Tool           │    │
+                    │  │ • Workflow Automation Tool      │    │
+                    │  └─────────────────────────────────┘    │
+                    └─────────────────────────────────────────┘
+                                      │
+                                      │ RPC/HTTP
+                                      ▼
+                    ┌─────────────────────────────────┐
+                    │      ReportServer               │
+                    │      (Java/GWT)                 │
+                    └─────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    Authentication Layer                        │
+│                                                                 │
+│    RSChatApp.Web ◄──────► Keycloak ◄──────► RsMcpServer.Web    │
+│                           (OIDC)                                │
+│                                                                 │
+│                     ReportServer ◄─────────► Keycloak          │
+│                     (Session Bridge)                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### 📖 Architecture Description
+
+The RSChatApp operates as a **browser-based workspace** that provides an intelligent chat interface powered by AI and enhanced with semantic search capabilities:
+
+**🌐 Browser-Based Workspace (RSChatApp.Web)**
+- **Session Management**: Currently maintains conversation context in browser memory for immediate responsiveness
+- **Interactive Chat Interface**: Real-time Blazor UI for seamless user interaction with AI models
+- **Future Evolution**: Plans for persistent sessions with topic-based conversation history and cross-session context retention
+
+**🧠 Knowledge Base Integration**
+The system ingests diverse content types into Qdrant vector database for intelligent retrieval:
+- **📚 Documentation**: PDFs, Markdown files, API documentation, and user manuals
+- **🔧 Groovy Scripts**: Build scripts, automation scripts, and custom .groovy files  
+- **💻 Terminal Commands**: CLI usage examples, command syntax references, and shell scripts
+
+**🤖 AI-Powered Intelligence**
+- **Ollama**: Handles chat responses and code analysis using local LLM models
+- **Qdrant**: Provides vector search, embeddings, and semantic RAG capabilities for context-aware responses
+
+**🔧 MCP Server Evolution (RsMcpServer.Web)**
+- **Current State**: Implements basic terminal tool for command execution and process management
+- **Future Roadmap**: Extensible architecture planned for advanced report tools, file management, database queries, and workflow automation
+
+**🔐 Enterprise Authentication**
+Centralized Keycloak OIDC authentication ensures secure access across all components with session bridging to ReportServer for seamless enterprise integration.
 
 ## 🚀 Key Features
 
@@ -69,15 +142,14 @@ Start the entire application stack with one command:
 # Navigate to the Aspire host directory
 cd RSChatApp.AppHost
 
-# Start all services (Ollama, Qdrant, MCP Server, Web App)
+# Start all services (Ollama with auto-downloaded models, Qdrant, MCP Server, Web App)
 dotnet run
 ```
-0--Requires setup reportserver
 
 This will automatically:
-- ✅ Start **Ollama** with GPU support (if available)
-- ✅ Pull required AI models (configurable)
-- ✅ Start **Qdrant** vector database with persistent storage
+- ✅ Start **Ollama** in Docker with GPU support (if available)
+- ✅ Pull and configure required AI models automatically (configurable in appsettings.json)
+- ✅ Start **Qdrant** vector database in Docker with persistent storage
 - ✅ Launch the **MCP Server** with authentication
 - ✅ Start the **Blazor Web Application**
 - ✅ Open the **Aspire Dashboard** for monitoring
@@ -87,6 +159,8 @@ This will automatically:
 - 🔧 **Aspire Dashboard**: `http://localhost:15986`
 - 🤖 **MCP Server API**: `http://localhost:5002`
 - 📊 **Qdrant Dashboard**: `http://localhost:6333/dashboard`
+
+**Note:** The first run may take a few minutes as Docker images are downloaded and AI models are pulled automatically.
 
 ## Core Components
 
@@ -132,11 +206,11 @@ This will automatically:
 ## Prerequisites
 
 - .NET 9.0 SDK or later
-- Java JDK 17 or later (for ReportServer)
-- Docker (for Aspire containerized resources)
-- Keycloak 22+ (for authentication)
-- Ollama (for AI model inference)
-- An Ollama-compatible AI model (default: iamcoder18/acemath-instruct:7b for chat, llama3.2:1b for embeddings)
+- Docker Desktop (for all containerized services)
+- Java JDK 17 or later (for ReportServer - if running locally)
+- Keycloak 22+ (for authentication - can be run via Docker)
+
+**Note:** Ollama, Qdrant, and AI models are automatically managed by the .NET Aspire AppHost via Docker containers - no manual installation required!
 
 ## Getting Started
 
@@ -483,11 +557,18 @@ Configure ReportServer to use Keycloak for authentication by updating the securi
 }
 ```
 
-### **2. Individual Service Setup**
+### **2. Alternative: Manual Service Setup**
 
-If you prefer to run services individually instead of using Aspire:
+**⚠️ Note:** We recommend using the .NET Aspire approach above as it automatically handles Docker containers, model downloads, and service orchestration. However, if you need to run services individually:
 
-#### **Start Keycloak**
+#### **Prerequisites for Manual Setup**
+- Docker Desktop running
+- .NET 9.0 SDK
+- All services will still use Docker containers (managed manually)
+
+#### **Start Required Services**
+
+**1. Start Keycloak (Authentication)**
 ```bash
 docker run -d --name keycloak -p 8080:8080 \
   -e KEYCLOAK_ADMIN=admin \
@@ -495,40 +576,39 @@ docker run -d --name keycloak -p 8080:8080 \
   quay.io/keycloak/keycloak:22.0 start-dev
 ```
 
-#### **Start Qdrant**
+**2. Start Qdrant (Vector Database)**
 ```bash
 docker run -d --name qdrant -p 6333:6333 -p 6334:6334 \
   -v qdrant_storage:/qdrant/storage \
   qdrant/qdrant:latest
 ```
 
-#### **Start Ollama**
+**3. Start Ollama (AI Models)**
 ```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
+# Start Ollama in Docker with GPU support
+docker run -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
 
 # Pull required models
-ollama pull iamcoder18/acemath-instruct:7b
-ollama pull llama3.2:1b
-
-# Start Ollama server
-ollama serve
+docker exec ollama ollama pull mistral-nemo:12b
+docker exec ollama ollama pull llama3.2:1b
 ```
 
-#### **Start ReportServer**
+**4. Start ReportServer (Optional - if available)**
 ```bash
 # Assuming Bitnami installation
 sudo /opt/bitnami/reportserver/ctlscript.sh start
 ```
 
-#### **Start MCP Server**
+**5. Start MCP Server**
 ```bash
 cd RsMcpServer.Web
 dotnet run
 ```
 
-#### **Start Chat Application**
+**6. Start Chat Application**
 ```bash
 cd RSChatApp.Web
 dotnet run
 ```
+
+**Note:** Manual setup requires you to configure all the networking and dependencies yourself. The Aspire approach handles all of this automatically with proper service discovery and health checks.

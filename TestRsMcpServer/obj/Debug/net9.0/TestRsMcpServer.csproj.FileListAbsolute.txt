@@ -590,3 +590,5 @@
 /home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/bin/Debug/net9.0/RsMcpServer.Web
 /home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/bin/Debug/net9.0/RsMcpServer.Web.dll
 /home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/bin/Debug/net9.0/RsMcpServer.Web.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/bin/Debug/net9.0/RsMcpServer.Identity.dll
+/home/markomoto/source/repos/mcp-server-javarpc/TestRsMcpServer/bin/Debug/net9.0/RsMcpServer.Identity.pdb
