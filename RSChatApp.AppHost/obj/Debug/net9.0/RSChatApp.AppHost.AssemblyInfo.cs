@@ -25,7 +25,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a887df5e4e9c4c3eae39d36ca7eb865d4d4a6379")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4385f5ae192002e96e058092a0f47b2db013f948")]
 [assembly: System.Reflection.AssemblyProductAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RSChatApp.AppHost")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,6 +1,6 @@
 # Enterprise MCP Server for ReportServer Integration
 
-A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer applications. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development and enterprise-grade authentication.
+A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development and enterprise-grade authentication.
 
 ## 🏗️ Architecture Overview
 
