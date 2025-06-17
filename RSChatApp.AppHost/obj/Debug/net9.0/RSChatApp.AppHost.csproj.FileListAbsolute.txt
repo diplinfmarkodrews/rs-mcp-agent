@@ -137,3 +137,4 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/obj/Debug/net9.0/ref/RSChatApp.AppHost.dll
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/obj/Debug/net9.0/Aspire/references/ReportServerRPCClient.ProjectMetadata.g.cs
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/obj/Debug/net9.0/Aspire/references/RsMcpServer_Web.ProjectMetadata.g.cs
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.AppHost/bin/Debug/net9.0/Aspire.Hosting.Keycloak.dll

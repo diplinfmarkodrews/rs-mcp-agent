@@ -18,16 +18,15 @@ var vectorDB = builder.AddQdrant("vectordb")
 var mcpServer = builder.AddProject<Projects.RsMcpServer_Web>("rs-mcp-server");
 
 var webApp = builder.AddProject<Projects.RSChatApp_Web>("aichatweb-app");
+
 webApp
     .WithReference(chat)
     .WithReference(embeddings)
     .WithReference(mcpServer)
-    .WaitFor(chat)
-    .WaitFor(mcpServer)
-    .WaitFor(embeddings);
-webApp
     .WithReference(vectorDB)
+    .WaitFor(chat)
+    .WaitFor(embeddings)
+    .WaitFor(mcpServer)
     .WaitFor(vectorDB);
-
 
 builder.Build().Run();

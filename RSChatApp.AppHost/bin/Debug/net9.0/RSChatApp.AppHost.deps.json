@@ -10,6 +10,7 @@
         "dependencies": {
           "Aspire.Dashboard.Sdk.linux-x64": "9.3.0",
           "Aspire.Hosting.AppHost": "9.3.0",
+          "Aspire.Hosting.Keycloak": "9.3.1-preview.1.25305.6",
           "Aspire.Hosting.Orchestration.linux-x64": "9.3.0",
           "Aspire.Hosting.Qdrant": "9.3.0",
           "CommunityToolkit.Aspire.Hosting.Ollama": "9.4.1-beta.291"
@@ -19,7 +20,7 @@
         }
       },
       "Aspire.Dashboard.Sdk.linux-x64/9.3.0": {},
-      "Aspire.Hosting/9.3.0": {
+      "Aspire.Hosting/9.3.1": {
         "dependencies": {
           "AspNetCore.HealthChecks.Uris": "9.0.0",
           "Google.Protobuf": "3.30.2",
@@ -46,8 +47,8 @@
         },
         "runtime": {
           "lib/net8.0/Aspire.Hosting.dll": {
-            "assemblyVersion": "9.3.0.0",
-            "fileVersion": "9.300.25.26520"
+            "assemblyVersion": "9.3.1.0",
+            "fileVersion": "9.300.125.30506"
           }
         },
         "resources": {
@@ -95,7 +96,7 @@
       "Aspire.Hosting.AppHost/9.3.0": {
         "dependencies": {
           "AspNetCore.HealthChecks.Uris": "9.0.0",
-          "Aspire.Hosting": "9.3.0",
+          "Aspire.Hosting": "9.3.1",
           "Google.Protobuf": "3.30.2",
           "Grpc.AspNetCore": "2.71.0",
           "Grpc.Net.ClientFactory": "2.71.0",
@@ -125,11 +126,44 @@
           }
         }
       },
+      "Aspire.Hosting.Keycloak/9.3.1-preview.1.25305.6": {
+        "dependencies": {
+          "AspNetCore.HealthChecks.Uris": "9.0.0",
+          "Aspire.Hosting": "9.3.1",
+          "Google.Protobuf": "3.30.2",
+          "Grpc.AspNetCore": "2.71.0",
+          "Grpc.Net.ClientFactory": "2.71.0",
+          "Grpc.Tools": "2.72.0",
+          "Humanizer.Core": "2.14.1",
+          "JsonPatch.Net": "3.3.0",
+          "KubernetesClient": "16.0.7",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.4",
+          "Microsoft.Extensions.Configuration.Binder": "9.0.4",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.4",
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.4",
+          "Microsoft.Extensions.Hosting": "9.0.4",
+          "Microsoft.Extensions.Hosting.Abstractions": "9.0.4",
+          "Microsoft.Extensions.Http": "9.0.4",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.4",
+          "Microsoft.Extensions.Options": "9.0.4",
+          "Microsoft.Extensions.Primitives": "9.0.4",
+          "Newtonsoft.Json": "13.0.3",
+          "Polly.Core": "8.5.2",
+          "StreamJsonRpc": "2.21.69",
+          "System.IO.Hashing": "9.0.4"
+        },
+        "runtime": {
+          "lib/net8.0/Aspire.Hosting.Keycloak.dll": {
+            "assemblyVersion": "9.3.1.0",
+            "fileVersion": "9.300.125.30506"
+          }
+        }
+      },
       "Aspire.Hosting.Orchestration.linux-x64/9.3.0": {},
       "Aspire.Hosting.Qdrant/9.3.0": {
         "dependencies": {
           "AspNetCore.HealthChecks.Uris": "9.0.0",
-          "Aspire.Hosting": "9.3.0",
+          "Aspire.Hosting": "9.3.1",
           "Google.Protobuf": "3.30.2",
           "Grpc.AspNetCore": "2.71.0",
           "Grpc.Net.ClientFactory": "2.71.0",
@@ -174,7 +208,7 @@
       },
       "CommunityToolkit.Aspire.Hosting.Ollama/9.4.1-beta.291": {
         "dependencies": {
-          "Aspire.Hosting": "9.3.0",
+          "Aspire.Hosting": "9.3.1",
           "OllamaSharp": "5.1.12"
         },
         "runtime": {
@@ -1035,12 +1069,12 @@
       "path": "aspire.dashboard.sdk.linux-x64/9.3.0",
       "hashPath": "aspire.dashboard.sdk.linux-x64.9.3.0.nupkg.sha512"
     },
-    "Aspire.Hosting/9.3.0": {
+    "Aspire.Hosting/9.3.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-y9MYFzHo87H9OI8/GUjzekiMJf2uVAVJROv6xiuPa//AMFvkP2W5ELkcc3/FxY0EW2EX2erkqTeDE3uhw6P/pQ==",
-      "path": "aspire.hosting/9.3.0",
-      "hashPath": "aspire.hosting.9.3.0.nupkg.sha512"
+      "sha512": "sha512-9yVRi8TFV2VQD/7UFT2RezaPKa/91JisKIADAyrkaqJzNFBRQbh/z7xi4MQ6Bzugav/atOdAx4K/NCBdC6LZTg==",
+      "path": "aspire.hosting/9.3.1",
+      "hashPath": "aspire.hosting.9.3.1.nupkg.sha512"
     },
     "Aspire.Hosting.AppHost/9.3.0": {
       "type": "package",
@@ -1048,6 +1082,13 @@
       "sha512": "sha512-/nNngW76y65NWOofCB+/t1bDZCacPIhBk9YZVygHlnBZaZS8d1CbLxQF4zMDQucQeaaY5BFBQUAtcc3PGLxHjA==",
       "path": "aspire.hosting.apphost/9.3.0",
       "hashPath": "aspire.hosting.apphost.9.3.0.nupkg.sha512"
+    },
+    "Aspire.Hosting.Keycloak/9.3.1-preview.1.25305.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pe8UD8VSmu4+Owz0K+Sjun+5j4eUhQWbdwfUqbHI1MyrCAf8BdObI/KxJlgmHyurvfF9OPsrxafy/o17GFsRcA==",
+      "path": "aspire.hosting.keycloak/9.3.1-preview.1.25305.6",
+      "hashPath": "aspire.hosting.keycloak.9.3.1-preview.1.25305.6.nupkg.sha512"
     },
     "Aspire.Hosting.Orchestration.linux-x64/9.3.0": {
       "type": "package",

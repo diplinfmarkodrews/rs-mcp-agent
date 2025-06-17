@@ -146,6 +146,12 @@ cd RSChatApp.AppHost
 dotnet run
 ```
 
+**💡 Windows Users Note:** If you're using Windows with Docker Desktop, you may need to set up a PowerShell alias for Docker Compose. The Aspire orchestration API uses the legacy `docker-compose` syntax. Run this command in PowerShell as Administrator:
+
+```powershell
+Set-Alias -Name docker-compose -Value 'docker compose'
+```
+
 This will automatically:
 - ✅ Start **Ollama** in Docker with GPU support (if available)
 - ✅ Pull and configure required AI models automatically (configurable in appsettings.json)
