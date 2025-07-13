@@ -34,7 +34,7 @@ public class TerminalTool
     /// Executes a terminal command on the report server
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server")]
-    public async Task<Result<CommandResult>> ExecuteCommandAsync(
+    public async Task<string> ExecuteCommandAsync(
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
@@ -46,7 +46,8 @@ public class TerminalTool
         if (sessionInfo?.ReportServerSessionId == null)
         {
             _logger.LogWarning("No active ReportServer session available. Authentication required.");
-            return new Result<CommandResult>(new AuthenticationException("Authentication required. Please authenticate with the Report Server first."));
+            return JsonSerializer.Serialize(
+                new Result<CommandResult>(new AuthenticationException("Authentication required. Please authenticate with the Report Server first.")));
         }
 
         // var terminalSessionInfo = await _reportServer.InitSessionAsync();
@@ -60,7 +61,7 @@ public class TerminalTool
         // TODO: make it long running
         var cmdResult = await _reportServer.ExecuteAsync(sessionInfo.ReportServerSessionId, command, cancellationToken);
         
-        return cmdResult;
+        return JsonSerializer.Serialize(cmdResult);
     }
 }
 

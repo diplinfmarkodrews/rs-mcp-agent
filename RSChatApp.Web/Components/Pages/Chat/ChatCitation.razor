@@ -34,5 +34,11 @@
             var search = Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
             viewerUrl = $"lib/pdf_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}#page={PageNumber}&search={HttpUtility.UrlEncode(search)}&phrase=true";
         }
+        if (File.EndsWith(".txt"))
+        {
+            var search = Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
+            viewerUrl = $"lib/text_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}&search={HttpUtility.UrlEncode(search)}&phrase=true";
+        }
+
     }
 }
