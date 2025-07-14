@@ -9,10 +9,9 @@ using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
-
+// builder.Configuration.AddJsonFile("prompts.json", optional: true, reloadOnChange: true);
 // Add Keycloak authentication
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
-
 builder.Services.AddHttpClient("RsMcpServer", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Address"] 
@@ -21,7 +20,7 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
 });
 #region McpClientConfiguration
 // Creating McpClient with SSE transport
-await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(
+await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
         new SseClientTransportOptions
         {
@@ -34,12 +33,22 @@ await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(
         loggerFactory: builder.Services.BuildServiceProvider()
             .GetRequiredService<ILoggerFactory>()
     ));
-builder.Services.AddSingleton(mcpClient);
+builder.Services.AddSingleton(mcpClientRS);
+// Create an MCPClient for the GitHub server
+await using IMcpClient mcpClientSeqThinking = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
+{
+    Name = "Sequential-Thinking",
+    Command = "npx",
+    Arguments = ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+}));
 
-var tools = await mcpClient.ListToolsAsync();
+
+var toolsRS = await mcpClientRS.ListToolsAsync();
+var toolsSeqThinking = await mcpClientSeqThinking.ListToolsAsync();
 IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
 #pragma warning disable SKEXP0001
-kernelBuilder.Plugins.AddFromFunctions("Tools", tools.Select(aiFunction => aiFunction.AsKernelFunction()));
+kernelBuilder.Plugins.AddFromFunctions("ReportServerTools", toolsRS.Select(aiFunction => aiFunction.AsKernelFunction()));
+kernelBuilder.Plugins.AddFromFunctions("SequentialThinkingTools", toolsSeqThinking.Select(aiFunction => aiFunction.AsKernelFunction()));
 #pragma warning restore SKEXP0001
 #endregion
 

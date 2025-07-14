@@ -4,6 +4,7 @@ obj/
 out/
 
 # Build results
+[Dd]ata/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

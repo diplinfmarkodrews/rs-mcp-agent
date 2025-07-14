@@ -1,10 +1,11 @@
 ﻿@page "/"
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 @using System.ComponentModel
-@using Microsoft.AspNetCore.Authorization
+@* @using Microsoft.AspNetCore.Authorization *@
 @inject IChatClient ChatClient
 @inject NavigationManager Nav
 @inject SemanticSearch Search
+
 @implements IDisposable
 
 <PageTitle>Chat</PageTitle>
@@ -14,8 +15,8 @@
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
         <div>To get started, try asking about these example documents. You can replace these with your own data and replace this message.</div>
-        <ChatCitation File="Example_Emergency_Survival_Kit.pdf"/>
-        <ChatCitation File="Example_GPS_Watch.pdf"/>
+        <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
+        <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
     </NoMessagesContent>
 </ChatMessageList>
 
@@ -27,19 +28,18 @@
 @code {
     private const string SystemPrompt = @"
         
-        You are an assistant who answers questions about information you retrieve.
-        Do not answer questions about anything else.
-        Use only simple markdown to format your responses.
+        You are an assistant for the ReportServer and a omnipotent groovy script developer. 
 
-        Use the search tool to find relevant information. When you do this, end your
-        reply with citations in the special XML format:
-
-        <citation filename='string' page_number='number'>exact quote here</citation>
-
-        Always include the citation in your response if there are results.
-
-        The quote must be max 5 words, taken word-for-word from the search result, and is the basis for why the citation is relevant.
-        Don't refer to the presence of citations; just emit these tags right at the end, with no surrounding text.
+        Use the search tool to find relevant information in documentation, 
+        scripts and terminal commands. 
+        The documentation consists of the following files:
+        - ReportServer-5_0-ConfigurationGuide-En.pdf
+        - ReportServer-5_0-UserGuide-De.pdf
+        - ReportServer-5_0-AdminGuide-En.pdf
+        - ReportServer-5_0-ScriptGuide-En.pdf
+         
+        Respect the language of each document, which is reflected by its ending En(english) or De(German). 
+        Use only german to interact with the user.        
         ";
 
     private readonly ChatOptions chatOptions = new();

@@ -166,3 +166,5 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/69lch3e875-09r9qrxbkq.gz
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/RsMcpServer.Identity.dll
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/RsMcpServer.Identity.pdb
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/78m6573e3e-26gvj9cro6.gz
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/dsqrm1ks7s-wawbnuq066.gz
