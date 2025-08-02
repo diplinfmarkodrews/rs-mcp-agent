@@ -7,6 +7,13 @@
     margin-bottom: 1.5rem; 
 }
 
+.header-buttons-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
 h1 {
     overflow: hidden;
     text-overflow: ellipsis;

@@ -120,8 +120,6 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/5ig5dg5sgy-3yynpeuhzu.gz
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/zl88qi70x3-qy44eny07z.gz
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/34e6hiwsul-j6nqk4dcso.gz
-/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/bnjvizor5b-hun8d8elfp.gz
-/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/l02thujvw7-hun8d8elfp.gz
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/staticwebassets.build.json
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/staticwebassets.build.json.cache
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/staticwebassets.development.json
@@ -176,3 +174,6 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/Microsoft.Extensions.AI.OpenAI.dll
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/ModelContextProtocol.Core.dll
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/NodaTime.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/scopedcss/Components/Pages/Login/LoginModal.razor.rz.scp.css
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/bnjvizor5b-5rrqsm4uo7.gz
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/l02thujvw7-5rrqsm4uo7.gz

@@ -5,6 +5,7 @@
 @using System.Diagnostics.CodeAnalysis
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.SemanticKernel
+@using RSChatApp.Web.Components.Pages.Login
 @inject IChatClient ChatClient
 @inject Kernel Kernel
 @inject NavigationManager Nav
@@ -14,11 +15,11 @@
 
 <PageTitle>Chat</PageTitle>
 
-<ChatHeader OnNewChat="@ResetConversationAsync" />
+<ChatHeader OnNewChat="@ResetConversationAsync" OnLoginRequested="@ShowLoginModal" />
 
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
-        <div>Willkommen beim ReportServer Agent.</div>
+        <div>Welcome to the ReportServer Agent.</div>
         <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
         <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
         <ChatCitation File="ReportServer-5_0-AdminGuide-En.pdf"/>
@@ -30,6 +31,8 @@
     <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" />
     <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
 </div>
+
+<LoginModal Show="@showLoginModal" ShowChanged="@OnLoginModalShowChanged" OnLoginSuccess="@OnLoginSuccess" />
 
 @code {
     private const string SystemPrompt = @"
@@ -53,6 +56,7 @@
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
     private ChatSuggestions? chatSuggestions;
+    private bool showLoginModal = false;
 
  
     [Experimental("SKEXP0001")]
@@ -129,6 +133,25 @@
         var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults: 5);
         return results.Select(result =>
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
+    }
+
+    private async Task ShowLoginModal()
+    {
+        showLoginModal = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLoginModalShowChanged(bool show)
+    {
+        showLoginModal = show;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnLoginSuccess()
+    {
+        showLoginModal = false;
+        await InvokeAsync(StateHasChanged);
+        // You can add additional logic here after successful login
     }
 
     public void Dispose()
