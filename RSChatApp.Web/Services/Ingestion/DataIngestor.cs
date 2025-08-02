@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.AI;
 using Microsoft.Extensions.VectorData;
+using RSChatApp.Web.Models.Ingestion;
 
 namespace RSChatApp.Web.Services.Ingestion;
 

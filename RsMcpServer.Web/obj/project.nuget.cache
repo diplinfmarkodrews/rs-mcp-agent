@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "TqHhTG589i4=",
+  "dgSpecHash": "lmnFqFWJdSs=",
   "success": true,
   "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Web/RsMcpServer.Web.csproj",
   "expectedPackageFiles": [
@@ -29,7 +29,7 @@
     "/home/markomoto/.nuget/packages/microsoft.extensions.configuration.json/9.0.5/microsoft.extensions.configuration.json.9.0.5.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.extensions.configuration.usersecrets/9.0.5/microsoft.extensions.configuration.usersecrets.9.0.5.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.extensions.dependencyinjection/9.0.5/microsoft.extensions.dependencyinjection.9.0.5.nupkg.sha512",
-    "/home/markomoto/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.5/microsoft.extensions.dependencyinjection.abstractions.9.0.5.nupkg.sha512",
+    "/home/markomoto/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.7/microsoft.extensions.dependencyinjection.abstractions.9.0.7.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.extensions.dependencyinjection.autoactivation/9.5.0/microsoft.extensions.dependencyinjection.autoactivation.9.5.0.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.extensions.diagnostics/9.0.5/microsoft.extensions.diagnostics.9.0.5.nupkg.sha512",
     "/home/markomoto/.nuget/packages/microsoft.extensions.diagnostics.abstractions/9.0.5/microsoft.extensions.diagnostics.abstractions.9.0.5.nupkg.sha512",

@@ -14,7 +14,7 @@ using RsMcpServer.Web.McpTools;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
 builder.Services.AddLogging(logging => 
 {
     logging.AddConsole();
@@ -43,14 +43,12 @@ kernelBuilder.Services.AddReportServerRpcClient(reportServerAddress)
 kernelBuilder.Plugins.AddFromType<TerminalTool>();
 var kernel = kernelBuilder.Build();
 
-// First set up service collection
 builder.Services.AddSingleton(kernel);
-var mcpBuilder = builder.Services.AddMcpServer()
+builder.Services.AddMcpServer()
     .WithTools(kernel.Plugins)
     // .WithHttpLogging(HttpLoggingFields.All, -1, -1)
     .WithHttpTransport();
 
-// Build the app AFTER all configuration is done
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

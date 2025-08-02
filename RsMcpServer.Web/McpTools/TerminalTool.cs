@@ -14,12 +14,13 @@ namespace RsMcpServer.Web.McpTools;
 /// <summary>
 /// MCP Server implementation for terminal commands using Microsoft.Extensions.AI MCP SDK
 /// </summary>
+
 public class TerminalTool
 {
     private readonly ILogger<TerminalTool> _logger;
     private readonly IReportServerClient _reportServer;
     private readonly ISessionBridgeService _sessionBridge;
-
+    
     public TerminalTool(
         ILogger<TerminalTool> logger, 
         IReportServerClient reportServer,

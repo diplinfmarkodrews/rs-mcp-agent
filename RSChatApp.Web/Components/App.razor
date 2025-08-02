@@ -1,7 +1,5 @@
-﻿@using RSChatApp.Web.Components.Pages.Login
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,7 +11,6 @@
 </head>
 
 <body>
-    <LoginModal Show="@showLogin" ShowChanged="@((bool v) => showLogin = v)" OnLoginSuccess="OnLoginSuccess" />
     <Routes @rendermode="@renderMode" />
     <script src="@Assets["app.js"]" type="module"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
@@ -23,11 +20,4 @@
 
 @code {
     private readonly IComponentRenderMode renderMode = new InteractiveServerRenderMode(prerender: false);
-    private bool showLogin = true;
-
-    private Task OnLoginSuccess()
-    {
-        // You can add additional logic here if needed
-        return Task.CompletedTask;
-    }
 }

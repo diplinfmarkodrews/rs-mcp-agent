@@ -1,4 +1,6 @@
-﻿namespace RSChatApp.Web.Services.Ingestion;
+﻿using RSChatApp.Web.Models.Ingestion;
+
+namespace RSChatApp.Web.Services.Ingestion;
 
 public interface IIngestionSource
 {

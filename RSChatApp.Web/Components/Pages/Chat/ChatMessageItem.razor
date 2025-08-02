@@ -12,7 +12,7 @@ else if (Message.Role == ChatRole.Assistant)
 {
     foreach (var content in Message.Contents)
     {
-        if (content is TextContent { Text: { Length: > 0 } text })
+        if (content is Microsoft.Extensions.AI.TextContent { Text: { Length: > 0 } text })
         {
             <div class="assistant-message">
                 <div>
@@ -33,7 +33,7 @@ else if (Message.Role == ChatRole.Assistant)
                 </div>
             </div>
         }
-        else if (content is FunctionCallContent { Name: "Search" } fcc && fcc.Arguments?.TryGetValue("searchPhrase", out var searchPhrase) is true)
+        else if (content is Microsoft.Extensions.AI.FunctionCallContent { Name: "Search" } fcc && fcc.Arguments?.TryGetValue("searchPhrase", out var searchPhrase) is true)
         {
             <div class="assistant-search">
                 <div class="assistant-search-icon">

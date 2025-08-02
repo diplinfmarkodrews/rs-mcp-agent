@@ -1,4 +1,5 @@
 ﻿using Microsoft.SemanticKernel.Text;
+using RSChatApp.Web.Models.Ingestion;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;

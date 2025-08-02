@@ -1,0 +1,69 @@
+@* $1$ Backup of original App.razor #1# *@
+@* @using RSChatApp.Web.Components.Pages.Login *@
+@* @using Microsoft.AspNetCore.Components.Authorization *@
+@* @using Microsoft.AspNetCore.Components.Routing *@
+@* @using Microsoft.AspNetCore.Components.Web *@
+@* @using Microsoft.AspNetCore.Components.Web.Virtualization *@
+@* @using Microsoft.JSInterop *@
+@* @inject AuthenticationStateProvider AuthenticationStateProvider *@
+@* @inject NavigationManager Navigation *@
+@* <!DOCTYPE html> *@
+@* <html lang="en"> *@
+@* *@
+@* <head> *@
+@*     <meta charset="utf-8" /> *@
+@*     <meta name="viewport" content="width=device-width, initial-scale=1.0" /> *@
+@*     <base href="/" /> *@
+@*     <link rel="stylesheet" href="@Assets["app.css"]" /> *@
+@*     <link rel="stylesheet" href="@Assets["RSChatApp.Web.styles.css"]" /> *@
+@*     <ImportMap /> *@
+@*     <HeadOutlet @rendermode="@renderMode" /> *@
+@* </head> *@
+@* *@
+@* <body> *@
+@* <div class="auth-header"> *@
+@*     <AuthorizeView> *@
+@*         <Authorized> *@
+@*             <span>Welcome, @context.User.Identity?.Name</span> *@
+@*             <button @onclick="Logout">Logout</button> *@
+@*         </Authorized> *@
+@*         <NotAuthorized> *@
+@*             <button @onclick="ShowLoginModal">Login</button> *@
+@*         </NotAuthorized> *@
+@*     </AuthorizeView> *@
+@* </div> *@
+@* *@
+@* <LoginModal Show="@showLogin" ShowChanged="@((bool v) => showLogin = v)" OnLoginSuccess="OnLoginSuccess" /> *@
+@* *@
+@* <CascadingAuthenticationState> *@
+@*     <Routes @rendermode="@renderMode" /> *@
+@* </CascadingAuthenticationState> *@
+@* <script src="@Assets["app.js"]" type="module"></script> *@
+@* <script src="@Assets["_framework/blazor.web.js"]"></script> *@
+@* </body> *@
+@* *@
+@* </html> *@
+@* *@
+@* @code { *@
+@*     // Use interactive rendering but with specific configuration to avoid conflicts *@
+@*     private readonly IComponentRenderMode renderMode = new InteractiveServerRenderMode(prerender: false); *@
+@*     private bool showLogin = false; *@
+@* *@
+@*     private void ShowLoginModal() *@
+@*     { *@
+@*         showLogin = true; *@
+@*     } *@
+@* *@
+@*     private Task OnLoginSuccess() *@
+@*     { *@
+@*         showLogin = false; *@
+@*         StateHasChanged(); *@
+@*         return Task.CompletedTask; *@
+@*     } *@
+@* *@
+@*     private void Logout() *@
+@*     { *@
+@*         // Clear authentication and redirect to refresh the page *@
+@*         Navigation.NavigateTo("/", true); *@
+@*     } *@
+@* } *@

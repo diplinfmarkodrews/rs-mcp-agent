@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.VectorData;
 
-namespace RSChatApp.Web.Services;
+namespace RSChatApp.Web.Models.Ingestion;
 
 public class IngestedDocument
 {

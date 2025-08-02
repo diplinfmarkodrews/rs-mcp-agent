@@ -24,6 +24,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/App_Backup.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHBfQmFja3VwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

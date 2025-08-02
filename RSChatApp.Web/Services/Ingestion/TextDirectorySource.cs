@@ -1,4 +1,5 @@
 using System.IO;
+using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Services;
 
 namespace RSChatApp.Web.Services.Ingestion;

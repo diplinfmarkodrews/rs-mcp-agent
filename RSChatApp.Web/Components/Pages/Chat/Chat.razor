@@ -1,11 +1,15 @@
 ﻿@page "/"
 @* @attribute [Authorize] *@
+@attribute [AllowAnonymous]
 @using System.ComponentModel
-@* @using Microsoft.AspNetCore.Authorization *@
+@using System.Diagnostics.CodeAnalysis
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.SemanticKernel
 @inject IChatClient ChatClient
+@inject Kernel Kernel
 @inject NavigationManager Nav
 @inject SemanticSearch Search
-
+@inject ILogger<App> Logger
 @implements IDisposable
 
 <PageTitle>Chat</PageTitle>
@@ -14,9 +18,11 @@
 
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
-        <div>To get started, try asking about these example documents. You can replace these with your own data and replace this message.</div>
+        <div>Willkommen beim ReportServer Agent.</div>
         <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
         <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
+        <ChatCitation File="ReportServer-5_0-AdminGuide-En.pdf"/>
+        <ChatCitation File="ReportServer-5_0-ScriptGuide-En.pdf"/>
     </NoMessagesContent>
 </ChatMessageList>
 
@@ -27,7 +33,6 @@
 
 @code {
     private const string SystemPrompt = @"
-        
         You are an assistant for the ReportServer and a omnipotent groovy script developer. 
 
         Use the search tool to find relevant information in documentation, 
@@ -39,7 +44,7 @@
         - ReportServer-5_0-ScriptGuide-En.pdf
          
         Respect the language of each document, which is reflected by its ending En(english) or De(German). 
-        Use only german to interact with the user.        
+          
         ";
 
     private readonly ChatOptions chatOptions = new();
@@ -49,10 +54,30 @@
     private ChatInput? chatInput;
     private ChatSuggestions? chatSuggestions;
 
+ 
+    [Experimental("SKEXP0001")]
     protected override void OnInitialized()
     {
         messages.Add(new(ChatRole.System, SystemPrompt));
-        chatOptions.Tools = [AIFunctionFactory.Create(SearchAsync)];
+        
+        // Debug logging to see what kernel plugins are available
+        var kernelPlugins = Kernel.Plugins.ToList();
+        Logger.LogInformation("Total kernel plugins available: {kernelPluginsCount}", kernelPlugins.Count);
+
+        // Create a list of all tools (local search + MCP tools)
+        var allTools = new List<AITool>
+        {
+            AIFunctionFactory.Create(SearchAsync,  "Search", "Search for information using a phrase or keyword"),
+        };
+        
+        // Add MCP tools
+        foreach (var plugin in kernelPlugins)
+        {
+            var aiFunctions = plugin.AsAIFunctions();
+            allTools.AddRange(aiFunctions);
+        }
+        Logger.LogInformation("Total tools registered for chat: {allToolsCount}", allTools.Count);
+        chatOptions.Tools = allTools;
     }
 
     private async Task AddUserMessageAsync(ChatMessage userMessage)

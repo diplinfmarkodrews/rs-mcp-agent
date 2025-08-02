@@ -8,12 +8,12 @@ namespace RsMcpServer.Identity.Middleware;
 /// <summary>
 /// Middleware for handling authentication session management
 /// </summary>
-public class AuthenticationSessionMiddleware
+public class AuthenticatedSessionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<AuthenticationSessionMiddleware> _logger;
+    private readonly ILogger<AuthenticatedSessionMiddleware> _logger;
 
-    public AuthenticationSessionMiddleware(RequestDelegate next, ILogger<AuthenticationSessionMiddleware> logger)
+    public AuthenticatedSessionMiddleware(RequestDelegate next, ILogger<AuthenticatedSessionMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -89,8 +89,8 @@ public static class AuthenticationMiddlewareExtensions
     /// <summary>
     /// Adds authentication session middleware to the pipeline
     /// </summary>
-    public static IApplicationBuilder UseAuthenticationSession(this IApplicationBuilder builder)
+    public static IApplicationBuilder UseAuthenticatedSession(this IApplicationBuilder builder)
     {
-        return builder.UseMiddleware<AuthenticationSessionMiddleware>();
+        return builder.UseMiddleware<AuthenticatedSessionMiddleware>();
     }
 }

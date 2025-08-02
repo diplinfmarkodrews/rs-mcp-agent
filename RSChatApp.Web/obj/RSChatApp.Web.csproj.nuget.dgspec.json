@@ -107,7 +107,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -160,39 +160,39 @@
           "dependencies": {
             "Aspire.Qdrant.Client": {
               "target": "Package",
-              "version": "[9.3.0, )"
+              "version": "[9.4.0, )"
             },
             "CommunityToolkit.Aspire.OllamaSharp": {
               "target": "Package",
-              "version": "[9.4.1-beta.291, )"
+              "version": "[9.7.0, )"
             },
             "Microsoft.Extensions.AI": {
               "target": "Package",
-              "version": "[9.5.0, )"
+              "version": "[9.7.1, )"
             },
             "Microsoft.SemanticKernel.Connectors.Qdrant": {
               "target": "Package",
-              "version": "[1.53.0-preview, )"
+              "version": "[1.61.0-preview, )"
             },
             "Microsoft.SemanticKernel.Core": {
               "target": "Package",
-              "version": "[1.54.0, )"
+              "version": "[1.61.0, )"
             },
             "ModelContextProtocol-SemanticKernel": {
               "target": "Package",
-              "version": "[0.0.1-preview-15, )"
+              "version": "[0.3.0, )"
             },
             "ModelContextProtocol.AspNetCore": {
               "target": "Package",
-              "version": "[0.2.0-preview.2, )"
+              "version": "[0.3.0-preview.3, )"
             },
             "ModelContextProtocolServer.Sse": {
               "target": "Package",
-              "version": "[0.0.1-preview-06, )"
+              "version": "[0.4.0, )"
             },
             "OllamaSharp": {
               "target": "Package",
-              "version": "[5.1.18, )"
+              "version": "[5.3.3, )"
             },
             "PdfPig": {
               "target": "Package",
@@ -200,7 +200,7 @@
             },
             "System.Linq.Async": {
               "target": "Package",
-              "version": "[6.0.1, )"
+              "version": "[6.0.3, )"
             }
           },
           "imports": [
@@ -222,7 +222,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -281,7 +281,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -298,14 +298,14 @@
           "/home/markomoto/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {
               "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
@@ -326,8 +326,8 @@
         "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "dependencies": {
             "AutoMapper": {
               "target": "Package",
@@ -366,7 +366,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -424,7 +424,7 @@
             },
             "Microsoft.Extensions.DependencyInjection.Abstractions": {
               "target": "Package",
-              "version": "[9.0.5, )"
+              "version": "[9.0.7, )"
             },
             "Microsoft.Extensions.Hosting.Abstractions": {
               "target": "Package",
@@ -466,7 +466,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
