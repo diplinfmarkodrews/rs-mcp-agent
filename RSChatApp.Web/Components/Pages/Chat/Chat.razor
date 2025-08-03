@@ -5,10 +5,15 @@
 @inject Kernel Kernel
 @inject NavigationManager Nav
 @inject SemanticSearch Search
-@inject ILogger<App> Logger
+@inject IAuthenticationService AuthenticationService
+@inject ILoginModalService LoginModalService
+@inject ILogger<Chat> Logger
 @using System.ComponentModel
 @using System.Diagnostics.CodeAnalysis
+@using System.Text
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Primitives
+@using RSChatApp.Web.Services.Authentication
 @using RSChatApp.Web.Services.SemanticSearch
 @implements IDisposable
 
@@ -68,6 +73,8 @@
         var allTools = new List<AITool>
         {
             AIFunctionFactory.Create(SearchAsync,  "Search", "Search for information using a phrase or keyword"),
+            AIFunctionFactory.Create(IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
+            AIFunctionFactory.Create(LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated")
         };
         
         // Add MCP tools
@@ -130,7 +137,45 @@
         return results.Select(result =>
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
     }
-
+    
+    [Description("Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not")]
+    private async Task<string> IsAuthenticatedAsync()
+    {
+        // Check User authentication status and build a response
+        var authResult = await AuthenticationService.GetAuthenticationInfoAsync();
+        return authResult.IsAuthenticated 
+            ? new StringBuilder("User: ")
+                .Append(authResult.UserName)
+                .Append(" is authenticated with roles: ")
+                .AppendJoin(',', authResult.Roles)
+                .ToString() 
+            : "User is not authenticated";
+    }
+    
+    [Description("Requests the user to login when they need to access ReportServer MCP tools but are not authenticated")]
+    private async Task<string> LoginUserRequestedAsync()
+    {
+        // Request login through the service and wait for the result
+        try
+        {
+            var loginSuccessful = await LoginModalService.RequestLoginAsync();
+            if (loginSuccessful)
+            {
+                // Re-check authentication status after successful login
+                return await IsAuthenticatedAsync();
+            }
+            
+            return "Login was cancelled or failed. Please try again to access ReportServer MCP tools.";
+            
+        }
+        catch (Exception exc)
+        {
+            Logger.LogError(exc, "Error during login request");
+            return new StringBuilder("An error occurred while requesting login. Please try again later.")
+                .Append(exc.Message)
+                .ToString();
+        }
+    }
     public void Dispose()
         => currentResponseCancellation?.Cancel();
 }

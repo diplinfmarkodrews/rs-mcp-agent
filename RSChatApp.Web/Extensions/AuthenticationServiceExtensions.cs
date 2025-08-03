@@ -15,6 +15,7 @@ public static class AuthenticationServiceExtensions
     public static IServiceCollection AddCustomAuthenticationService(this IServiceCollection services)
     {
         services.AddScoped<IAuthenticationService, BlazorAuthenticationService>();
+        services.AddScoped<ILoginModalService, LoginModalService>();
         return services;
     }
 }

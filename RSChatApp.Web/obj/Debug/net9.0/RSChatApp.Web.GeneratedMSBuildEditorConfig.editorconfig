@@ -56,10 +56,6 @@ build_metadata.AdditionalFiles.CssScope = b-7bushche9i
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-jfu6func4n
 
-[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Layout/SurveyPrompt.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvU3VydmV5UHJvbXB0LnJhem9y
-build_metadata.AdditionalFiles.CssScope = b-ddp1s91vrg
-
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL0Vycm9yLnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-lbyclrzauh

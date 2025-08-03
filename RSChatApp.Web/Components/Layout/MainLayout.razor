@@ -1,5 +1,8 @@
 ﻿@using RSChatApp.Web.Components.Pages.Auth
+@using RSChatApp.Web.Services.Authentication
+@inject ILoginModalService LoginModalService
 @inherits LayoutComponentBase
+@implements IDisposable
 
 <div class="app-layout">
     <!-- Top Navigation Bar -->
@@ -30,8 +33,27 @@
 
 @code {
     private bool showLoginModal = false;
+    private TaskCompletionSource<bool>? currentLoginRequest;
 
-    private async Task HandleLoginRequested()
+    protected override void OnInitialized()
+    {
+        // Subscribe to login requests from other components
+        LoginModalService.LoginRequested += OnLoginRequested;
+    }
+
+    public void Dispose()
+    {
+        LoginModalService.LoginRequested -= OnLoginRequested;
+    }
+
+    private void OnLoginRequested(object? sender, TaskCompletionSource<bool> tcs)
+    {
+        currentLoginRequest = tcs;
+        showLoginModal = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async Task HandleLoginRequested()
     {
         showLoginModal = true;
         await InvokeAsync(StateHasChanged);
@@ -40,13 +62,28 @@
     private async Task OnLoginModalShowChanged(bool show)
     {
         showLoginModal = show;
+        
+        // If modal is being closed and we have a pending request, mark it as cancelled
+        if (!show && currentLoginRequest != null && !currentLoginRequest.Task.IsCompleted)
+        {
+            currentLoginRequest.SetResult(false);
+            currentLoginRequest = null;
+        }
+        
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnLoginSuccess()
     {
         showLoginModal = false;
+        
+        // If we have a pending request, mark it as successful
+        if (currentLoginRequest != null && !currentLoginRequest.Task.IsCompleted)
+        {
+            currentLoginRequest.SetResult(true);
+            currentLoginRequest = null;
+        }
+        
         await InvokeAsync(StateHasChanged);
-        // You can add additional logic here after successful login
     }
 }
