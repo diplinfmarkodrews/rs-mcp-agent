@@ -1,3 +1,38 @@
+.app-layout[b-jfu6func4n] {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-nav[b-jfu6func4n] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand[b-jfu6func4n] {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.nav-actions[b-jfu6func4n] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.main-content[b-jfu6func4n] {
+    flex: 1;
+    min-height: calc(100vh - 60px);
+}
+
 #blazor-error-ui[b-jfu6func4n] {
     color-scheme: light only;
     background: lightyellow;

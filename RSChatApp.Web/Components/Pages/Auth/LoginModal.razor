@@ -1,0 +1,346 @@
+@inject NavigationManager Navigation
+@inject ILogger<LoginModal> Logger
+@inject IJSRuntime JSRuntime
+@using Microsoft.Extensions.Logging
+
+@if (Show)
+{
+    <div class="modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1050; display: flex; justify-content: center; align-items: center;" @onclick="@CloseModal">
+        <div class="modal-content" style="background-color: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); max-width: 600px; width: 95%; max-height: 90vh; overflow: hidden;" @onclick:stopPropagation="true">
+            <div class="modal-header" style="padding: 1rem 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500;">Login to ReportServer</h5>
+                <button type="button" class="btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c757d; padding: 0; width: 1.5rem; height: 1.5rem;" @onclick="@CloseModal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body" style="padding: 0; height: 500px; position: relative;">
+                @if (hasError)
+                {
+                    <div class="text-center" style="padding: 2rem;">
+                        <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠</div>
+                        <h4 style="color: #dc3545; margin-bottom: 1rem;">Authentication Error</h4>
+                        <p style="margin-bottom: 1rem;">@errorMessage</p>
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn-default" @onclick="@RetryAuthentication" style="margin-right: 1rem;">
+                                <i class="fas fa-redo me-2"></i>
+                                Try Again
+                            </button>
+                          
+                        </div>
+                    </div>
+                }
+                else if (showIframe)
+                {
+                    <iframe @ref="authIframe" 
+                            src="@authUrl" 
+                            style="width: 100%; height: 100%; border: none;"
+                            @onload="OnIframeLoad">
+                    </iframe>
+                    @if (isLoading)
+                    {
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); display: flex; justify-content: center; align-items: center;">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading authentication...</span>
+                                </div>
+                                <div class="mt-2">Loading authentication...</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center" style="padding: 2rem;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Initializing authentication...</span>
+                        </div>
+                        <div class="mt-2">Initializing authentication...</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback<bool> ShowChanged { get; set; }
+    [Parameter] public EventCallback OnLoginSuccess { get; set; }
+
+    private bool isLoading = false;
+    private bool showIframe = false;
+    private bool hasError = false;
+    private string errorMessage = "";
+    private string authUrl = "";
+    private ElementReference authIframe;
+
+    private async Task CloseModal()
+    {
+        Show = false;
+        showIframe = false;
+        isLoading = false;
+        hasError = false;
+        errorMessage = "";
+        await ShowChanged.InvokeAsync(Show);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reset state and auto-start authentication when modal is shown
+        if (Show)
+        {
+            isLoading = false;
+            showIframe = false;
+            hasError = false;
+            errorMessage = "";
+            
+            // Automatically start the authentication process
+            await LoadKeycloakInIframe();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Show)
+        {
+            // Add JavaScript to listen for authentication completion
+            await JSRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    private async Task LoadKeycloakInIframe()
+    {
+        try
+        {
+            hasError = false;
+            errorMessage = "";
+            isLoading = true;
+            StateHasChanged();
+            
+            // Use the existing auth/challenge endpoint from KeycloakAuthenticationExtensions
+            var baseUrl = Navigation.BaseUri.TrimEnd('/');
+            var returnUrl = Uri.EscapeDataString($"{baseUrl}/auth/popup-auth-success");
+            authUrl = $"{baseUrl}/auth/challenge?returnUrl={returnUrl}";
+            
+            Logger.LogInformation("Loading authentication URL: {AuthUrl}", authUrl);
+            
+            showIframe = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading Keycloak in iframe");
+            ShowError("Failed to initialize authentication. Please check if the authentication service is available and try again.");
+        }
+    }
+
+    private async Task RetryAuthentication()
+    {
+        // Clear any existing error state        
+        hasError = false;
+        errorMessage = "";
+        StateHasChanged();
+
+        // Reload the authentication by calling LoadKeycloakInIframe again
+        await LoadKeycloakInIframe();
+    }
+
+    private void ShowError(string message)
+    {
+        hasError = true;
+        errorMessage = message;
+        isLoading = false;
+        showIframe = false;
+        StateHasChanged();
+    }
+
+    private async Task OnIframeLoad()
+    {
+        isLoading = false;
+        StateHasChanged();
+        
+        // Ensure authentication listener is set up
+        await JSRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
+        
+        // Start monitoring for authentication completion
+        await JSRuntime.InvokeVoidAsync("monitorAuthenticationIframe", authIframe);
+    }
+
+    [JSInvokable]
+    public async Task OnAuthenticationSuccess()
+    {
+        Logger.LogInformation("Authentication successful");
+        await OnLoginSuccess.InvokeAsync();
+        await CloseModal();
+    }
+
+    [JSInvokable]
+    public async Task OnAuthenticationError(string error)
+    {
+        Logger.LogError("Authentication error: {Error}", error);
+        
+        // Map common error messages to user-friendly ones
+        string userMessage = error.ToLowerInvariant() switch
+        {
+            var msg when msg.Contains("invalid_request") => "The authentication request was invalid. Please check your configuration.",
+            var msg when msg.Contains("access_denied") => "Access was denied. Please check your credentials and permissions.",
+            var msg when msg.Contains("server_error") => "The authentication server encountered an error. Please try again later.",
+            var msg when msg.Contains("temporarily_unavailable") => "The authentication service is temporarily unavailable. Please try again in a few moments.",
+            var msg when msg.Contains("connection") || msg.Contains("network") => "Unable to connect to the authentication service. Please check your network connection.",
+            _ => $"Authentication failed: {error}"
+        };
+        
+        ShowError(userMessage);
+    }
+
+    [JSInvokable]
+    public async Task OnConnectionError()
+    {
+        Logger.LogError("Connection error during authentication");
+        ShowError("Unable to connect to the authentication service. Please check if Keycloak is running and accessible.");
+    }
+
+    [JSInvokable]
+    public async Task OnAuthenticationRetry()
+    {
+        Logger.LogInformation("User requested authentication retry");
+        await RetryAuthentication();
+    }
+
+    [JSInvokable]
+    public async Task OnAuthenticationClose()
+    {
+        Logger.LogInformation("User requested to close authentication");
+        await CloseModal();
+    }
+}
+
+<style>
+    .btn-close::before {
+        display: none !important;
+    }
+</style>
+
+<script>
+    window.setupAuthenticationListener = (dotNetRef) => {
+        window.authDotNetRef = dotNetRef;
+        console.log('Authentication listener set up');
+        
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            console.log('Received message:', event.data);
+            if (event.data && typeof event.data === 'object') {
+                if (event.data.type === 'auth-success') {
+                    console.log('Authentication success received');
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationSuccess');
+                    }
+                } else if (event.data.type === 'auth-error') {
+                    console.log('Authentication error received:', event.data.message);
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', event.data.message || 'Authentication failed');
+                    }
+                } else if (event.data.type === 'auth-retry') {
+                    console.log('Authentication retry requested');
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationRetry');
+                    }
+                } else if (event.data.type === 'auth-close') {
+                    console.log('Authentication close requested');
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationClose');
+                    }
+                }
+            }
+        });
+    };
+
+    window.monitorAuthenticationIframe = (iframe) => {
+        console.log('Starting iframe monitoring');
+        let checkCount = 0;
+        const maxChecks = 120; // 2 minutes timeout
+        
+        const checkAuthStatus = () => {
+            checkCount++;
+            console.log('Checking auth status, attempt:', checkCount);
+            
+            try {
+                // Try to access iframe content
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeUrl = iframe.contentWindow.location.href;
+                console.log('Current iframe URL:', iframeUrl);
+                
+                // Check for success indicators
+                if (iframeUrl.includes('/auth/popup-auth-success') || 
+                    iframeUrl.includes('/signin-oidc') ||
+                    iframeUrl.includes('access_token') ||
+                    (iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.includes('Authentication Successful'))) {
+                    
+                    console.log('Success detected in iframe');
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationSuccess');
+                    }
+                    return;
+                }
+                
+                // Check for error indicators in URL
+                if (iframeUrl.includes('/auth/error') || 
+                    iframeUrl.includes('error=') ||
+                    iframeUrl.includes('access_denied')) {
+                    
+                    console.log('Error detected in iframe URL');
+                    // Extract error details from URL if available
+                    const urlParams = new URLSearchParams(iframeUrl.split('?')[1] || '');
+                    const errorParam = urlParams.get('error') || urlParams.get('error_description') || urlParams.get('message') || 'Authentication failed';
+                    
+                    if (window.authDotNetRef) {
+                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', errorParam);
+                    }
+                    return;
+                }
+                
+                // Check for error indicators in document content
+                if (iframeDoc && iframeDoc.body) {
+                    const bodyText = iframeDoc.body.innerText.toLowerCase();
+                    if (bodyText.includes('error') || 
+                        bodyText.includes('failed') || 
+                        bodyText.includes('invalid') ||
+                        bodyText.includes('denied')) {
+                        
+                        console.log('Error detected in iframe content');
+                        if (window.authDotNetRef) {
+                            window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', 'Authentication failed - please check your credentials');
+                        }
+                        return;
+                    }
+                }
+                
+            } catch (e) {
+                // Cross-origin restrictions prevent access - this is normal for external auth providers
+                console.log('Cross-origin access restricted (normal):', e.message);
+                // Continue monitoring unless we've hit the timeout
+            }
+            
+            // Check for timeout
+            if (checkCount >= maxChecks) {
+                console.log('Authentication timeout reached');
+                if (window.authDotNetRef) {
+                    window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', 'Authentication timed out - please try again');
+                }
+                return;
+            }
+            
+            // Continue monitoring
+            setTimeout(checkAuthStatus, 1000);
+        };
+        
+        // Handle iframe load errors
+        iframe.addEventListener('error', function(e) {
+            console.log('Iframe load error:', e);
+            if (window.authDotNetRef) {
+                window.authDotNetRef.invokeMethodAsync('OnConnectionError');
+            }
+        });
+        
+        // Start monitoring after a short delay
+        setTimeout(checkAuthStatus, 500);
+    };
+</script>

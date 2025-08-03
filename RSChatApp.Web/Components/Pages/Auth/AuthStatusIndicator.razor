@@ -1,0 +1,44 @@
+@using RSChatApp.Web.Services.Authentication
+@inject IAuthenticationService AuthenticationService
+@implements IDisposable
+
+<div class="auth-status-indicator" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+    @if (authInfo.IsAuthenticated)
+    {
+        <div style="width: 8px; height: 8px; background-color: #28a745; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px #28a745;"></div>
+        <span style="color: #28a745; font-size: 0.875rem; font-weight: 500;">Connected</span>
+    }
+    else
+    {
+        <div style="width: 8px; height: 8px; background-color: #dc3545; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px #dc3545;"></div>
+        <span style="color: #dc3545; font-size: 0.875rem; font-weight: 500;">Disconnected</span>
+    }
+</div>
+
+@code {
+    private AuthenticationInfo authInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateAuthenticationState();
+
+        // Subscribe to authentication state changes
+        AuthenticationService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthenticationService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged(object? sender, AuthenticationInfo newAuthInfo)
+    {
+        authInfo = newAuthInfo;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAuthenticationState()
+    {
+        authInfo = await AuthenticationService.GetAuthenticationInfoAsync();
+    }
+}

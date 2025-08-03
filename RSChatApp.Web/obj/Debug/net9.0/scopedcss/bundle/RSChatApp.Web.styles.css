@@ -89,6 +89,41 @@
     }
 }
 /* _content/RSChatApp.Web/Components/Layout/MainLayout.razor.rz.scp.css */
+.app-layout[b-jfu6func4n] {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-nav[b-jfu6func4n] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand[b-jfu6func4n] {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.nav-actions[b-jfu6func4n] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.main-content[b-jfu6func4n] {
+    flex: 1;
+    min-height: calc(100vh - 60px);
+}
+
 #blazor-error-ui[b-jfu6func4n] {
     color-scheme: light only;
     background: lightyellow;
@@ -130,6 +165,131 @@
         height: 1.25rem;
         flex-shrink: 0;
     }
+/* _content/RSChatApp.Web/Components/Pages/Auth/Error.razor.rz.scp.css */
+ body[b-lbyclrzauh] {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px;
+    background-color: #f8f9fa;
+}
+.error-message[b-lbyclrzauh] {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto;
+    border-left: 4px solid #dc3545;
+}
+.error-icon[b-lbyclrzauh] {
+    color: #dc3545;
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+.retry-button[b-lbyclrzauh] {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+.close-button[b-lbyclrzauh] {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+/* _content/RSChatApp.Web/Components/Pages/Auth/LoginModal.razor.rz.scp.css */
+.modal-backdrop[b-9npfbmzb7h] {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    backdrop-filter: blur(2px);
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.modal-content[b-9npfbmzb7h] {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header[b-9npfbmzb7h] {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title[b-9npfbmzb7h] {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.modal-body[b-9npfbmzb7h] {
+    padding: 1.5rem;
+}
+
+.btn-close[b-9npfbmzb7h] {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close:hover[b-9npfbmzb7h] {
+    color: #000;
+}
+
+.btn-close[b-9npfbmzb7h]::before {
+    content: "×";
+}
+/* _content/RSChatApp.Web/Components/Pages/Auth/PopupAuthSuccess.razor.rz.scp.css */
+body[b-nn2iimbjpr] {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px;
+    background-color: #f8f9fa;
+}
+.success-message[b-nn2iimbjpr] {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+.success-icon[b-nn2iimbjpr] {
+    color: #28a745;
+    font-size: 48px;
+    margin-bottom: 20px;
+}
 /* _content/RSChatApp.Web/Components/Pages/Chat/Chat.razor.rz.scp.css */
 .chat-container[b-3fe0d7io2g] {
     position: sticky; 
@@ -424,69 +584,4 @@ chat-messages[b-otnhs9j0jg] >  div:last-of-type {
     flex-wrap: wrap;
     display: flex;
     margin-bottom: 0.75rem;
-}
-/* _content/RSChatApp.Web/Components/Pages/Login/LoginModal.razor.rz.scp.css */
-.modal-backdrop[b-crzrtuecnx] {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
-    backdrop-filter: blur(2px);
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-
-.modal-content[b-crzrtuecnx] {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-header[b-crzrtuecnx] {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-title[b-crzrtuecnx] {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 500;
-}
-
-.modal-body[b-crzrtuecnx] {
-    padding: 1.5rem;
-}
-
-.btn-close[b-crzrtuecnx] {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #6c757d;
-    padding: 0;
-    width: 1.5rem;
-    height: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-close:hover[b-crzrtuecnx] {
-    color: #000;
-}
-
-.btn-close[b-crzrtuecnx]::before {
-    content: "×";
 }

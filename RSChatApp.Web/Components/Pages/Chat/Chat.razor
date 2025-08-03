@@ -1,21 +1,20 @@
 ﻿@page "/"
 @* @attribute [Authorize] *@
 @attribute [AllowAnonymous]
-@using System.ComponentModel
-@using System.Diagnostics.CodeAnalysis
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.SemanticKernel
-@using RSChatApp.Web.Components.Pages.Login
 @inject IChatClient ChatClient
 @inject Kernel Kernel
 @inject NavigationManager Nav
 @inject SemanticSearch Search
 @inject ILogger<App> Logger
+@using System.ComponentModel
+@using System.Diagnostics.CodeAnalysis
+@using Microsoft.AspNetCore.Authorization
+@using RSChatApp.Web.Services.SemanticSearch
 @implements IDisposable
 
 <PageTitle>Chat</PageTitle>
 
-<ChatHeader OnNewChat="@ResetConversationAsync" OnLoginRequested="@ShowLoginModal" />
+<ChatHeader OnNewChat="@ResetConversationAsync" />
 
 <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
     <NoMessagesContent>
@@ -31,8 +30,6 @@
     <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" />
     <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
 </div>
-
-<LoginModal Show="@showLoginModal" ShowChanged="@OnLoginModalShowChanged" OnLoginSuccess="@OnLoginSuccess" />
 
 @code {
     private const string SystemPrompt = @"
@@ -56,7 +53,6 @@
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
     private ChatSuggestions? chatSuggestions;
-    private bool showLoginModal = false;
 
  
     [Experimental("SKEXP0001")]
@@ -135,25 +131,7 @@
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
     }
 
-    private async Task ShowLoginModal()
-    {
-        showLoginModal = true;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task OnLoginModalShowChanged(bool show)
-    {
-        showLoginModal = show;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task OnLoginSuccess()
-    {
-        showLoginModal = false;
-        await InvokeAsync(StateHasChanged);
-        // You can add additional logic here after successful login
-    }
-
     public void Dispose()
         => currentResponseCancellation?.Cancel();
+}
 }

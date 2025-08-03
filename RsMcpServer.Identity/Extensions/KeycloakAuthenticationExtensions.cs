@@ -125,7 +125,8 @@ public static class KeycloakAuthenticationExtensions
                         context.Exception?.Message);
                     
                     context.HandleResponse();
-                    context.Response.Redirect("/auth/error");
+                    var errorMessage = Uri.EscapeDataString(context.Exception?.Message ?? "Authentication failed");
+                    context.Response.Redirect($"/auth/error?message={errorMessage}");
                     return Task.CompletedTask;
                 },
                 

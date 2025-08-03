@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RsMcpServer.Identity")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+76127ca3d86c1ae3d440b054c5239d662e907d45")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1d3a3ac6195ed835b3cf0664775bf8270c48e44d")]
 [assembly: System.Reflection.AssemblyProductAttribute("RsMcpServer.Identity")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RsMcpServer.Identity")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

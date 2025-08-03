@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.VectorData;
 using RSChatApp.Web.Models.Ingestion;
 
-namespace RSChatApp.Web.Services;
+namespace RSChatApp.Web.Services.SemanticSearch;
 
 public class SemanticSearch(
     VectorStoreCollection<Guid, IngestedChunk> vectorCollection)

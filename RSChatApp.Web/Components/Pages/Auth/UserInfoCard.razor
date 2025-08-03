@@ -1,0 +1,87 @@
+@using RSChatApp.Web.Services.Authentication
+@inject IAuthenticationService AuthenticationService
+@implements IDisposable
+
+@if (authInfo.IsAuthenticated)
+{
+    <div class="user-info-card" style="background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 1rem 0;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                @GetUserInitials()
+            </div>
+            <div>
+                <div style="font-weight: 600; color: #333;">@authInfo.DisplayName</div>
+                <div style="font-size: 0.875rem; color: #6c757d;">@authInfo.UserName</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(authInfo.Email))
+        {
+            <div style="font-size: 0.875rem; color: #6c757d; margin-bottom: 0.5rem;">
+                <i class="fas fa-envelope me-1"></i>@authInfo.Email
+            </div>
+        }
+
+        @if (authInfo.Roles.Any())
+        {
+            <div style="margin-top: 0.75rem;">
+                <div style="font-size: 0.875rem; font-weight: 500; color: #495057; margin-bottom: 0.25rem;">Roles:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                    @foreach (var role in authInfo.Roles)
+                    {
+                        <span style="background: #e9ecef; color: #495057; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">@role</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center" style="padding: 2rem; color: #6c757d;">
+        <i class="fas fa-user-slash" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p>Not authenticated</p>
+    </div>
+}
+
+@code {
+    private AuthenticationInfo authInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateAuthenticationState();
+
+        // Subscribe to authentication state changes
+        AuthenticationService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthenticationService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged(object? sender, AuthenticationInfo newAuthInfo)
+    {
+        authInfo = newAuthInfo;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAuthenticationState()
+    {
+        authInfo = await AuthenticationService.GetAuthenticationInfoAsync();
+    }
+
+    private string GetUserInitials()
+    {
+        if (string.IsNullOrEmpty(authInfo.DisplayName))
+            return "U";
+
+        var parts = authInfo.DisplayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        else if (parts.Length == 1 && parts[0].Length >= 2)
+            return parts[0].Substring(0, 2).ToUpper();
+        else
+            return parts[0][0].ToString().ToUpper();
+    }
+}

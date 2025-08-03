@@ -1,0 +1,65 @@
+@using RSChatApp.Web.Services.Authentication
+@inject IAuthenticationService AuthenticationService
+@implements IDisposable
+
+@if (authInfo.IsAuthenticated)
+{
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        @if (!string.IsNullOrEmpty(authInfo.DisplayName))
+        {
+            <span style="color: #6c757d; font-size: 0.9rem;">Welcome, @authInfo.DisplayName</span>
+        }
+        <button class="btn-default" @onclick="@Logout">
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Logout
+        </button>
+    </div>
+}
+else
+{
+    <button class="btn-default" @onclick="@OpenLoginModal">
+        <i class="fas fa-sign-in-alt me-2"></i>
+        Login to ReportServer
+    </button>
+}
+
+@code {
+    [Parameter]
+    public EventCallback OnLoginRequested { get; set; }
+
+    private AuthenticationInfo authInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateAuthenticationState();
+        
+        // Subscribe to authentication state changes
+        AuthenticationService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthenticationService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    private async void OnAuthenticationStateChanged(object? sender, AuthenticationInfo newAuthInfo)
+    {
+        authInfo = newAuthInfo;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAuthenticationState()
+    {
+        authInfo = await AuthenticationService.GetAuthenticationInfoAsync();
+    }
+
+    private async Task OpenLoginModal()
+    {
+        await OnLoginRequested.InvokeAsync();
+    }
+
+    private async Task Logout()
+    {
+        await AuthenticationService.LogoutAsync();
+    }
+}

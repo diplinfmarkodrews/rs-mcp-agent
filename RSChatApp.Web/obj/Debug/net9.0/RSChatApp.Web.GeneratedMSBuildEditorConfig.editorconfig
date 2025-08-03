@@ -24,8 +24,16 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/App_Backup.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHBfQmFja3VwLnJhem9y
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/AuthenticationWidget.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL0F1dGhlbnRpY2F0aW9uV2lkZ2V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/AuthStatusIndicator.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL0F1dGhTdGF0dXNJbmRpY2F0b3IucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/UserInfoCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL1VzZXJJbmZvQ2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Error.razor]
@@ -51,6 +59,18 @@ build_metadata.AdditionalFiles.CssScope = b-jfu6func4n
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Layout/SurveyPrompt.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvU3VydmV5UHJvbXB0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = b-ddp1s91vrg
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/Error.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL0Vycm9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-lbyclrzauh
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/LoginModal.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL0xvZ2luTW9kYWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-9npfbmzb7h
+
+[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Auth/PopupAuthSuccess.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9BdXRoL1BvcHVwQXV0aFN1Y2Nlc3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-nn2iimbjpr
 
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Chat/Chat.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXQucmF6b3I=
@@ -79,7 +99,3 @@ build_metadata.AdditionalFiles.CssScope = b-otnhs9j0jg
 [/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Chat/ChatSuggestions.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9DaGF0L0NoYXRTdWdnZXN0aW9ucy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-rknajfaxz4
-
-[/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/Components/Pages/Login/LoginModal.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dpbi9Mb2dpbk1vZGFsLnJhem9y
-build_metadata.AdditionalFiles.CssScope = b-crzrtuecnx

@@ -4,8 +4,9 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Models.Ingestion;
-using RSChatApp.Web.Services;
 using RSChatApp.Web.Services.Ingestion;
+using RSChatApp.Web.Services.SemanticSearch;
+using RSChatApp.Web.Extensions;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 
@@ -21,15 +22,22 @@ builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings))
 
 // Add Keycloak authentication
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
+
+// Add custom authentication service
+builder.Services.AddCustomAuthenticationService();
+
 builder.Services.AddHttpClient("RsMcpServer", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Address"] 
                                  ?? throw new InvalidOperationException("RsMcpServer:Address"));
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
 }).AddStandardResilienceHandler(); // Only used without aspire 
+
 builder.Services.AddKernel();
 
-var scopedServiceProvider = builder.Services.BuildServiceProvider().CreateScope().ServiceProvider;
+var scopedServiceProvider = builder.Services.BuildServiceProvider()
+    .CreateScope()
+    .ServiceProvider;
 
 // Creating McpClient with SSE transport
 await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
@@ -92,11 +100,11 @@ builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks
 builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
-
+builder.Services.AddControllers();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
+app.MapControllers();
 // Use Keycloak authentication
 app.UseAuthentication();
 app.UseSession();
