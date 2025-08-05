@@ -4,6 +4,7 @@ using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
 using ReportServerRPCClient.Extensions;
 using RsMcpServer.Identity.Extensions;
+using RsMcpServer.Identity.Middleware;
 using RsMcpServer.Identity.Services;
 using RsMcpServer.Web.Extensions;
 using RsMcpServer.Web.McpTools;
@@ -57,7 +58,8 @@ app.UseHttpsRedirection();
 app.UseOpenAPISwaggerUI();
 
 // This includes session, authentication, and authorization
-app.UseKeycloakAuthentication(); 
+app.UseKeycloakAuthentication()
+    .UseAuthenticatedSession();
 
 // Map MCP endpoints
 app.MapMcp()

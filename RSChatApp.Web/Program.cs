@@ -108,7 +108,6 @@ app.MapControllers();
 // Use Keycloak authentication
 app.UseAuthentication();
 app.UseSession();
-app.UseAuthenticatedSession();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -125,21 +124,63 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Add a diagnostic endpoint to check loaded tools
-app.MapGet("/debug/tools", (Kernel kernel) =>
+
+
+// Add authentication debug endpoint for development
+if (app.Environment.IsDevelopment())
 {
-    var plugins = kernel.Plugins.Select(p => new
+    // Add a diagnostic endpoint to check loaded tools
+    app.MapGet("/debug/tools", (Kernel kernel) =>
     {
-        Name = p.Name,
-        FunctionCount = p.Count(),
-        Functions = p.Select(f => new { 
-            Name = f.Name ?? "Unknown", 
-            Description = f.Description ?? "No description" 
-        }).ToList()
-    }).ToList();
-    
-    return Results.Json(new { TotalPlugins = plugins.Count, Plugins = plugins });
-});
+        var plugins = kernel.Plugins.Select(p => new
+        {
+            Name = p.Name,
+            FunctionCount = p.Count(),
+            Functions = p.Select(f => new { 
+                Name = f.Name ?? "Unknown", 
+                Description = f.Description ?? "No description" 
+            }).ToList()
+        }).ToList();
+        
+        return Results.Json(new { TotalPlugins = plugins.Count, Plugins = plugins });
+    });
+    app.MapGet("/debug/auth-config", (IConfiguration config) =>
+    {
+        return Results.Ok(new
+        {
+            Authority = config["Keycloak:Authority"],
+            ClientId = config["Keycloak:ClientId"],
+            HasClientSecret = !string.IsNullOrEmpty(config["Keycloak:ClientSecret"]),
+            RequireHttpsMetadata = config["Keycloak:RequireHttpsMetadata"],
+            Scopes = config.GetSection("Keycloak:Scopes").Get<string[]>(),
+            ReportServerAddress = config["ReportServer:Address"]
+        });
+    });
+
+    app.MapGet("/debug/keycloak-health", async (IHttpClientFactory httpClientFactory) =>
+    {
+        try
+        {
+            var httpClient = httpClientFactory.CreateClient();
+            var keycloakAuthority = app.Configuration["Keycloak:Authority"];
+            var response = await httpClient.GetAsync($"{keycloakAuthority}/.well-known/openid_configuration");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return Results.Ok(new { Status = "Healthy", Response = content });
+            }
+            else
+            {
+                return Results.Ok(new { Status = "Unhealthy", StatusCode = response.StatusCode, Reason = response.ReasonPhrase });
+            }
+        }
+        catch (Exception ex)
+        {
+            return Results.Ok(new { Status = "Error", Message = ex.Message });
+        }
+    });
+}
 
 
 // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from

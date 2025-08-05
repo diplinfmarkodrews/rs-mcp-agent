@@ -44,6 +44,7 @@ public static class KeycloakAuthenticationExtensions
         });
         var reportServerAddress = configuration["ReportServer:Address"]
             ?? throw new ArgumentNullException("ReportServer:Address", "Report Server address is not configured.");
+
         services.AddReportServerRpcClient(reportServerAddress);
 
         // Add authentication services
@@ -82,7 +83,11 @@ public static class KeycloakAuthenticationExtensions
             options.ClientSecret = configuration["Keycloak:ClientSecret"];
             options.RequireHttpsMetadata = !environment.IsDevelopment();
             options.ResponseType = OpenIdConnectResponseType.Code;
-            options.UsePkce = true; // Enhanced security
+            
+            // Make PKCE configurable, default to false in development
+            var usePkce = configuration.GetValue<bool?>("Keycloak:UsePkce") ?? !environment.IsDevelopment();
+            options.UsePkce = usePkce;
+            
             options.SaveTokens = true;
             options.GetClaimsFromUserInfoEndpoint = true;
             
