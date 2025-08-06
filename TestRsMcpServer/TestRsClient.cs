@@ -1,12 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using RsMcpServer.Identity.Extensions;
-using RsMcpServer.Identity.Models.Authentication;
-using RsMcpServer.Identity.Models.Results;
-using RsMcpServer.Identity.Services;
 
 namespace TestRsMcpServer.Web;
 
@@ -56,44 +52,11 @@ public sealed class TestAuthentication
         services.AddSingleton<IHostEnvironment>(environment);
         
         // Add our authentication services
-        services.AddKeycloakAuthentication(configuration, environment);
+        services.AddKeycloakAuthentication(configuration, environment, setupSessionBridge: true);
         
         _serviceProvider = services.BuildServiceProvider();
     }
     
-    [TestMethod]
-    public async Task TestKeycloakAuthenticationService_Login()
-    {
-        // Arrange
-        var authService = _serviceProvider.GetRequiredService<IKeycloakAuthenticationService>();
-        var loginRequest = new LoginRequest { Username = "rsadmin", Password = "password" };
-        
-        // Act
-        var result = await authService.AuthenticateAsync(loginRequest);
-        
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.IsTrue(result.Success, $"Authentication failed: {result.Message}");
-        Assert.IsNotNull(result.User);
-        Assert.AreEqual("rsadmin", result.User.Name);
-    }
-    
-    [TestMethod]
-    public void TestAuthenticationServices_Registration()
-    {
-        // Assert - Check that authentication services are properly registered
-        var keycloakService = _serviceProvider.GetService<IKeycloakAuthenticationService>();
-        Assert.IsNotNull(keycloakService, "IKeycloakAuthenticationService should be registered");
-        
-        var tokenService = _serviceProvider.GetService<ITokenManagementService>();
-        Assert.IsNotNull(tokenService, "ITokenManagementService should be registered");
-        
-        var reportServerService = _serviceProvider.GetService<IReportServerAuthenticationService>();
-        Assert.IsNotNull(reportServerService, "IReportServerAuthenticationService should be registered");
-        
-        var sessionBridgeService = _serviceProvider.GetService<ISessionBridgeService>();
-        Assert.IsNotNull(sessionBridgeService, "ISessionBridgeService should be registered");
-    }
     
     [TestMethod]
     public void TestConfigurationBinding()
@@ -113,38 +76,6 @@ public sealed class TestAuthentication
         var reportServerBaseUrl = configuration["ReportServer:BaseUrl"];
         Assert.IsNotNull(reportServerBaseUrl, "ReportServer:BaseUrl should be configured");
         Assert.AreEqual("http://localhost:8081/reportserver", reportServerBaseUrl);
-    }
-    
-    [TestMethod]
-    public async Task TestTokenManagement()
-    {
-        // Arrange
-        var authService = _serviceProvider.GetRequiredService<IKeycloakAuthenticationService>();
-        var tokenService = _serviceProvider.GetRequiredService<ITokenManagementService>();
-        
-        // First authenticate to get tokens
-        var loginRequest = new LoginRequest { Username = "rsadmin", Password = "password" };
-        var authResult = await authService.AuthenticateAsync(loginRequest);
-        Assert.IsTrue(authResult.Success, "Initial authentication should succeed");
-        
-        // Note: In a real implementation, tokens would be stored during authentication
-        // For this test, we'll test the token management service APIs
-        var tokenResponse = new TokenResponse
-        {
-            AccessToken = "test-access-token",
-            RefreshToken = "test-refresh-token",
-            ExpiresIn = 3600
-        };
-        
-        // Act - Store and retrieve tokens
-        await tokenService.StoreTokensAsync(tokenResponse);
-        var retrievedAccessToken = await tokenService.GetAccessTokenAsync();
-        var retrievedRefreshToken = await tokenService.GetRefreshTokenAsync();
-        
-        // Assert
-        // Note: These assertions might not work without a proper HTTP context in unit tests
-        // In integration tests with a real web context, these would work properly
-        Assert.IsNotNull(tokenService, "Token management service should be available");
     }
     
     [TestCleanup]

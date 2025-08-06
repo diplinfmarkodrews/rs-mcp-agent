@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RSChatApp.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+14afaf82d126b1175ce9a2fadbe0dc593621af4a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+19400f9e340a02320b102971759592ef773a7d5c")]
 [assembly: System.Reflection.AssemblyProductAttribute("RSChatApp.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RSChatApp.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

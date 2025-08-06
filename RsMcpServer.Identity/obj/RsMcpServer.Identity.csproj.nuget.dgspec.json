@@ -51,10 +51,6 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
-              "target": "Package",
-              "version": "[9.0.6, )"
-            },
             "Microsoft.Extensions.Http.Resilience": {
               "target": "Package",
               "version": "[9.5.0, )"
@@ -299,9 +295,17 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
+            "Keycloak.AuthServices.Authentication": {
               "target": "Package",
-              "version": "[9.0.6, )"
+              "version": "[2.6.1, )"
+            },
+            "Keycloak.AuthServices.Authorization": {
+              "target": "Package",
+              "version": "[2.6.1, )"
+            },
+            "Keycloak.AuthServices.Common": {
+              "target": "Package",
+              "version": "[2.6.1, )"
             },
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
@@ -326,10 +330,6 @@
             "Microsoft.Extensions.Options": {
               "target": "Package",
               "version": "[9.0.5, )"
-            },
-            "System.IdentityModel.Tokens.Jwt": {
-              "target": "Package",
-              "version": "[8.0.1, )"
             }
           },
           "imports": [

@@ -1,21 +1,38 @@
-using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using RsMcpServer.Identity.Models.Options;
-using RsMcpServer.Identity.Models.Results;
+using Keycloak.AuthServices.Common;
+using Keycloak.AuthServices.Authentication;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 
 namespace RsMcpServer.Identity.Services;
 
+public interface ITokenManagementService
+{
+    Task<TokenRefreshResult> RefreshTokenAsync(CancellationToken cancellationToken = default);
+    Task<string?> GetAccessTokenAsync();
+    Task StoreTokensFromContextAsync(TokenValidatedContext context);
+    Task ClearTokensAsync();
+}
+
+public class TokenRefreshResult
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public TimeSpan? ExpiresIn { get; set; }
+}
+
 /// <summary>
-/// Service for managing authentication tokens
+/// Service for managing authentication tokens using Keycloak AuthServices
 /// </summary>
 public class TokenManagementService : ITokenManagementService
 {
     private readonly ILogger<TokenManagementService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly KeycloakOptions _keycloakOptions;
+    private readonly KeycloakAuthenticationOptions _keycloakOptions;
 
     private const string AccessTokenKey = "auth:access_token";
     private const string RefreshTokenKey = "auth:refresh_token";
@@ -26,7 +43,7 @@ public class TokenManagementService : ITokenManagementService
         ILogger<TokenManagementService> logger,
         IHttpContextAccessor httpContextAccessor,
         IHttpClientFactory httpClientFactory,
-        IOptions<KeycloakOptions> keycloakOptions)
+        IOptions<KeycloakAuthenticationOptions> keycloakOptions)
     {
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
@@ -50,180 +67,186 @@ public class TokenManagementService : ITokenManagementService
 
             _logger.LogInformation("Refreshing access token");
 
-            using var httpClient = _httpClientFactory.CreateClient("keycloak");
+            using var httpClient = _httpClientFactory.CreateClient();
             
-            var tokenRequest = new Dictionary<string, string>
+            var tokenEndpoint = $"{_keycloakOptions.AuthServerUrl}/protocol/openid-connect/token";
+            
+            var requestData = new Dictionary<string, string>
             {
-                ["client_id"] = _keycloakOptions.ClientId,
-                ["client_secret"] = _keycloakOptions.ClientSecret,
                 ["grant_type"] = "refresh_token",
-                ["refresh_token"] = refreshToken
+                ["refresh_token"] = refreshToken,
+                ["client_id"] = _keycloakOptions.Resource,
             };
 
-            var content = new FormUrlEncodedContent(tokenRequest);
-            var response = await httpClient.PostAsync(_keycloakOptions.TokenEndpoint, content, cancellationToken);
+            if (!string.IsNullOrEmpty(_keycloakOptions.Credentials?.Secret))
+            {
+                requestData["client_secret"] = _keycloakOptions.Credentials.Secret;
+            }
 
-            if (!response.IsSuccessStatusCode)
+            var request = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+            {
+                Content = new FormUrlEncodedContent(requestData)
+            };
+
+            var response = await httpClient.SendAsync(request, cancellationToken);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                var tokenResponse = JsonSerializer.Deserialize<JsonElement>(content);
+                
+                var accessToken = tokenResponse.GetProperty("access_token").GetString();
+                var newRefreshToken = tokenResponse.TryGetProperty("refresh_token", out var refreshProp) 
+                    ? refreshProp.GetString() 
+                    : refreshToken;
+                
+                var expiresIn = tokenResponse.TryGetProperty("expires_in", out var expiresProp)
+                    ? TimeSpan.FromSeconds(expiresProp.GetInt32())
+                    : TimeSpan.FromHours(1);
+
+                // Store new tokens
+                await StoreTokenAsync(AccessTokenKey, accessToken);
+                await StoreTokenAsync(RefreshTokenKey, newRefreshToken);
+                await StoreTokenAsync(TokenExpiryKey, DateTimeOffset.UtcNow.Add(expiresIn).ToString("O"));
+
+                _logger.LogInformation("Access token refreshed successfully");
+
+                return new TokenRefreshResult
+                {
+                    Success = true,
+                    ExpiresIn = expiresIn
+                };
+            }
+            else
             {
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogWarning("Token refresh failed: {Error}", errorContent);
+                _logger.LogError("Token refresh failed: {StatusCode} - {Content}", response.StatusCode, errorContent);
                 
                 return new TokenRefreshResult
                 {
                     Success = false,
-                    Message = "Token refresh failed"
+                    Message = $"Token refresh failed: {response.StatusCode}"
                 };
             }
-
-            var tokenJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(tokenJson, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (tokenResponse == null)
-            {
-                return new TokenRefreshResult
-                {
-                    Success = false,
-                    Message = "Invalid token response"
-                };
-            }
-
-            // Store the new tokens
-            await StoreTokensAsync(tokenResponse);
-
-            _logger.LogInformation("Access token refreshed successfully");
-
-            return new TokenRefreshResult
-            {
-                Success = true,
-                Message = "Token refreshed successfully",
-                ExpiresIn = tokenResponse.ExpiresIn,
-                TokenResponse = tokenResponse
-            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error refreshing token");
-            
             return new TokenRefreshResult
             {
                 Success = false,
-                Message = "Token refresh error"
+                Message = ex.Message
             };
         }
     }
 
-    public async Task<bool> TokenNeedsRefreshAsync()
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Session == null)
-        {
-            return false;
-        }
-
-        var expiryString = httpContext.Session.GetString(TokenExpiryKey);
-        if (string.IsNullOrEmpty(expiryString) || 
-            !DateTimeOffset.TryParse(expiryString, out var expiry))
-        {
-            return true; // If we can't determine expiry, assume refresh is needed
-        }
-
-        // Check if token expires within the threshold
-        return DateTimeOffset.UtcNow.Add(_keycloakOptions.TokenRefreshThreshold) >= expiry;
-    }
-
     public async Task<string?> GetAccessTokenAsync()
     {
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Session == null)
+        var token = await GetTokenAsync(AccessTokenKey);
+        
+        if (string.IsNullOrEmpty(token))
+            return null;
+
+        // Check if token is expired
+        var expiryString = await GetTokenAsync(TokenExpiryKey);
+        if (!string.IsNullOrEmpty(expiryString) && 
+            DateTimeOffset.TryParse(expiryString, out var expiry) && 
+            expiry <= DateTimeOffset.UtcNow.AddMinutes(-5)) // 5 minute buffer
         {
+            _logger.LogInformation("Access token expired, attempting refresh");
+            var refreshResult = await RefreshTokenAsync();
+            if (refreshResult.Success)
+            {
+                return await GetTokenAsync(AccessTokenKey);
+            }
             return null;
         }
 
-        // Check if token needs refresh first
-        if (await TokenNeedsRefreshAsync())
-        {
-            var refreshResult = await RefreshTokenAsync();
-            if (!refreshResult.Success)
-            {
-                _logger.LogWarning("Failed to refresh token when getting access token");
-                return null;
-            }
-        }
-
-        return httpContext.Session.GetString(AccessTokenKey);
+        return token;
     }
 
-    public async Task<string?> GetRefreshTokenAsync()
+    public async Task StoreTokensFromContextAsync(TokenValidatedContext context)
     {
-        await Task.CompletedTask; // For async consistency
-        
-        var httpContext = _httpContextAccessor.HttpContext;
-        return httpContext?.Session?.GetString(RefreshTokenKey);
-    }
-
-    public async Task StoreTokensAsync(TokenResponse tokenResponse)
-    {
-        await Task.CompletedTask; // For async consistency
-        
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Session == null)
-        {
-            _logger.LogWarning("Cannot store tokens: HttpContext or Session is null");
-            return;
-        }
-
         try
         {
-            // Store tokens in session
-            httpContext.Session.SetString(AccessTokenKey, tokenResponse.AccessToken);
+            var properties = context.Properties;
             
-            if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
+            if (properties.GetTokenValue("access_token") is string accessToken)
             {
-                httpContext.Session.SetString(RefreshTokenKey, tokenResponse.RefreshToken);
-            }
-            
-            if (!string.IsNullOrEmpty(tokenResponse.IdToken))
-            {
-                httpContext.Session.SetString(IdTokenKey, tokenResponse.IdToken);
+                await StoreTokenAsync(AccessTokenKey, accessToken);
             }
 
-            // Calculate and store expiry time
-            var expiry = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
-            httpContext.Session.SetString(TokenExpiryKey, expiry.ToString("O"));
+            if (properties.GetTokenValue("refresh_token") is string refreshToken)
+            {
+                await StoreTokenAsync(RefreshTokenKey, refreshToken);
+            }
 
-            _logger.LogInformation("Tokens stored successfully, expires at: {Expiry}", expiry);
+            if (properties.GetTokenValue("id_token") is string idToken)
+            {
+                await StoreTokenAsync(IdTokenKey, idToken);
+            }
+
+            // Calculate expiry
+            if (properties.GetTokenValue("expires_at") is string expiresAt)
+            {
+                await StoreTokenAsync(TokenExpiryKey, expiresAt);
+            }
+            else if (properties.GetTokenValue("expires_in") is string expiresInStr &&
+                     int.TryParse(expiresInStr, out var expiresInSeconds))
+            {
+                var expiry = DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds);
+                await StoreTokenAsync(TokenExpiryKey, expiry.ToString("O"));
+            }
+
+            _logger.LogInformation("Tokens stored successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error storing tokens");
+            _logger.LogError(ex, "Error storing tokens from context");
         }
     }
 
     public async Task ClearTokensAsync()
     {
-        await Task.CompletedTask; // For async consistency
-        
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Session == null)
+        var session = _httpContextAccessor.HttpContext?.Session;
+        if (session != null)
         {
-            return;
+            session.Remove(AccessTokenKey);
+            session.Remove(RefreshTokenKey);
+            session.Remove(IdTokenKey);
+            session.Remove(TokenExpiryKey);
+            await session.CommitAsync();
         }
+    }
 
-        try
-        {
-            httpContext.Session.Remove(AccessTokenKey);
-            httpContext.Session.Remove(RefreshTokenKey);
-            httpContext.Session.Remove(IdTokenKey);
-            httpContext.Session.Remove(TokenExpiryKey);
+    private async Task<string?> GetRefreshTokenAsync()
+    {
+        return await GetTokenAsync(RefreshTokenKey);
+    }
 
-            _logger.LogInformation("Tokens cleared successfully");
-        }
-        catch (Exception ex)
+    private async Task<string?> GetTokenAsync(string key)
+    {
+        var session = _httpContextAccessor.HttpContext?.Session;
+        if (session == null) return null;
+
+        await session.LoadAsync();
+        return session.GetString(key);
+    }
+
+    private async Task StoreTokenAsync(string key, string? value)
+    {
+        var session = _httpContextAccessor.HttpContext?.Session;
+        if (session == null) return;
+
+        await session.LoadAsync();
+        if (string.IsNullOrEmpty(value))
         {
-            _logger.LogError(ex, "Error clearing tokens");
+            session.Remove(key);
         }
+        else
+        {
+            session.SetString(key, value);
+        }
+        await session.CommitAsync();
     }
 }

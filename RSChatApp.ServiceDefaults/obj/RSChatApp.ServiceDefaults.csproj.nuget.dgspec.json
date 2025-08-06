@@ -51,10 +51,6 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
-              "target": "Package",
-              "version": "[9.0.6, )"
-            },
             "Microsoft.Extensions.Http.Resilience": {
               "target": "Package",
               "version": "[9.5.0, )"

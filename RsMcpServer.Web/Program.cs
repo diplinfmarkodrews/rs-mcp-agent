@@ -23,7 +23,7 @@ builder.Services.AddLogging(logging =>
 });
 
 // Add Keycloak authentication with enhanced features
-builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
+builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: true);
 builder.Services.AddOpenApi();
 var reportServerAddress = builder.Configuration["ReportServer:Address"] 
                           ?? throw new InvalidOperationException("ReportServer:Address");
@@ -38,7 +38,7 @@ builder.Services.AddScoped<TerminalTool>();
 var kernelBuilder = Kernel.CreateBuilder();
 kernelBuilder.Services.AddReportServerRpcClient(reportServerAddress)
     .AddLogging()
-    .AddKeycloakAuthentication(builder.Configuration, builder.Environment)
+    .AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: true)
     .AddSingleton<ISessionBridgeService, SessionBridgeService>()
     .AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 kernelBuilder.Plugins.AddFromType<TerminalTool>();

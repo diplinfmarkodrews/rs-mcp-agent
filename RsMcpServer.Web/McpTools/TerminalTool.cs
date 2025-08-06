@@ -42,9 +42,10 @@ public class TerminalTool
         _logger.LogInformation("Executing terminal command: {Command}", command);
         
         // Get the session information from the session bridge service
-        var sessionInfo = await _sessionBridge.GetSessionInfoAsync();
+        // probably not the bear token, have to figure out what to use here
+        var bearerToken = await _sessionBridge.GetBearerTokenAsync();
         
-        if (sessionInfo?.ReportServerSessionId == null)
+        if (string.IsNullOrEmpty(bearerToken))
         {
             _logger.LogWarning("No active ReportServer session available. Authentication required.");
             return JsonSerializer.Serialize(
@@ -60,7 +61,7 @@ public class TerminalTool
         
         // Execute the command with the session ID
         // TODO: make it long running
-        var cmdResult = await _reportServer.ExecuteAsync(sessionInfo.ReportServerSessionId, command, cancellationToken);
+        var cmdResult = await _reportServer.ExecuteAsync(bearerToken, command, cancellationToken);
         
         return JsonSerializer.Serialize(cmdResult);
     }

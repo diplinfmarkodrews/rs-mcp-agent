@@ -21,7 +21,7 @@ builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings))
     .Bind(promptExecutionSettings);
 
 // Add Keycloak authentication
-builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
+builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 
 // Add custom authentication service
 builder.Services.AddCustomAuthenticationService();
@@ -105,9 +105,6 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 app.MapControllers();
-// Use Keycloak authentication
-app.UseAuthentication();
-app.UseSession();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -118,13 +115,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-
 
 // Add authentication debug endpoint for development
 if (app.Environment.IsDevelopment())

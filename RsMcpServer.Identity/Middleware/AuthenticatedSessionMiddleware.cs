@@ -19,7 +19,7 @@ public class AuthenticatedSessionMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, ISessionBridgeService sessionBridge)
+    public async Task InvokeAsync(HttpContext context, ISessionBridgeService sessionBridge, ITokenManagementService tokenService)
     {
         // Skip authentication checks for certain paths
         if (ShouldSkipAuthentication(context))
@@ -33,17 +33,24 @@ public class AuthenticatedSessionMiddleware
             // Check if user is authenticated
             if (context.User?.Identity?.IsAuthenticated == true)
             {
-                // Synchronize sessions to ensure they're still valid
-                var syncResult = await sessionBridge.SynchronizeSessionsAsync();
+                // Ensure we have a valid bearer token for ReportServer integration
+                var token = await sessionBridge.GetBearerTokenAsync();
                 
-                if (!syncResult)
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("Session synchronization failed for user: {User}", 
+                    _logger.LogWarning("No valid bearer token available for authenticated user: {User}", 
                         context.User.Identity.Name);
                     
-                    // Handle session expiry
-                    await sessionBridge.HandleSessionExpiryAsync();
-                    return;
+                    // Try to refresh the token
+                    var refreshResult = await tokenService.RefreshTokenAsync();
+                    if (!refreshResult.Success)
+                    {
+                        _logger.LogWarning("Token refresh failed, clearing session");
+                        await sessionBridge.ClearSessionAsync();
+                        context.Response.StatusCode = 401;
+                        await context.Response.WriteAsync("Authentication token expired");
+                        return;
+                    }
                 }
             }
 
@@ -51,44 +58,33 @@ public class AuthenticatedSessionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in authentication session middleware");
-            
-            // Continue with the request even if session management fails
-            await _next(context);
+            _logger.LogError(ex, "Error in authentication middleware");
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("Internal server error");
         }
     }
 
     private static bool ShouldSkipAuthentication(HttpContext context)
     {
-        var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+        var path = context.Request.Path.Value?.ToLowerInvariant();
         
-        var skipPaths = new[]
+        return path switch
         {
-            "/auth/login",
-            "/auth/logout", 
-            "/auth/challenge",
-            "/auth/error",
-            "/health",
-            "/alive",
-            "/_framework",
-            "/css",
-            "/js",
-            "/images",
-            "/favicon.ico"
+            var p when p?.StartsWith("/auth") == true => true,
+            var p when p?.StartsWith("/health") == true => true,
+            var p when p?.StartsWith("/swagger") == true => true,
+            var p when p?.StartsWith("/api/health") == true => true,
+            "/" => true,
+            _ => false
         };
-
-        return skipPaths.Any(skipPath => path.StartsWith(skipPath));
     }
 }
 
 /// <summary>
-/// Extension methods for registering authentication middleware
+/// Extension methods for registering the authenticated session middleware
 /// </summary>
-public static class AuthenticationMiddlewareExtensions
+public static class AuthenticatedSessionMiddlewareExtensions
 {
-    /// <summary>
-    /// Adds authentication session middleware to the pipeline
-    /// </summary>
     public static IApplicationBuilder UseAuthenticatedSession(this IApplicationBuilder builder)
     {
         return builder.UseMiddleware<AuthenticatedSessionMiddleware>();

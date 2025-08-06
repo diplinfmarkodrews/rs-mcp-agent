@@ -7,17 +7,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Security.Claims;
+using Keycloak.AuthServices.Authentication;
+using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Common;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using ReportServerRPCClient.Extensions;
-using RsMcpServer.Identity.Models.Authentication;
-using RsMcpServer.Identity.Models.Options;
 using RsMcpServer.Identity.Services;
 
 namespace RsMcpServer.Identity.Extensions;
 
 /// <summary>
-/// Extension methods for configuring sophisticated Keycloak authentication
+/// Extension methods for configuring Keycloak authentication using AuthServices
 /// </summary>
 public static class KeycloakAuthenticationExtensions
 {
@@ -27,27 +28,28 @@ public static class KeycloakAuthenticationExtensions
     public static IServiceCollection AddKeycloakAuthentication(
         this IServiceCollection services, 
         IConfiguration configuration,
-        IHostEnvironment environment)
+        IHostEnvironment environment,
+        bool setupSessionBridge = false)
     {
-        // Configure Keycloak options
-        services.Configure<KeycloakOptions>(configuration.GetSection("Keycloak"));
-        services.Configure<ReportServerOptions>(configuration.GetSection("ReportServer"));
-        
-        // Add HTTP clients
-        services.AddHttpClient("keycloak", client =>
+        // Add Keycloak authentication using AuthServices
+        services.AddKeycloakWebApiAuthentication(configuration, options =>
         {
-            var authority = configuration["Keycloak:Authority"];
-            if (!string.IsNullOrEmpty(authority))
-            {
-                client.BaseAddress = new Uri(authority);
-            }
+            options.RequireHttpsMetadata = !environment.IsDevelopment();
         });
-        var reportServerAddress = configuration["ReportServer:Address"]
-            ?? throw new ArgumentNullException("ReportServer:Address", "Report Server address is not configured.");
 
-        services.AddReportServerRpcClient(reportServerAddress);
+        // Add Keycloak authorization
+        services.AddKeycloakAuthorization(configuration);
 
-        // Add authentication services
+        // Configure Keycloak options from AuthServices
+        var keycloakOptions = configuration.GetKeycloakOptions<KeycloakAuthenticationOptions>()!;
+        
+        // // Needed for ReportServer authentication
+        // var reportServerAddress = configuration["ReportServer:Address"]
+        //     ?? throw new ArgumentNullException("ReportServer:Address", "Report Server address is not configured.");
+        //
+        // services.AddReportServerRpcClient(reportServerAddress);
+
+        // Add authentication services with cookie support for web apps
         services.AddAuthentication(options =>
         {
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -60,9 +62,9 @@ public static class KeycloakAuthenticationExtensions
             options.Cookie.Name = "RSAuth";
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = environment.IsDevelopment() 
-                ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest 
-                : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
-            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+                ? CookieSecurePolicy.SameAsRequest 
+                : CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Lax;
             options.LoginPath = "/auth/login";
             options.LogoutPath = "/auth/logout";
             options.AccessDeniedPath = "/auth/access-denied";
@@ -78,16 +80,13 @@ public static class KeycloakAuthenticationExtensions
         })
         .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
         {
-            options.Authority = configuration["Keycloak:Authority"];
-            options.ClientId = configuration["Keycloak:ClientId"];
-            options.ClientSecret = configuration["Keycloak:ClientSecret"];
+            options.Authority = keycloakOptions.AuthServerUrl;
+            options.ClientId = keycloakOptions.Resource;
+            options.ClientSecret = keycloakOptions.Credentials?.Secret;
             options.RequireHttpsMetadata = !environment.IsDevelopment();
             options.ResponseType = OpenIdConnectResponseType.Code;
             
-            // Make PKCE configurable, default to false in development
-            var usePkce = configuration.GetValue<bool?>("Keycloak:UsePkce") ?? !environment.IsDevelopment();
-            options.UsePkce = usePkce;
-            
+            options.UsePkce = true;
             options.SaveTokens = true;
             options.GetClaimsFromUserInfoEndpoint = true;
             
@@ -97,7 +96,7 @@ public static class KeycloakAuthenticationExtensions
             options.Scope.Add("profile");
             options.Scope.Add("email");
             options.Scope.Add("roles");
-            options.Scope.Add("offline_access"); // For refresh tokens
+            options.Scope.Add("offline_access");
             
             // Custom scopes for ReportServer
             var customScopes = configuration.GetSection("Keycloak:Scopes").Get<string[]>();
@@ -114,11 +113,11 @@ public static class KeycloakAuthenticationExtensions
             {
                 OnTokenValidated = async context =>
                 {
-                    var authService = context.HttpContext.RequestServices
-                        .GetRequiredService<IKeycloakAuthenticationService>();
+                    var tokenService = context.HttpContext.RequestServices
+                        .GetRequiredService<ITokenManagementService>();
                     
-                    // Initialize ReportServer session
-                    await authService.InitializeReportServerSessionAsync(context.Principal!);
+                    // Store tokens for ReportServer integration
+                    await tokenService.StoreTokensFromContextAsync(context);
                 },
                 
                 OnAuthenticationFailed = context =>
@@ -137,12 +136,10 @@ public static class KeycloakAuthenticationExtensions
                 
                 OnUserInformationReceived = context =>
                 {
-                    // Log successful user info retrieval
                     var logger = context.HttpContext.RequestServices
                         .GetRequiredService<ILogger<OpenIdConnectEvents>>();
                     
                     logger.LogInformation("User information received successfully");
-                    
                     return Task.CompletedTask;
                 },
                 
@@ -155,40 +152,31 @@ public static class KeycloakAuthenticationExtensions
                     }
                     
                     return Task.CompletedTask;
-                },
-                
-                OnTokenResponseReceived = async context =>
-                {
-                    var authService = context.HttpContext.RequestServices
-                        .GetRequiredService<IKeycloakAuthenticationService>();
-                    
-                    // Store tokens for refresh and ReportServer integration
-                    await authService.StoreTokensAsync(context.TokenEndpointResponse);
                 }
             };
         });
 
-        // Add authorization policies
+        // Add authorization policies using Keycloak resource-based authorization
         services.AddAuthorizationBuilder()
             .AddPolicy("AuthenticatedUser", policy =>
                 policy.RequireAuthenticatedUser())
             .AddPolicy("ReportServerUser", policy =>
                 policy.RequireAuthenticatedUser()
-                      .RequireClaim("scope", "reportserver"))
+                      .RequireRealmRoles("rs-user"))
             .AddPolicy("ReportServerAdmin", policy =>
                 policy.RequireAuthenticatedUser()
-                      .RequireRole("rs-admin"))
+                      .RequireRealmRoles("rs-admin"))
             .AddPolicy("ChatAppUser", policy =>
                 policy.RequireAuthenticatedUser()
-                      .RequireClaim("scope", "chatapp"));
+                      .RequireRealmRoles("chat-user"));
 
-        // Register core services
-        services.AddHttpContextAccessor(); // Required for session management
-        services.AddScoped<IKeycloakAuthenticationService, KeycloakAuthenticationService>();
-        services.AddScoped<IReportServerAuthenticationService, ReportServerAuthenticationService>();
-        services.AddScoped<ITokenManagementService, TokenManagementService>();
-        services.AddScoped<ISessionBridgeService, SessionBridgeService>();
-
+        if (setupSessionBridge)
+        {
+            // Register core services
+            services.AddHttpContextAccessor();
+            services.AddScoped<ITokenManagementService, TokenManagementService>();
+            services.AddScoped<ISessionBridgeService, SessionBridgeService>();
+        }
         // Add session services for token storage
         services.AddDistributedMemoryCache();
         services.AddSession(options =>
@@ -225,35 +213,6 @@ public static class KeycloakAuthenticationExtensions
     private static void MapAuthenticationEndpoints(this WebApplication app)
     {
         var authGroup = app.MapGroup("/auth").WithTags("Authentication");
-
-        // Direct login endpoint for API clients
-        authGroup.MapPost("/login", async (
-            LoginRequest request,
-            IKeycloakAuthenticationService authService,
-            CancellationToken cancellationToken) =>
-        {
-            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return Results.BadRequest(new { Error = "Username and password are required" });
-            }
-
-            var result = await authService.AuthenticateAsync(request, cancellationToken);
-            
-            if (result.Success)
-            {
-                return Results.Ok(new
-                {
-                    Success = true,
-                    Message = "Authentication successful",
-                    User = result.User,
-                    ExpiresIn = result.ExpiresIn
-                });
-            }
-
-            return Results.Unauthorized();
-        })
-        .WithName("DirectLogin")
-        .AllowAnonymous();
 
         // OIDC challenge endpoint
         authGroup.MapGet("/challenge", (string? returnUrl) =>
