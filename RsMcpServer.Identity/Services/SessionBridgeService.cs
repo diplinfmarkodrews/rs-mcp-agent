@@ -12,6 +12,7 @@ public interface ISessionBridgeService
     Task<ClaimsPrincipal?> GetCurrentUserAsync();
     Task<bool> IsAuthenticatedAsync();
     Task ClearSessionAsync();
+    Task<string?> GetSessionIdAsync();
 }
 
 /// <summary>
@@ -116,6 +117,40 @@ public class SessionBridgeService : ISessionBridgeService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error clearing session");
+        }
+    }
+
+    public async Task<string?> GetSessionIdAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Retrieving session ID");
+            
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext?.Session == null)
+            {
+                _logger.LogWarning("No active session found");
+                return null;
+            }
+
+            // Ensure session is loaded
+            await httpContext.Session.LoadAsync();
+            
+            var sessionId = httpContext.Session.Id;
+            
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                _logger.LogWarning("Session ID is null or empty");
+                return null;
+            }
+
+            _logger.LogDebug("Session ID retrieved successfully: {SessionId}", sessionId);
+            return sessionId;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving session ID");
+            return null;
         }
     }
 }
