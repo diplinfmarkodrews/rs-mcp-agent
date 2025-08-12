@@ -7,7 +7,7 @@ using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 using RsMcpServer.Identity.Services;
 using RsMcpServer.Web.Extensions;
-using RsMcpServer.Web.McpTools;
+using RsMcpServer.Web.Mcp.Tools;
 
 
 // Make the Program accessible to the test project
@@ -21,7 +21,7 @@ builder.Services.AddLogging(logging =>
     logging.AddConsole();
     logging.AddDebug();
 });
-
+builder.Services.AddHealthChecks();
 // Add Keycloak authentication with enhanced features
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: true);
 builder.Services.AddOpenApi();
@@ -54,12 +54,16 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseOpenApi();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseOpenAPISwaggerUI();
+// Map health check endpoints
+app.MapHealthChecks("/health");
 
 // This includes session, authentication, and authorization
 app.UseKeycloakAuthentication()
-    .UseAuthenticatedSession();
+    .UseAuthenticatedSession()
+    ;
 
 // Map MCP endpoints
 app.MapMcp()
@@ -76,3 +80,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+// for testing purposes
+namespace RsMcpServer.Web
+{
+    public partial class Program { }
+}
+

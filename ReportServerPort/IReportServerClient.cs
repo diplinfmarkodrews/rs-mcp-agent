@@ -1,5 +1,5 @@
-﻿using ReportServerPort.Authentication.Contracts;
-using ReportServerPort.Contracts;
+﻿using ReportServerPort.Contracts;
+using ReportServerPort.Contracts.Authentication;
 using ReportServerPort.Contracts.Terminal;
 using ReportServerPort.FileServer.Contracts;
 

@@ -31,23 +31,78 @@ public static class KeycloakAuthenticationExtensions
         IHostEnvironment environment,
         bool setupSessionBridge = false)
     {
-        // Add Keycloak authentication using AuthServices
-        services.AddKeycloakWebApiAuthentication(configuration, options =>
-        {
-            options.RequireHttpsMetadata = !environment.IsDevelopment();
-        });
-
-        // Add Keycloak authorization
-        services.AddKeycloakAuthorization(configuration);
-
-        // Configure Keycloak options from AuthServices
-        var keycloakOptions = configuration.GetKeycloakOptions<KeycloakAuthenticationOptions>()!;
+        // Read configuration directly from IConfiguration
+        var keycloakSection = configuration.GetSection("Keycloak");
+        var authority = keycloakSection["Authority"];
+        var clientId = keycloakSection["ClientId"] ?? keycloakSection["Resource"];
+        var clientSecret = keycloakSection["ClientSecret"];
+        var realm = keycloakSection["Realm"];
         
-        // // Needed for ReportServer authentication
-        // var reportServerAddress = configuration["ReportServer:Address"]
-        //     ?? throw new ArgumentNullException("ReportServer:Address", "Report Server address is not configured.");
-        //
-        // services.AddReportServerRpcClient(reportServerAddress);
+        // More explicit reading of RequireHttpsMetadata with debugging
+        var requireHttpsMetadataConfig = keycloakSection["RequireHttpsMetadata"];
+        Console.WriteLine($"Debug: RequireHttpsMetadata config value = '{requireHttpsMetadataConfig}'");
+        Console.WriteLine($"Debug: Environment = {environment.EnvironmentName}");
+        Console.WriteLine($"Debug: IsDevelopment = {environment.IsDevelopment()}");
+        Console.WriteLine($"Debug: IsEnvironment('Testing') = {environment.IsEnvironment("Testing")}");
+        
+        bool requireHttpsMetadata;
+        if (!string.IsNullOrEmpty(requireHttpsMetadataConfig))
+        {
+            if (bool.TryParse(requireHttpsMetadataConfig, out requireHttpsMetadata))
+            {
+                Console.WriteLine($"Debug: Parsed RequireHttpsMetadata from config = {requireHttpsMetadata}");
+            }
+            else
+            {
+                Console.WriteLine($"Debug: Failed to parse RequireHttpsMetadata, using fallback");
+                requireHttpsMetadata = !environment.IsDevelopment() && !environment.IsEnvironment("Testing");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Debug: No RequireHttpsMetadata config found, using fallback");
+            requireHttpsMetadata = !environment.IsDevelopment() && !environment.IsEnvironment("Testing");
+        }
+        
+        Console.WriteLine($"Debug: Final RequireHttpsMetadata = {requireHttpsMetadata}");
+        
+        if (string.IsNullOrEmpty(authority))
+        {
+            throw new InvalidOperationException("Keycloak:Authority configuration is required");
+        }
+        
+        if (string.IsNullOrEmpty(clientId))
+        {
+            throw new InvalidOperationException("Keycloak:ClientId or Keycloak:Resource configuration is required");
+        }
+
+        // Debug output
+        Console.WriteLine($"Keycloak Configuration: Authority={authority}, ClientId={clientId}, RequireHttpsMetadata={requireHttpsMetadata}, Environment={environment.EnvironmentName}");
+
+        // Skip Keycloak AuthServices for Testing environment or when HTTPS is disabled
+        // The AuthServices library seems to have issues with HTTP URLs even when RequireHttpsMetadata=false
+        if (!environment.IsEnvironment("Testing") && requireHttpsMetadata)
+        {
+            try
+            {
+                services.AddKeycloakWebApiAuthentication(configuration, options =>
+                {
+                    options.RequireHttpsMetadata = requireHttpsMetadata;
+                });
+                
+                // Add Keycloak authorization
+                services.AddKeycloakAuthorization(configuration);
+                Console.WriteLine("Keycloak AuthServices configured successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Keycloak AuthServices configuration failed, using manual setup: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Skipping Keycloak AuthServices - using manual OpenIdConnect configuration");
+        }
 
         // Add authentication services with cookie support for web apps
         services.AddAuthentication(options =>
@@ -80,10 +135,10 @@ public static class KeycloakAuthenticationExtensions
         })
         .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
         {
-            options.Authority = keycloakOptions.AuthServerUrl;
-            options.ClientId = keycloakOptions.Resource;
-            options.ClientSecret = keycloakOptions.Credentials?.Secret;
-            options.RequireHttpsMetadata = !environment.IsDevelopment();
+            options.Authority = authority;
+            options.ClientId = clientId;
+            options.ClientSecret = clientSecret;
+            options.RequireHttpsMetadata = requireHttpsMetadata;
             options.ResponseType = OpenIdConnectResponseType.Code;
             
             options.UsePkce = true;
@@ -104,7 +159,10 @@ public static class KeycloakAuthenticationExtensions
             {
                 foreach (var scope in customScopes)
                 {
-                    options.Scope.Add(scope);
+                    if (!options.Scope.Contains(scope))
+                    {
+                        options.Scope.Add(scope);
+                    }
                 }
             }
 

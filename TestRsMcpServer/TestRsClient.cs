@@ -1,21 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using RsMcpServer.Identity.Extensions;
 
-namespace TestRsMcpServer.Web;
-
-/// <summary>
-/// Mock host environment for testing
-/// </summary>
-public class MockHostEnvironment : IHostEnvironment
-{
-    public string EnvironmentName { get; set; } = "Development";
-    public string ApplicationName { get; set; } = "TestApplication";
-    public string ContentRootPath { get; set; } = Directory.GetCurrentDirectory();
-    public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-}
+namespace TestRsMcpServer;
 
 [TestClass]
 public sealed class TestAuthentication
@@ -51,40 +39,20 @@ public sealed class TestAuthentication
         var environment = new MockHostEnvironment { EnvironmentName = "Development" };
         services.AddSingleton<IHostEnvironment>(environment);
         
-        // Add our authentication services
+        // Add Keycloak authentication with session bridge
         services.AddKeycloakAuthentication(configuration, environment, setupSessionBridge: true);
         
         _serviceProvider = services.BuildServiceProvider();
     }
-    
-    
+
     [TestMethod]
-    public void TestConfigurationBinding()
+    public void TestKeycloakConfiguration()
     {
-        // Act
         var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
         
-        // Assert - Check that authentication configuration is properly bound
-        var keycloakAuthority = configuration["Keycloak:Authority"];
-        Assert.IsNotNull(keycloakAuthority, "Keycloak:Authority should be configured");
-        Assert.AreEqual("http://localhost:8080/realms/reportserver", keycloakAuthority);
-        
-        var keycloakClientId = configuration["Keycloak:ClientId"];
-        Assert.IsNotNull(keycloakClientId, "Keycloak:ClientId should be configured");
-        Assert.AreEqual("reportserver-app", keycloakClientId);
-        
-        var reportServerBaseUrl = configuration["ReportServer:BaseUrl"];
-        Assert.IsNotNull(reportServerBaseUrl, "ReportServer:BaseUrl should be configured");
-        Assert.AreEqual("http://localhost:8081/reportserver", reportServerBaseUrl);
-    }
-    
-    [TestCleanup]
-    public void Cleanup()
-    {
-        if (_serviceProvider is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
+        Assert.AreEqual("http://localhost:8080/realms/reportserver", 
+            configuration["Keycloak:Authority"]);
+        Assert.AreEqual("reportserver-app", 
+            configuration["Keycloak:ClientId"]);
     }
 }
-

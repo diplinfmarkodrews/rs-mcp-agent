@@ -178,3 +178,8 @@
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/scopedcss/Components/Pages/Auth/PopupAuthSuccess.razor.rz.scp.css
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/bnjvizor5b-o7x4hdmtsx.gz
 /home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/compressed/l02thujvw7-o7x4hdmtsx.gz
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/Keycloak.AuthServices.Authentication.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/Keycloak.AuthServices.Common.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/Keycloak.AuthServices.Authorization.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/Debug/net9.0/RSChatApp.Web.MvcApplicationPartsAssemblyInfo.cs

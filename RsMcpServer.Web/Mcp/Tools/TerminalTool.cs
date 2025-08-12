@@ -9,7 +9,7 @@ using ReportServerPort.Contracts;
 using ReportServerPort.Contracts.Terminal;
 using RsMcpServer.Identity.Services;
 
-namespace RsMcpServer.Web.McpTools;
+namespace RsMcpServer.Web.Mcp.Tools;
 
 /// <summary>
 /// MCP Server implementation for terminal commands using Microsoft.Extensions.AI MCP SDK

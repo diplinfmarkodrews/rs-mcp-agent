@@ -103,7 +103,122 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj",
+        "projectName": "RSChatApp.Web",
+        "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj",
+        "packagesPath": "/home/markomoto/.nuget/packages/",
+        "outputPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/markomoto/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Aspire.Qdrant.Client": {
+              "target": "Package",
+              "version": "[9.4.0, )"
+            },
+            "CommunityToolkit.Aspire.OllamaSharp": {
+              "target": "Package",
+              "version": "[9.7.0, )"
+            },
+            "Microsoft.Extensions.AI": {
+              "target": "Package",
+              "version": "[9.7.1, )"
+            },
+            "Microsoft.SemanticKernel.Connectors.Qdrant": {
+              "target": "Package",
+              "version": "[1.61.0-preview, )"
+            },
+            "Microsoft.SemanticKernel.Core": {
+              "target": "Package",
+              "version": "[1.61.0, )"
+            },
+            "ModelContextProtocol-SemanticKernel": {
+              "target": "Package",
+              "version": "[0.3.0, )"
+            },
+            "ModelContextProtocol.AspNetCore": {
+              "target": "Package",
+              "version": "[0.3.0-preview.3, )"
+            },
+            "ModelContextProtocolServer.Sse": {
+              "target": "Package",
+              "version": "[0.4.0, )"
+            },
+            "OllamaSharp": {
+              "target": "Package",
+              "version": "[5.3.3, )"
+            },
+            "PdfPig": {
+              "target": "Package",
+              "version": "[0.1.10, )"
+            },
+            "System.Linq.Async": {
+              "target": "Package",
+              "version": "[6.0.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -120,14 +235,14 @@
           "/home/markomoto/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "netstandard2.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "netstandard2.0": {
+            "targetAlias": "netstandard2.0",
             "projectReferences": {}
           }
         },
@@ -144,8 +259,20 @@
         "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "netstandard2.0": {
+          "targetAlias": "netstandard2.0",
+          "dependencies": {
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.8, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -157,12 +284,7 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "frameworkReferences": {
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/RuntimeIdentifierGraph.json"
         }
       }
     },
@@ -212,7 +334,7 @@
           "dependencies": {
             "AutoMapper": {
               "target": "Package",
-              "version": "[14.0.0, )"
+              "version": "[13.0.1, )"
             },
             "Microsoft.Extensions.Hosting.Abstractions": {
               "target": "Package",
@@ -247,7 +369,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -351,7 +473,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -414,7 +536,7 @@
             },
             "Microsoft.Extensions.AI": {
               "target": "Package",
-              "version": "[9.5.0, )"
+              "version": "[9.7.1, )"
             },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
@@ -422,19 +544,19 @@
             },
             "Microsoft.SemanticKernel.Core": {
               "target": "Package",
-              "version": "[1.54.0, )"
+              "version": "[1.61.0, )"
             },
-            "ModelContextProtocol": {
+            "ModelContextProtocol-SemanticKernel": {
               "target": "Package",
-              "version": "[0.2.0-preview.2, )"
+              "version": "[0.3.0, )"
             },
             "ModelContextProtocol.AspNetCore": {
               "target": "Package",
-              "version": "[0.2.0-preview.1, )"
+              "version": "[0.3.0-preview.3, )"
             },
             "ModelContextProtocolServer.Sse": {
               "target": "Package",
-              "version": "[0.0.1-preview-06, )"
+              "version": "[0.4.0, )"
             },
             "OpenAPISwaggerUI": {
               "target": "Package",
@@ -460,7 +582,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
@@ -489,11 +611,17 @@
               "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.ServiceDefaults/RSChatApp.ServiceDefaults.csproj"
               },
+              "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj"
+              },
               "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerPort/ReportServerPort.csproj"
               },
               "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/ReportServerRPCClient/ReportServerRPCClient.csproj"
+              },
+              "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj": {
+                "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Identity/RsMcpServer.Identity.csproj"
               },
               "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Web/RsMcpServer.Web.csproj": {
                 "projectPath": "/home/markomoto/source/repos/mcp-server-javarpc/RsMcpServer.Web/RsMcpServer.Web.csproj"
@@ -528,6 +656,10 @@
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.12.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.9.3, )"
             }
           },
           "imports": [
@@ -546,7 +678,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

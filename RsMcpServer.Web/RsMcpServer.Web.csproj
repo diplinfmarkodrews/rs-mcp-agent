@@ -8,12 +8,14 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Extensions.AI" Version="9.5.0" />
+        <PackageReference Include="Microsoft.Extensions.AI" Version="9.7.1" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
-        <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.54.0" />
-        <PackageReference Include="ModelContextProtocol" Version="0.2.0-preview.2" />
-        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.2.0-preview.1" />
-        <PackageReference Include="ModelContextProtocolServer.Sse" Version="0.0.1-preview-06" />
+        <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.61.0" />
+        <!-- Align MCP related packages with available versions and RSChatApp.Web -->
+        <!-- Removed base ModelContextProtocol package (not needed directly) -->
+        <PackageReference Include="ModelContextProtocol-SemanticKernel" Version="0.3.0" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
+        <PackageReference Include="ModelContextProtocolServer.Sse" Version="0.4.0" />
         <PackageReference Include="OpenAPISwaggerUI" Version="9.2024.1215.2209" />
     </ItemGroup>
 
@@ -25,14 +27,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Microsoft.SemanticKernel.Abstractions">
-        <HintPath>..\..\..\..\.nuget\packages\microsoft.semantickernel.abstractions\1.53.0\lib\net8.0\Microsoft.SemanticKernel.Abstractions.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="McpPrompts\" />
-      <Folder Include="McpRessources\" />
+      <Folder Include="Mcp\Prompts\" />
+      <Folder Include="Mcp\Ressources\" />
     </ItemGroup>
 
 </Project>

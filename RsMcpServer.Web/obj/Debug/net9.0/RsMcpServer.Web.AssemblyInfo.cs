@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RsMcpServer.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b0198ffedc277fb267d430272f88ea8bd399156b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9e212f57847f5af7d40d9fb1fccdc85870ccc63")]
 [assembly: System.Reflection.AssemblyProductAttribute("RsMcpServer.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RsMcpServer.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

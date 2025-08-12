@@ -20,6 +20,7 @@ OpenAIPromptExecutionSettings promptExecutionSettings = new OpenAIPromptExecutio
 builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings))
     .Bind(promptExecutionSettings);
 
+builder.Services.AddHealthChecks();
 // Add Keycloak authentication
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 
@@ -113,8 +114,14 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+else 
+{
+    // Use developer exception page in development
+    app.MapHealthChecks("/health");
+}
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
@@ -192,4 +199,11 @@ await DataIngestor.IngestDataAsync(
     new TextDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
 app.Run();
+
+namespace RSChatApp.Web
+{
+    public partial class Program { }
+}
+
+
 

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RSChatApp.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+19400f9e340a02320b102971759592ef773a7d5c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9e212f57847f5af7d40d9fb1fccdc85870ccc63")]
 [assembly: System.Reflection.AssemblyProductAttribute("RSChatApp.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RSChatApp.ServiceDefaults")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

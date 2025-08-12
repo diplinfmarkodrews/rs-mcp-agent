@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ReportServerPort;
-using ReportServerPort.Authentication.Contracts;
 using ReportServerPort.Contracts;
+using ReportServerPort.Contracts.Authentication;
 using ReportServerPort.Contracts.Terminal;
-using ReportServerPort.Exceptions;
 using ReportServerRPCClient.DTOs.Terminal;
 using ReportServerRPCClient.Infrastructure;
 

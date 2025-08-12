@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "CkLAIwAzqFA=",
+  "dgSpecHash": "3RH4lCOfJpA=",
   "success": true,
   "projectFilePath": "/home/markomoto/source/repos/mcp-server-javarpc/RSChatApp.Web/RSChatApp.Web.csproj",
   "expectedPackageFiles": [
     "/home/markomoto/.nuget/packages/aspire.qdrant.client/9.4.0/aspire.qdrant.client.9.4.0.nupkg.sha512",
-    "/home/markomoto/.nuget/packages/automapper/14.0.0/automapper.14.0.0.nupkg.sha512",
+    "/home/markomoto/.nuget/packages/automapper/13.0.1/automapper.13.0.1.nupkg.sha512",
     "/home/markomoto/.nuget/packages/azure.ai.openai/2.2.0-beta.5/azure.ai.openai.2.2.0-beta.5.nupkg.sha512",
     "/home/markomoto/.nuget/packages/azure.core/1.47.0/azure.core.1.47.0.nupkg.sha512",
     "/home/markomoto/.nuget/packages/communitytoolkit.aspire.ollamasharp/9.7.0/communitytoolkit.aspire.ollamasharp.9.7.0.nupkg.sha512",
@@ -119,7 +119,7 @@
     "/home/markomoto/.nuget/packages/system.memory.data/9.0.7/system.memory.data.9.0.7.nupkg.sha512",
     "/home/markomoto/.nuget/packages/system.net.serversentevents/10.0.0-preview.4.25258.110/system.net.serversentevents.10.0.0-preview.4.25258.110.nupkg.sha512",
     "/home/markomoto/.nuget/packages/system.numerics.tensors/9.0.7/system.numerics.tensors.9.0.7.nupkg.sha512",
-    "/home/markomoto/.nuget/packages/system.text.json/9.0.7/system.text.json.9.0.7.nupkg.sha512",
+    "/home/markomoto/.nuget/packages/system.text.json/9.0.8/system.text.json.9.0.8.nupkg.sha512",
     "/home/markomoto/.nuget/packages/system.threading.channels/9.0.7/system.threading.channels.9.0.7.nupkg.sha512",
     "/home/markomoto/.nuget/packages/system.threading.ratelimiting/8.0.0/system.threading.ratelimiting.8.0.0.nupkg.sha512"
   ],
