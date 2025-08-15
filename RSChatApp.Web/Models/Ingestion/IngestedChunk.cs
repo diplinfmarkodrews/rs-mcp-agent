@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.VectorData;
+using Microsoft.Extensions.VectorData;
 
 namespace RSChatApp.Web.Models.Ingestion;
 

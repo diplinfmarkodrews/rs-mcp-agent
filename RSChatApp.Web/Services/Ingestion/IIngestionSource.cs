@@ -1,4 +1,4 @@
-﻿using RSChatApp.Web.Models.Ingestion;
+using RSChatApp.Web.Models.Ingestion;
 
 namespace RSChatApp.Web.Services.Ingestion;
 

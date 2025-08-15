@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.VectorData;
+using Microsoft.Extensions.VectorData;
 using RSChatApp.Web.Models.Ingestion;
 
 namespace RSChatApp.Web.Services.SemanticSearch;
