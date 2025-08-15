@@ -1,13 +1,16 @@
 using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
-
-var ollama = builder.AddOllama("ollama")
-    .WithGPUSupport()
-    .WithDataVolume();
+bool hasGpu = builder.Configuration.GetValue<bool>("Ollama:Gpu");
+var ollama = hasGpu 
+    ? builder.AddOllama("ollama")
+        .WithGPUSupport()
+        .WithDataVolume()
+    : builder.AddOllama("ollama")
+        .WithDataVolume();
 
 var chat = ollama.AddModel("chat",  
-    builder.Configuration["Ollama:Model"] ?? "mistral-nemo:12b");
+    builder.Configuration["Ollama:Model"] ?? "mistral:7b");
 var embeddings = ollama.AddModel("embeddings", 
     builder.Configuration["Ollama:EmbeddingModel"] ?? "all-minilm");
 
