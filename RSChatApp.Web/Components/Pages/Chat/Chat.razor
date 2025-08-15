@@ -1,4 +1,4 @@
-@page "/"
+﻿@page "/"
 @* @attribute [Authorize] *@
 @attribute [AllowAnonymous]
 @inject IChatClient ChatClient
@@ -179,4 +179,4 @@
     public void Dispose()
         => currentResponseCancellation?.Cancel();
 }
-}
+

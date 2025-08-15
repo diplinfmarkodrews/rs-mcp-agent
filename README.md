@@ -6,34 +6,34 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          RSChatApp.Web (Browser-Based Workspace)               │
-│                                   (Blazor UI)                                  │
+│                          RSChatApp.Web (Browser-Based Workspace)                │
+│                                   (Blazor UI)                                   │
 │                                                                                 │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────────────┐ │
-│  │     Ollama      │    │     Qdrant      │    │    Session Management      │ │
-│  │   (AI/LLM)      │    │   (VectorDB)    │    │                             │ │
-│  │                 │    │                 │    │  Current: In-Memory         │ │
-│  │ • Chat Response │    │ • Vector Search │    │  • Browser Session         │ │
-│  │ • Code Analysis │    │ • Embeddings    │    │  • Conversation Context    │ │
-│  └─────────────────┘    │ • Semantic RAG  │    │                             │ │
-│                         └─────────────────┘    │  Future: Persistent         │ │
-│                                 ▲              │  • Topic-Based History     │ │
-│                    Knowledge     │              │  • Cross-Session Context   │ │
-│                    Base          │              └─────────────────────────────┘ │
-│                    Ingestion     │                                              │
-│  ┌─────────────────────────────────────────────┐                              │
-│  │           Ingested Content                   │                              │
-│  │                                             │                              │
-│  │  📚 Documentation    🔧 Groovy Scripts     │                              │
-│  │  • PDFs, Markdown   • .groovy files        │                              │
-│  │  • API Docs         • Build scripts        │                              │
-│  │  • User Manuals     • Automation scripts   │                              │
-│  │                                             │                              │
-│  │  💻 Terminal Commands                       │                              │
-│  │  • CLI usage examples                      │                              │
-│  │  • Command syntax                          │                              │
-│  │  • Shell scripts                           │                              │
-│  └─────────────────────────────────────────────┘                              │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────────────┐  │
+│  │     Ollama      │    │     Qdrant      │    │    Session Management       │  │
+│  │   (AI/LLM)      │    │   (VectorDB)    │    │                             │  │
+│  │                 │    │                 │    │  Current: In-Memory         │  │
+│  │ • Chat Response │    │ • Vector Search │    │  • Browser Session          │  │
+│  │ • Code Analysis │    │ • Embeddings    │    │  • Conversation Context     │  │
+│  └─────────────────┘    │ • Semantic RAG  │    │                             │  │
+│                         └─────────────────┘    │  Future: Persistent         │  │
+│                                 ▲              │  • Topic-Based History      │  │
+│                    Knowledge    │              │  • Cross-Session Context    │  │
+│                    Base         │              └─────────────────────────────┘  │
+│                    Ingestion    │                                               │
+│  ┌─────────────────────────────────────────────┐                                │
+│  │           Ingested Content                  │                                │
+│  │                                             │                                │
+│  │  📚 Documentation    🔧 Groovy Scripts      │                                │
+│  │  • PDFs, Markdown    • .groovy files        │                                │
+│  │  • API Docs          • Build scripts        │                                │
+│  │  • User Manuals      • Automation scripts   │                                │
+│  │                                             │                                │
+│  │  💻 Terminal Commands                       │                                │
+│  │  • CLI usage examples                       │                                │
+│  │  • Command syntax                           │                                │
+│  │  • Shell scripts                            │                                │
+│  └─────────────────────────────────────────────┘                                │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       │ MCP Protocol
@@ -66,13 +66,13 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
                     └─────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Authentication Layer                        │
+│                    Authentication Layer                         │
 │                                                                 │
-│    RSChatApp.Web ◄──────► Keycloak ◄──────► RsMcpServer.Web    │
+│    RSChatApp.Web ◄──────► Keycloak ◄──────► RsMcpServer.Web     │
 │                           (OIDC)                                │
 │                                                                 │
-│                     ReportServer ◄─────────► Keycloak          │
-│                     (Session Bridge)                           │
+│                     ReportServer ◄─────────► Keycloak           │
+│                     (Session Bridge)                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
