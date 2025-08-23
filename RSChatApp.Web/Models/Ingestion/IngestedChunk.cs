@@ -4,7 +4,7 @@ namespace RSChatApp.Web.Models.Ingestion;
 
 public class IngestedChunk
 {
-    private const int VectorDimensions = 384; // 384 is the default vector size for the all-minilm embedding model
+    private const int VectorDimensions = 1024; // 1024 is the vector size for the snowflake-arctic-embed2 model
     private const string VectorDistanceFunction = DistanceFunction.CosineSimilarity;
 
     [VectorStoreKey]

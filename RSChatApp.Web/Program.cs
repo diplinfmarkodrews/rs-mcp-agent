@@ -1,4 +1,6 @@
+using System.Text;
 using Microsoft.Extensions.AI;
+using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
@@ -8,7 +10,8 @@ using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Extensions;
 using RsMcpServer.Identity.Extensions;
-using RsMcpServer.Identity.Middleware;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Configuration.AddJsonFile("prompts.json", optional: true, reloadOnChange: true);
@@ -19,6 +22,16 @@ OpenAIPromptExecutionSettings promptExecutionSettings = new OpenAIPromptExecutio
 };
 builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings))
     .Bind(promptExecutionSettings);
+
+OpenAISettings openAISettings = new();
+builder.Configuration.GetSection(nameof(OpenAISettings))
+    .Bind(openAISettings);
+
+openAISettings.SetApiKey();
+
+McpClientSettings mcpClientSettings = new();
+builder.Configuration.GetSection(nameof(McpClientSettings))
+    .Bind(mcpClientSettings);
 
 builder.Services.AddHealthChecks();
 // Add Keycloak authentication
@@ -35,11 +48,12 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
 }).AddStandardResilienceHandler(); // Only used without aspire 
 
 builder.Services.AddKernel();
+var kernelBuilder = Kernel.CreateBuilder();
 
 var scopedServiceProvider = builder.Services.BuildServiceProvider()
     .CreateScope()
     .ServiceProvider;
-
+var startupLogger = scopedServiceProvider.GetRequiredService<ILogger<Program>>();
 // Creating McpClient with SSE transport
 await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
@@ -55,150 +69,168 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
         loggerFactory: scopedServiceProvider
             .GetRequiredService<ILoggerFactory>()
     ));
-
-// Create an MCPClient for the Sequential Thinking server
-await using IMcpClient mcpClientSeqThinking = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
-{
-    Name = "SequentialThinking",
-    Command = "npx",
-    Arguments = ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-}));
-
 var toolsRs = await mcpClientRS.ListToolsAsync();
-var toolsSeqThinking = await mcpClientSeqThinking.ListToolsAsync();
-var kernelBuilder = Kernel.CreateBuilder();
+startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
+    new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
+
 #pragma warning disable SKEXP0001
 kernelBuilder.Plugins.AddFromFunctions("RsMcpServer", toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
-kernelBuilder.Plugins.AddFromFunctions("SequentialThinking", toolsSeqThinking.Select(aiFunction => aiFunction.AsKernelFunction()));
+foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpClientConfiguration>())
+{
+
+    // Create an MCPClient for each configured client
+    await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
+    {
+        Name = clientConfig.Name,
+        Command = clientConfig.Command,
+        Arguments = clientConfig.Arguments?.ToArray() ?? Array.Empty<string>(),
+    }));
+    var tools = await mcpClient.ListToolsAsync();
+    startupLogger.LogInformation("Register McpClient: {clientConfigName} with toolCalls: {toolCalls}", clientConfig.Name, 
+        new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
+    
+    kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, tools.Select(aiFunction => aiFunction.AsKernelFunction()));
+}
 #pragma warning restore SKEXP0001
 
-//TODO: Register Chat and Embedding clients with the kernel
-var kernel = kernelBuilder.Build();
-builder.Services.AddSingleton(kernel);
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession();
+    var kernel = kernelBuilder.Build();
+    builder.Services.AddSingleton(kernel);
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddSession();
 
-// Add Blazor services
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    // Add Blazor services
+    builder.Services.AddRazorComponents()
+        .AddInteractiveServerComponents();
 
-// Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
-builder.AddServiceDefaults();
+    // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
+    builder.AddServiceDefaults();
 
-builder.AddOllamaApiClient("chat")
-    .AddChatClient()
-    .UseFunctionInvocation() 
-    .UseKernelFunctionInvocation()
-    .UseOpenTelemetry(configure: c =>
-        c.EnableSensitiveData = builder.Environment.IsDevelopment());
-
-builder.AddOllamaApiClient("embeddings")
-    .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
-
-builder.AddQdrantClient("vectordb");
-    
-builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
-builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
-builder.Services.AddScoped<DataIngestor>();
-builder.Services.AddSingleton<SemanticSearch>();
-builder.Services.AddControllers();
-var app = builder.Build();
-
-app.MapDefaultEndpoints();
-app.MapControllers();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-else 
-{
-    // Use developer exception page in development
-    app.MapHealthChecks("/health");
-}
-
-if (!app.Environment.IsDevelopment())
-    app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseAntiforgery();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-// Add authentication debug endpoint for development
-if (app.Environment.IsDevelopment())
-{
-    // Add a diagnostic endpoint to check loaded tools
-    app.MapGet("/debug/tools", (Kernel kernel) =>
+    if (openAISettings.IsValid())
     {
-        var plugins = kernel.Plugins.Select(p => new
-        {
-            Name = p.Name,
-            FunctionCount = p.Count(),
-            Functions = p.Select(f => new { 
-                Name = f.Name ?? "Unknown", 
-                Description = f.Description ?? "No description" 
-            }).ToList()
-        }).ToList();
-        
-        return Results.Json(new { TotalPlugins = plugins.Count, Plugins = plugins });
-    });
-    app.MapGet("/debug/auth-config", (IConfiguration config) =>
+        builder.Services.AddOpenAIChatClient(openAISettings.Model,
+            new Uri(openAISettings.Address),
+            openAISettings.ApiKey,
+            openTelemetryConfig: config => config.EnableSensitiveData = false
+        );       
+    }
+    else
     {
-        return Results.Ok(new
+        builder.AddOllamaApiClient("chat")
+            .AddChatClient()
+            .UseFunctionInvocation()
+            .UseKernelFunctionInvocation()
+            .UseOpenTelemetry(configure: c =>
+                c.EnableSensitiveData = builder.Environment.IsDevelopment());
+
+    }
+    // Create EmbeddingClient with Ollama
+    builder.AddOllamaApiClient("embeddings")
+        .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
+
+    builder.AddQdrantClient("vectordb");
+
+    builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
+    builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
+    builder.Services.AddScoped<DataIngestor>();
+    builder.Services.AddSingleton<SemanticSearch>();
+    builder.Services.AddControllers();
+    var app = builder.Build();
+
+    app.MapDefaultEndpoints();
+    app.MapControllers();
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Error", createScopeForErrors: true);
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
+    }
+    else
+    {
+        // Use developer exception page in development
+        app.MapHealthChecks("/health");
+    }
+
+    if (!app.Environment.IsDevelopment())
+        app.UseHttpsRedirection();
+    app.UseStaticFiles();
+    app.UseAntiforgery();
+    app.MapRazorComponents<App>()
+        .AddInteractiveServerRenderMode();
+
+    // Add authentication debug endpoint for development
+    if (app.Environment.IsDevelopment())
+    {
+        // Add a diagnostic endpoint to check loaded tools
+        app.MapGet("/debug/tools", (Kernel kernel) =>
         {
-            Authority = config["Keycloak:Authority"],
-            ClientId = config["Keycloak:ClientId"],
-            HasClientSecret = !string.IsNullOrEmpty(config["Keycloak:ClientSecret"]),
-            RequireHttpsMetadata = config["Keycloak:RequireHttpsMetadata"],
-            Scopes = config.GetSection("Keycloak:Scopes").Get<string[]>(),
-            ReportServerAddress = config["ReportServer:Address"]
+            var plugins = kernel.Plugins.Select(p => new
+            {
+                Name = p.Name,
+                FunctionCount = p.Count(),
+                Functions = p.Select(f => new {
+                    Name = f.Name ?? "Unknown",
+                    Description = f.Description ?? "No description"
+                }).ToList()
+            }).ToList();
+
+            return Results.Json(new { TotalPlugins = plugins.Count, Plugins = plugins });
         });
-    });
+        // app.MapGet("/debug/auth-config", (IConfiguration config) =>
+        // {
+        //     return Results.Ok(new
+        //     {
+        //         Authority = config["Keycloak:Authority"],
+        //         ClientId = config["Keycloak:ClientId"],
+        //         HasClientSecret = !string.IsNullOrEmpty(config["Keycloak:ClientSecret"]),
+        //         RequireHttpsMetadata = config["Keycloak:RequireHttpsMetadata"],
+        //         Scopes = config.GetSection("Keycloak:Scopes").Get<string[]>(),
+        //         ReportServerAddress = config["ReportServer:Address"]
+        //     });
+        // });
 
-    app.MapGet("/debug/keycloak-health", async (IHttpClientFactory httpClientFactory) =>
-    {
-        try
-        {
-            var httpClient = httpClientFactory.CreateClient();
-            var keycloakAuthority = app.Configuration["Keycloak:Authority"];
-            var response = await httpClient.GetAsync($"{keycloakAuthority}/.well-known/openid_configuration");
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return Results.Ok(new { Status = "Healthy", Response = content });
-            }
-            else
-            {
-                return Results.Ok(new { Status = "Unhealthy", StatusCode = response.StatusCode, Reason = response.ReasonPhrase });
-            }
-        }
-        catch (Exception ex)
-        {
-            return Results.Ok(new { Status = "Error", Message = ex.Message });
-        }
-    });
-}
+        // app.MapGet("/debug/keycloak-health", async (IHttpClientFactory httpClientFactory) =>
+        // {
+        //     try
+        //     {
+        //         var httpClient = httpClientFactory.CreateClient();
+        //         var keycloakAuthority = app.Configuration["Keycloak:Authority"];
+        //         var response = await httpClient.GetAsync($"{keycloakAuthority}/.well-known/openid_configuration");
+
+        //         if (response.IsSuccessStatusCode)
+        //         {
+        //             var content = await response.Content.ReadAsStringAsync();
+        //             return Results.Ok(new { Status = "Healthy", Response = content });
+        //         }
+        //         else
+        //         {
+        //             return Results.Ok(new { Status = "Unhealthy", StatusCode = response.StatusCode, Reason = response.ReasonPhrase });
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return Results.Ok(new { Status = "Error", Message = ex.Message });
+        //     }
+        // });
+    }
 
 
-// By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
-// other sources by implementing IIngestionSource.
-// Important: ensure that any content you ingest is trusted, as it may be reflected back
-// to users or could be a source of prompt injection risk.
-await DataIngestor.IngestDataAsync(
-    app.Services,
-    new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
+    // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
+    // other sources by implementing IIngestionSource.
+    // Important: ensure that any content you ingest is trusted, as it may be reflected back
+    // to users or could be a source of prompt injection risk.
+    await DataIngestor.IngestDataAsync(
+        app.Services,
+        new PDFDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
-// Ingest text files from the /wwwroot/Data directory.
-// Only supports .txt files, no subfolders
-await DataIngestor.IngestDataAsync(
-    app.Services,
-    new TextDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
+    // Ingest text files from the /wwwroot/Data directory.
+    // Only supports .txt files, no subfolders
+    await DataIngestor.IngestDataAsync(
+        app.Services,
+        new TextDirectorySource(Path.Combine(builder.Environment.WebRootPath, "Data")));
 
-app.Run();
+    app.Run();
 
 namespace RSChatApp.Web
 {

@@ -1,4 +1,5 @@
 @inject IChatClient ChatClient
+@inject ILogger<ChatSuggestions> Logger
 
 @if (suggestions is not null)
 {
@@ -15,10 +16,12 @@
 @code {
     private static string Prompt = @"
         Suggest up to 3 follow-up questions that I could ask you to help me complete my task.
-        Each suggestion must be a complete sentence, maximum 6 words.
+        Each suggestion must be a complete sentence, maximum 8 words.
         Each suggestion must be phrased as something that I (the user) would ask you (the assistant) in response to your previous message,
-        for example 'How do I do that?' or 'Explain ...'.
-        If there are no suggestions, reply with an empty list.
+        for example 'How do I do that?' or 'Explain more about this' or 'What are the steps?'.
+        
+        Respond with just the suggestions, one per line, no numbers or bullets.
+        If there are no suitable suggestions, respond with 'No suggestions'.
     ";
 
     private string[]? suggestions;
@@ -46,10 +49,36 @@
 
         try
         {
-            var response = await ChatClient.GetResponseAsync<string[]>(
-                [.. ReduceMessages(messages), new(ChatRole.User, Prompt)],
+            var reducedMessages = ReduceMessages(messages).ToList();
+            
+            // Skip if no safe messages to work with
+            if (reducedMessages.Count <= 1) // Only system message or empty
+            {
+                suggestions = null;
+                StateHasChanged();
+                return;
+            }
+
+            var response = await ChatClient.GetResponseAsync(
+                [.. reducedMessages, new(ChatRole.User, Prompt)],
                 cancellationToken: cancellation.Token);
-            if (!response.TryGetResult(out suggestions))
+                
+            if (response is not null)
+            {
+                var responseMessages = new List<ChatMessage>();
+                responseMessages.AddMessages(response);
+                
+                var responseText = responseMessages.LastOrDefault()?.Text?.Trim();
+                if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
+                {
+                    suggestions = ParseLinesFromResponse(responseText);
+                }
+                else
+                {
+                    suggestions = null;
+                }
+            }
+            else
             {
                 suggestions = null;
             }
@@ -58,8 +87,20 @@
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            await DispatchExceptionAsync(ex);
+            Logger.LogError(ex, "Error generating chat suggestions");
+            suggestions = null;
+            StateHasChanged();
         }
+    }
+
+    private string[] ParseLinesFromResponse(string responseText)
+    {
+        return responseText
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim().TrimStart('-', '*', '•', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ')', ' '))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && line.Length > 3)
+            .Take(3)
+            .ToArray();
     }
 
     private async Task AddSuggestionAsync(string text)
@@ -69,10 +110,19 @@
 
     private IEnumerable<ChatMessage> ReduceMessages(IReadOnlyList<ChatMessage> messages)
     {
-        // Get any leading system messages, plus up to 5 user/assistant messages
-        // This should be enough context to generate suggestions without unnecessarily resending entire conversations when long
+        // Get system messages
         var systemMessages = messages.TakeWhile(m => m.Role == ChatRole.System);
-        var otherMessages = messages.Where((m, index) => m.Role == ChatRole.User || m.Role == ChatRole.Assistant).Where(m => !string.IsNullOrEmpty(m.Text)).TakeLast(5);
-        return systemMessages.Concat(otherMessages);
+        
+        // Get safe user/assistant messages (text-only, no tool calls)
+        var safeMessages = messages
+            .Skip(systemMessages.Count())
+            .Where(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) &&
+                       !string.IsNullOrWhiteSpace(m.Text) && 
+                       m.Contents?.Count == 1 && 
+                       m.Contents.FirstOrDefault() is Microsoft.Extensions.AI.TextContent)
+            .Select(m => new ChatMessage(m.Role, m.Text))
+            .TakeLast(4);
+        
+        return systemMessages.Concat(safeMessages);
     }
 }

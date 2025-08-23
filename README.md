@@ -4,7 +4,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ## 🏗️ Architecture Overview
 
-```
+
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                          RSChatApp.Web (Browser-Based Workspace)                │
 │                                   (Blazor UI)                                   │
@@ -259,169 +259,6 @@ Or test directly using the Aspire dashboard to monitor service health and intera
 
 ## ⚙️ Configuration
 
-### **Keycloak Authentication Setup**
-
-The system uses Keycloak for centralized authentication across all components. Here's how to set it up:
-
-#### **1. Keycloak Installation & Setup**
-
-**Using Docker (Recommended for Development):**
-
-```bash
-# Start Keycloak with Docker
-docker run -d \
-  --name keycloak \
-  -p 8080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  quay.io/keycloak/keycloak:22.0 \
-  start-dev
-```
-
-**Access Keycloak Admin Console:**
-- URL: `http://localhost:8080`
-- Username: `admin`
-- Password: `admin`
-
-#### **2. Realm Configuration**
-
-Create a new realm called `reportserver`:
-
-1. **Create Realm:**
-   - Go to Administration Console
-   - Click "Create Realm"
-   - Name: `reportserver`
-   - Display Name: `ReportServer Realm`
-   - Enable: `true`
-
-2. **Realm Settings:**
-   ```json
-   {
-     "realm": "reportserver",
-     "enabled": true,
-     "displayName": "ReportServer Realm",
-     "registrationAllowed": false,
-     "resetPasswordAllowed": true,
-     "editUsernameAllowed": false,
-     "bruteForceProtected": true
-   }
-   ```
-
-#### **3. Client Configuration**
-
-Create a client for the MCP Server applications:
-
-1. **Client Settings:**
-   - **Client ID:** `reportserver-app`
-   - **Client Name:** `ReportServer Application`
-   - **Protocol:** `openid-connect`
-   - **Client Authentication:** `ON` (Confidential)
-   - **Standard Flow:** `ON`
-   - **Direct Access Grants:** `ON`
-
-2. **Client Configuration JSON:**
-   ```json
-   {
-     "clientId": "reportserver-app",
-     "name": "ReportServer Application",
-     "description": "MCP Server and Chat Application Client",
-     "enabled": true,
-     "protocol": "openid-connect",
-     "publicClient": false,
-     "standardFlowEnabled": true,
-     "implicitFlowEnabled": false,
-     "directAccessGrantsEnabled": true,
-     "serviceAccountsEnabled": false,
-     "authorizationServicesEnabled": false,
-     "redirectUris": [
-       "http://localhost:5123/*",
-       "http://localhost:5002/*",
-       "https://yourdomain.com/signin-oidc"
-     ],
-     "webOrigins": ["+"],
-     "attributes": {
-       "pkce.code.challenge.method": "S256"
-     }
-   }
-   ```
-
-3. **Valid Redirect URIs:**
-   - `http://localhost:5123/*` (RSChatApp.Web)
-   - `http://localhost:5002/*` (RsMcpServer.Web)
-   - `https://yourdomain.com/signin-oidc` (Production)
-
-#### **4. User Management**
-
-1. **Create Users:**
-   - Go to Users → Add user
-   - Set username, email, first name, last name
-   - Enable user and set temporary password
-
-2. **Assign Roles:**
-   - Create roles: `rs-admin`, `rs-user`, `mcp-user`
-   - Assign appropriate roles to users
-
-### **ReportServer Setup**
-
-ReportServer is a Java-based reporting platform that integrates with the MCP system.
-
-#### **1. Installation Options**
-
-**Option A: Bitnami Stack (Recommended for Quick Start)**
-```bash
-# Download from: https://bitnami.com/stack/reportserver
-wget https://downloads.bitnami.com/files/stacks/reportserver/[version]/bitnami-reportserver-[version]-linux-x64-installer.run
-chmod +x bitnami-reportserver-[version]-linux-x64-installer.run
-sudo ./bitnami-reportserver-[version]-linux-x64-installer.run
-```
-
-**Option B: Manual WAR Deployment**
-```bash
-# Build from source
-git clone https://github.com/infofabrik/reportserver.git
-cd reportserver
-mvn clean install
-
-# Deploy to Tomcat
-cp target/reportserver.war $TOMCAT_HOME/webapps/
-```
-
-**Option C: Docker Deployment**
-```bash
-# Using custom Docker image (if available)
-docker run -d \
-  --name reportserver \
-  -p 8081:8080 \
-  -e DB_HOST=localhost \
-  -e DB_PORT=3306 \
-  -e DB_NAME=reportserver \
-  -e DB_USER=reportserver \
-  -e DB_PASS=password \
-  reportserver:latest
-```
-
-#### **2. ReportServer Configuration**
-
-**Database Setup:**
-```properties
-# hibernate.properties
-hibernate.connection.driver_class=com.mysql.cj.jdbc.Driver
-hibernate.connection.url=jdbc:mysql://localhost:3306/reportserver?useSSL=false
-hibernate.connection.username=reportserver
-hibernate.connection.password=password
-hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
-```
-
-**Keycloak Integration:**
-Configure ReportServer to use Keycloak for authentication by updating the security configuration.
-
-#### **3. Access Points**
-
-- **Web Interface:** `http://localhost:8081/reportserver`
-- **REST API:** `http://localhost:8081/reportserver/api`
-- **RPC Interface:** Available via HTTP for MCP integration
-
-### **Application Configuration (appsettings.json)**
 
 #### **RSChatApp.Web Configuration**
 
@@ -436,20 +273,7 @@ Configure ReportServer to use Keycloak for authentication by updating the securi
     }
   },
   "AllowedHosts": "*",
-  "Keycloak": {
-    "Authority": "http://localhost:8080/realms/reportserver",
-    "ClientId": "reportserver-app",
-    "ClientSecret": "your-client-secret-here",
-    "Realm": "reportserver",
-    "Scopes": [
-      "openid",
-      "profile",
-      "email",
-      "roles"
-    ],
-    "RequireHttpsMetadata": false,
-    "TokenRefreshThreshold": "00:05:00"
-  },
+
   "ReportServer": {
     "Address": "http://localhost:8081",
     "SessionTimeout": "01:00:00",
@@ -501,8 +325,7 @@ Configure ReportServer to use Keycloak for authentication by updating the securi
   "ReportServer": {
     "Address": "http://localhost:8081/",
     "SessionTimeout": "01:00:00",
-    "CookieDomain": "localhost",
-    "EnableSessionBridge": true
+    "CookieDomain": "localhost"
   }
 }
 ```
@@ -528,8 +351,6 @@ Configure ReportServer to use Keycloak for authentication by updating the securi
 - `Address`: Ollama server URL
 - `Model`: Chat completion model
 - `EmbeddingModel`: Text embedding model
-- `MaxTokens`: Maximum tokens per response
-- `Temperature`: Response randomness (0.0-1.0)
 
 **Qdrant Settings:**
 - `Address`: Qdrant vector database URL
@@ -547,68 +368,6 @@ Configure ReportServer to use Keycloak for authentication by updating the securi
     "Address": "http://localhost:8081"
   }
 }
-```
-
-**Production Environment:**
-```json
-{
-  "Keycloak": {
-    "RequireHttpsMetadata": true,
-    "Authority": "https://keycloak.yourdomain.com/realms/reportserver",
-    "ClientSecret": "${KEYCLOAK_CLIENT_SECRET}"
-  },
-  "ReportServer": {
-    "Address": "https://reportserver.yourdomain.com"
-  }
-}
-```
-
-### **2. Alternative: Manual Service Setup**
-
-**⚠️ Note:** We recommend using the .NET Aspire approach above as it automatically handles Docker containers, model downloads, and service orchestration. However, if you need to run services individually:
-
-#### **Prerequisites for Manual Setup**
-- Docker Desktop running
-- .NET 9.0 SDK
-- All services will still use Docker containers (managed manually)
-
-#### **Start Required Services**
-
-**1. Start Keycloak (Authentication)**
-```bash
-docker run -d --name keycloak -p 8080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  quay.io/keycloak/keycloak:22.0 start-dev
-```
-
-**2. Start Qdrant (Vector Database)**
-```bash
-docker run -d --name qdrant -p 6333:6333 -p 6334:6334 \
-  -v qdrant_storage:/qdrant/storage \
-  qdrant/qdrant:latest
-```
-
-**3. Start Ollama (AI Models)**
-```bash
-# Start Ollama in Docker with GPU support
-docker run -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
-
-# Pull required models
-docker exec ollama ollama pull mistral-nemo:12b
-docker exec ollama ollama pull llama3.2:1b
-```
-
-**4. Start ReportServer (Optional - if available)**
-```bash
-# Assuming Bitnami installation
-sudo /opt/bitnami/reportserver/ctlscript.sh start
-```
-
-**5. Start MCP Server**
-```bash
-cd RsMcpServer.Web
-dotnet run
 ```
 
 **6. Start Chat Application**
