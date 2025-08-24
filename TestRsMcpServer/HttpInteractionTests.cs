@@ -42,7 +42,7 @@ public sealed class HttpInteractionTests
         // Scenario 1: Without authentication (current test state)
         var sessionId = await sessionBridge.GetSessionIdAsync();
         var isAuthenticated = await sessionBridge.IsAuthenticatedAsync();
-        var bearerToken = await sessionBridge.GetBearerTokenAsync();
+        var bearerToken = await sessionBridge.GetAuthenticationTokenAsync();
         
         Console.WriteLine("\n=== Current Test State (No Authentication) ===");
         Console.WriteLine($"SessionId: {sessionId ?? "NULL"}");

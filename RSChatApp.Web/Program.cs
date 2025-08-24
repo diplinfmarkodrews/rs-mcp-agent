@@ -47,9 +47,7 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
 }).AddStandardResilienceHandler(); // Only used without aspire 
 
-builder.Services.AddKernel();
-var kernelBuilder = Kernel.CreateBuilder();
-
+var kernelBuilder = builder.Services.AddKernel();
 var scopedServiceProvider = builder.Services.BuildServiceProvider()
     .CreateScope()
     .ServiceProvider;
@@ -74,10 +72,11 @@ startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
     new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
 #pragma warning disable SKEXP0001
-kernelBuilder.Plugins.AddFromFunctions("RsMcpServer", toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
+kernelBuilder.Plugins.AddFromFunctions("RsMcpServer", 
+    toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
+#pragma warning restore SKEXP0001
 foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpClientConfiguration>())
 {
-
     // Create an MCPClient for each configured client
     await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
     {
@@ -88,13 +87,13 @@ foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpCl
     var tools = await mcpClient.ListToolsAsync();
     startupLogger.LogInformation("Register McpClient: {clientConfigName} with toolCalls: {toolCalls}", clientConfig.Name, 
         new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
-    
-    kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, tools.Select(aiFunction => aiFunction.AsKernelFunction()));
-}
+#pragma warning disable SKEXP0001
+    kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, 
+        tools.Select(aiFunction => aiFunction.AsKernelFunction()));
 #pragma warning restore SKEXP0001
+}
 
-    var kernel = kernelBuilder.Build();
-    builder.Services.AddSingleton(kernel);
+
     builder.Services.AddDistributedMemoryCache();
     builder.Services.AddSession();
 
