@@ -1,6 +1,6 @@
 # Enterprise MCP Server for ReportServer Integration
 
-A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development and enterprise-grade authentication.
+A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development.
 
 ## 🏗️ Architecture Overview
 
@@ -9,31 +9,44 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │                          RSChatApp.Web (Browser-Based Workspace)                │
 │                                   (Blazor UI)                                   │
 │                                                                                 │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────────────┐  │
-│  │     Ollama      │    │     Qdrant      │    │    Session Management       │  │
-│  │   (AI/LLM)      │    │   (VectorDB)    │    │                             │  │
-│  │                 │    │                 │    │  Current: In-Memory         │  │
-│  │ • Chat Response │    │ • Vector Search │    │  • Browser Session          │  │
-│  │ • Code Analysis │    │ • Embeddings    │    │  • Conversation Context     │  │
-│  └─────────────────┘    │ • Semantic RAG  │    │                             │  │
-│                         └─────────────────┘    │  Future: Persistent         │  │
-│                                 ▲              │  • Topic-Based History      │  │
-│                    Knowledge    │              │  • Cross-Session Context    │  │
-│                    Base         │              └─────────────────────────────┘  │
-│                    Ingestion    │                                               │
-│  ┌─────────────────────────────────────────────┐                                │
-│  │           Ingested Content                  │                                │
-│  │                                             │                                │
-│  │  📚 Documentation    🔧 Groovy Scripts      │                                │
-│  │  • PDFs, Markdown    • .groovy files        │                                │
-│  │  • API Docs          • Build scripts        │                                │
-│  │  • User Manuals      • Automation scripts   │                                │
-│  │                                             │                                │
-│  │  💻 Terminal Commands                       │                                │
-│  │  • CLI usage examples                       │                                │
-│  │  • Command syntax                           │                                │
-│  │  • Shell scripts                            │                                │
-│  └─────────────────────────────────────────────┘                                │
+│  ┌─────────────────────────────────────────┐    ┌─────────────────────────────┐  │
+│  │         LLM Provider Layer              │    │    Session Management       │  │
+│  │                                         │    │                             │  │
+│  │  ┌─────────────┐  ┌─────────────────┐   │    │  Current: In-Memory         │  │
+│  │  │   Ollama    │  │   Anthropic     │   │    │  • Browser Session          │  │
+│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │    │  • Conversation Context     │  │
+│  │  │             │  │                 │   │    │                             │  │
+│  │  │ • Mistral   │  │ • Claude-3.5    │   │    │  Future: Persistent         │  │
+│  │  │ • Llama     │  │ • Claude-3      │   │    │  • Topic-Based History      │  │
+│  │  │ • Qwen      │  │ • Claude Haiku  │   │    │  • Cross-Session Context    │  │
+│  │  └─────────────┘  └─────────────────┘   │    └─────────────────────────────┘  │
+│  │                                         │                                     │
+│  │  ┌─────────────┐  ┌─────────────────┐   │    ┌─────────────────┐             │
+│  │  │   OpenAI    │  │    Azure AI     │   │    │     Qdrant      │             │
+│  │  │  (GPT-4/o1) │  │    (OpenAI)     │   │    │   (VectorDB)    │             │
+│  │  │             │  │                 │   │    │                 │             │
+│  │  │ • GPT-4o    │  │ • GPT-4         │   │    │ • Vector Search │             │
+│  │  │ • GPT-4     │  │ • GPT-3.5       │   │    │ • Embeddings    │             │
+│  │  │ • o1-mini   │  │ • Text Embedding│   │    │ • Semantic RAG  │             │
+│  │  └─────────────┘  └─────────────────┘   │    └─────────────────┘             │
+│  │                                         │            ▲                       │
+│  │    🔄 Intelligent Provider Selection    │            │                       │
+│  │    • Cost optimization                  │ Knowledge  │                       │
+│  │    • Performance-based routing          │ Base       │                       │
+│  │    • Fallback mechanisms                │ Ingestion  │                       │
+│  └─────────────────────────────────────────┘            │                       │
+│                          ┌─────────────────────────────────────────────┐        │
+│                          │           Ingested Content                  │        │
+│                          │                                             │        │  │                          │  📚 Documentation    🔧 Groovy Scripts      │        │
+│                          │  • PDFs, Markdown    • .groovy files        │        │
+│                          │  • API Docs          • Build scripts        │        │
+│                          │  • User Manuals      • Automation scripts   │        │
+│                          │                                             │        │
+│                          │  💻 Terminal Commands                       │        │
+│                          │  • CLI usage examples                       │        │
+│                          │  • Command syntax                           │        │
+│                          │  • Shell scripts                            │        │
+│                          └─────────────────────────────────────────────┘        │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       │ MCP Protocol
@@ -91,9 +104,14 @@ The system ingests diverse content types into Qdrant vector database for intelli
 - **🔧 Groovy Scripts**: Build scripts, automation scripts, and custom .groovy files  
 - **💻 Terminal Commands**: CLI usage examples, command syntax references, and shell scripts
 
-**🤖 AI-Powered Intelligence**
-- **Ollama**: Handles chat responses and code analysis using local LLM models
-- **Qdrant**: Provides vector search, embeddings, and semantic RAG capabilities for context-aware responses
+**🤖 Multi-Provider AI Intelligence**
+  - **Flexible LLM Provider Layer**: Support for multiple AI providers, in future with intelligent routing and fallback 
+  - **Ollama**: Local deployment for privacy-sensitive workloads and offline operation
+  - **Anthropic Claude**: High-quality reasoning and code analysis with Claude-3.5 Sonnet
+  - **OpenAI GPT**: Versatile models including GPT-4o and o1-mini for different use cases
+  - **Azure OpenAI**: Enterprise-grade hosted OpenAI models with additional security
+
+- **Ollama/Qdrant**: Powerful local embedding Model, provides vector search, embeddings, and semantic RAG capabilities for context-aware responses
 
 **🔧 MCP Server Evolution (RsMcpServer.Web)**
 - **Current State**: Implements basic terminal tool for command execution and process management
@@ -111,9 +129,13 @@ Centralized Keycloak OIDC authentication ensures secure access across all compon
 - ✅ **Cross-System Session Synchronization**
 - ✅ **Role-Based Access Control (RBAC)**
 
-### **AI-Powered Chat Interface**
+### **Multi-Provider AI Chat Interface**
 - ✅ **Modern Blazor Web UI** with real-time chat capabilities
-- ✅ **Ollama Integration** for local LLM inference
+- ✅ **Multiple LLM Provider Support**:
+  - **Ollama Integration** for local LLM inference (Mistral, Llama, Qwen)
+  - **Anthropic Claude** for advanced reasoning (Claude-3.5 Sonnet, Claude-3, Haiku)
+  - **OpenAI GPT** for versatile AI capabilities (GPT-4o, GPT-4, o1-mini)
+  - **Azure OpenAI** for enterprise-grade hosted models
 - ✅ **Qdrant Vector Database** for semantic search and RAG
 - ✅ **Document Ingestion Pipeline** with PDF support
 - ✅ **Semantic Search** across ingested documents
@@ -153,11 +175,12 @@ Set-Alias -Name docker-compose -Value 'docker compose'
 ```
 
 This will automatically:
-- ✅ Start **Ollama** in Docker with GPU support (if available)
+- ✅ Start **Ollama** in Docker with GPU support (if available) as the default local LLM provider
 - ✅ Pull and configure required AI models automatically (configurable in appsettings.json)
+- ✅ Set up **multiple LLM provider support** (configure Anthropic, OpenAI, Azure OpenAI in appsettings.json)
 - ✅ Start **Qdrant** vector database in Docker with persistent storage
 - ✅ Launch the **MCP Server** with authentication
-- ✅ Start the **Blazor Web Application**
+- ✅ Start the **Blazor Web Application** with intelligent LLM provider selection
 - ✅ Open the **Aspire Dashboard** for monitoring
 
 **Access Points:**
@@ -166,7 +189,7 @@ This will automatically:
 - 🤖 **MCP Server API**: `http://localhost:5002`
 - 📊 **Qdrant Dashboard**: `http://localhost:6333/dashboard`
 
-**Note:** The first run may take a few minutes as Docker images are downloaded and AI models are pulled automatically.
+**Note:** The first run may take a few minutes as Docker images are downloaded and AI models are pulled automatically. To use commercial LLM providers (Anthropic, OpenAI, Azure), configure your API keys in the appsettings.json file.
 
 ## Core Components
 
@@ -280,12 +303,39 @@ Or test directly using the Aspire dashboard to monitor service health and intera
     "CookieDomain": "localhost",
     "EnableSessionBridge": true
   },
-  "Ollama": {
-    "Address": "http://0.0.0.0:11434",
-    "Model": "mistral-nemo:12b",
-    "EmbeddingModel": "llama3.2:1b",
-    "MaxTokens": 4096,
-    "Temperature": 0.7
+  "LLMProviders": {
+    "DefaultProvider": "Ollama",
+    "FallbackStrategy": "Cascade",
+    "Ollama": {
+      "Address": "http://0.0.0.0:11434",
+      "Model": "mistral-nemo:12b",
+      "EmbeddingModel": "llama3.2:1b",
+      "MaxTokens": 4096,
+      "Temperature": 0.7,
+      "Enabled": true
+    },
+    "Anthropic": {
+      "ApiKey": "your-anthropic-api-key",
+      "Model": "claude-3-5-sonnet-20241022",
+      "MaxTokens": 4096,
+      "Temperature": 0.7,
+      "Enabled": false
+    },
+    "OpenAI": {
+      "ApiKey": "your-openai-api-key",
+      "Model": "gpt-4o",
+      "MaxTokens": 4096,
+      "Temperature": 0.7,
+      "Enabled": false
+    },
+    "AzureOpenAI": {
+      "Endpoint": "https://your-resource.openai.azure.com/",
+      "ApiKey": "your-azure-openai-key",
+      "DeploymentName": "gpt-4",
+      "MaxTokens": 4096,
+      "Temperature": 0.7,
+      "Enabled": false
+    }
   },
   "Qdrant": {
     "Address": "http://localhost:6334"
@@ -347,10 +397,31 @@ Or test directly using the Aspire dashboard to monitor service health and intera
 - `CookieDomain`: Domain for session cookies
 - `EnableSessionBridge`: Enable session bridging between Keycloak and ReportServer
 
+**LLM Provider Settings:**
+- `DefaultProvider`: Primary LLM provider to use ("Ollama", "Anthropic", "OpenAI", "AzureOpenAI")
+- `FallbackStrategy`: How to handle provider failures ("Cascade", "RoundRobin", "None")
+
 **Ollama Settings:**
 - `Address`: Ollama server URL
-- `Model`: Chat completion model
+- `Model`: Chat completion model (e.g., "mistral-nemo:12b", "llama3.2:3b")
 - `EmbeddingModel`: Text embedding model
+- `Enabled`: Whether this provider is available
+
+**Anthropic Claude Settings:**
+- `ApiKey`: Anthropic API key from console.anthropic.com
+- `Model`: Claude model variant ("claude-3-5-sonnet-20241022", "claude-3-haiku-20240307")
+- `Enabled`: Whether this provider is available
+
+**OpenAI Settings:**
+- `ApiKey`: OpenAI API key from platform.openai.com
+- `Model`: GPT model variant ("gpt-4o", "gpt-4", "o1-mini")
+- `Enabled`: Whether this provider is available
+
+**Azure OpenAI Settings:**
+- `Endpoint`: Azure OpenAI resource endpoint
+- `ApiKey`: Azure OpenAI API key
+- `DeploymentName`: Deployment name in Azure (not the model name)
+- `Enabled`: Whether this provider is available
 
 **Qdrant Settings:**
 - `Address`: Qdrant vector database URL

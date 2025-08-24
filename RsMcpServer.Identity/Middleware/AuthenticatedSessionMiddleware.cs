@@ -6,7 +6,7 @@ using RsMcpServer.Identity.Services;
 namespace RsMcpServer.Identity.Middleware;
 
 /// <summary>
-/// Middleware for handling authentication session management
+/// Middleware for handling both Legacy token and Keycloak authentication session management
 /// </summary>
 public class AuthenticatedSessionMiddleware
 {
@@ -19,7 +19,9 @@ public class AuthenticatedSessionMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, ISessionBridgeService sessionBridge, ITokenManagementService tokenService)
+    public async Task InvokeAsync(
+        HttpContext context, 
+        ISessionBridgeService sessionBridge)
     {
         // Skip authentication checks for certain paths
         if (ShouldSkipAuthentication(context))
@@ -30,28 +32,18 @@ public class AuthenticatedSessionMiddleware
 
         try
         {
-            // Check if user is authenticated
-            if (context.User?.Identity?.IsAuthenticated == true)
+            // Single entry point - let SessionBridge handle the complexity
+            var authContext = await sessionBridge.GetAuthenticationContextAsync();
+            
+            if (authContext.IsAuthenticated && authContext.User != null)
             {
-                // Ensure we have a valid bearer token for ReportServer integration
-                var token = await sessionBridge.GetBearerTokenAsync();
-                
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogWarning("No valid bearer token available for authenticated user: {User}", 
-                        context.User.Identity.Name);
-                    
-                    // Try to refresh the token
-                    var refreshResult = await tokenService.RefreshTokenAsync();
-                    if (!refreshResult.Success)
-                    {
-                        _logger.LogWarning("Token refresh failed, clearing session");
-                        await sessionBridge.ClearSessionAsync();
-                        context.Response.StatusCode = 401;
-                        await context.Response.WriteAsync("Authentication token expired");
-                        return;
-                    }
-                }
+                context.User = authContext.User;
+                _logger.LogDebug("Authentication successful: {Type} for {User}", 
+                    authContext.Type, authContext.User.Identity?.Name);
+            }
+            else
+            {
+                _logger.LogDebug("No authentication context available");
             }
 
             await _next(context);
@@ -70,11 +62,12 @@ public class AuthenticatedSessionMiddleware
         
         return path switch
         {
-            var p when p?.StartsWith("/auth") == true => true,
-            var p when p?.StartsWith("/health") == true => true,
-            var p when p?.StartsWith("/swagger") == true => true,
-            var p when p?.StartsWith("/api/health") == true => true,
-            "/" => true,
+            var p when p?.StartsWith("/api/auth") == true => true,  // Auth endpoints
+            var p when p?.StartsWith("/auth") == true => true,      // Legacy auth paths
+            var p when p?.StartsWith("/health") == true => true,    // Health checks
+            var p when p?.StartsWith("/swagger") == true => true,   // Swagger UI
+            var p when p?.StartsWith("/api/health") == true => true, // API health
+            "/" => true,                                             // Root
             _ => false
         };
     }
