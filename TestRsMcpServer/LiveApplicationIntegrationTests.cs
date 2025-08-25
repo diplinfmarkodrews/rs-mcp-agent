@@ -1,18 +1,4 @@
 using System.Net;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using RsMcpServer.Identity.Extensions;
-using RsMcpServer.Identity.Services;
-using RsMcpServer.Web.Mcp.Tools;
-using Microsoft.SemanticKernel;
-using ReportServerRPCClient.Extensions;
-using RsMcpServer.Web.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRsMcpServer;
 

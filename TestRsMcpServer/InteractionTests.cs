@@ -5,6 +5,12 @@ using Microsoft.Extensions.Hosting;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RsMcpServer.Web;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using TestRsMcpServer.Utilities;
 
 namespace TestRsMcpServer;
 
@@ -103,12 +109,12 @@ public sealed class InteractionTests
         // Step 1-2: Check initial state (simulates what happens without authentication)
         var initialSessionId = await sessionBridge.GetSessionIdAsync();
         var initialAuth = await sessionBridge.IsAuthenticatedAsync();
-        var initialToken = await sessionBridge.GetBearerTokenAsync();
+        var initialToken = await sessionBridge.GetAuthenticationContextAsync();
         
         // Assert - Document expected behavior
         Assert.IsNull(initialSessionId, "Initial session should be null");
         Assert.IsFalse(initialAuth, "Initial authentication should be false");
-        Assert.IsNull(initialToken, "Initial token should be null");
+        Assert.IsNull(initialToken.AuthenticationToken, "Initial token should be null");
         
         Console.WriteLine($"✓ Without authentication: SessionId={initialSessionId}, IsAuthenticated={initialAuth}, HasToken={initialToken != null}");
         Console.WriteLine("✓ In real scenario with authentication, these would have actual values");

@@ -1,14 +1,10 @@
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
-using ModelContextProtocol.Server;
 using OpenAPISwaggerUI;
-using ReportServerPort;
 using ReportServerRPCClient.Extensions;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
-using RsMcpServer.Identity.Services;
-using RsMcpServer.Web.Extensions;
 using RsMcpServer.Web.Mcp.Tools;
 
 // Make the Program accessible to the test project
@@ -32,8 +28,9 @@ var reportServerAddress = builder.Configuration["ReportServer:Address"]
 builder.Services.AddReportServerRpcClient(reportServerAddress);
 builder.Services.AddScoped<TerminalTool>();
 
-var kernelBuilder = builder.Services.AddKernel();
-kernelBuilder.Plugins.AddFromType<TerminalTool>();
+builder.Services.AddKernel()
+    .Plugins.AddFromType<TerminalTool>();
+
 
 builder.Services.AddMcpServer()
     .WithTools<TerminalTool>()

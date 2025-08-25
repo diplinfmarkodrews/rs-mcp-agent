@@ -77,7 +77,7 @@ public sealed class TerminalToolInteractionTests
         var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
 
         // Act
-        var bearerToken = await sessionBridge.GetBearerTokenAsync();
+        var bearerToken = await sessionBridge.GetAuthenticationTokenAsync();
 
         // Assert
         Assert.IsNull(bearerToken, "Bearer token should be null without session");
