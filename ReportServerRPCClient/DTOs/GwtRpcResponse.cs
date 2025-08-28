@@ -1,6 +1,4 @@
 using Newtonsoft.Json;
-using ReportServerPort.Contracts;
-using ReportServerPort.Exceptions;
 
 namespace ReportServerRPCClient.DTOs;
 

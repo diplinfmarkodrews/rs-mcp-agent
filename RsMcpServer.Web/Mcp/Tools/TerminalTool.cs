@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
-using ReportServerPort;
-using ReportServerPort.Contracts;
-using ReportServerPort.Contracts.Terminal;
+using ReportServer.Abstraction;
+using ReportServer.Abstraction.Contracts;
+using ReportServer.Abstraction.Contracts.Terminal;
 using RsMcpServer.Identity.Services;
 
 namespace RsMcpServer.Web.Mcp.Tools;

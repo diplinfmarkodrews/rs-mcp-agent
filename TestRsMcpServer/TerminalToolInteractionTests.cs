@@ -4,10 +4,10 @@ using Microsoft.Extensions.Hosting;
 using RsMcpServer.Identity.Services;
 using RsMcpServer.Web.Mcp.Tools;
 using Microsoft.Extensions.Logging;
-using ReportServerPort;
-using ReportServerPort.Contracts;
-using ReportServerPort.Contracts.Terminal;
-using ReportServerPort.Contracts.Authentication; // Correct namespace
+using ReportServer.Abstraction;
+using ReportServer.Abstraction.Contracts;
+using ReportServer.Abstraction.Contracts.Terminal;
+using ReportServer.Abstraction.Contracts.Authentication; // Correct namespace
 using Microsoft.Extensions.FileProviders;
 
 namespace TestRsMcpServer;
@@ -269,6 +269,12 @@ public class MockReportServerClient : IReportServerClient
     {
         return Task.FromResult(new Result<AuthenticationResult>(
             new Exception("Mock: Authentication not implemented")));
+    }
+
+    public Task<Result<string>> LogoutAsync()
+    {
+        return Task.FromResult(new Result<string>(
+            new Exception("Mock: Logout not implemented")));
     }
 
     // IRsTerminalClient implementation  

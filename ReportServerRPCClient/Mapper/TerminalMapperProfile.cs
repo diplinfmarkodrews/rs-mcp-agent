@@ -1,4 +1,5 @@
 using AutoMapper;
+using ReportServer.Abstraction.Contracts.Terminal;
 
 namespace ReportServerRPCClient.Mapper;
 
@@ -6,13 +7,13 @@ public class TerminalMapperProfile: Profile
 {
     public TerminalMapperProfile()
     {
-        CreateMap<DTOs.Terminal.AbstractNodeDto, ReportServerPort.Contracts.Terminal.AbstractNode>()
+        CreateMap<DTOs.Terminal.AbstractNodeDto, AbstractNode>()
             .ReverseMap();
         
-        CreateMap<DTOs.Terminal.CommandResultDto, ReportServerPort.Contracts.Terminal.CommandResult>()
+        CreateMap<DTOs.Terminal.CommandResultDto, CommandResult>()
             .ReverseMap();
         
-        CreateMap<DTOs.Terminal.TerminalSessionInfoDto, ReportServerPort.Contracts.Terminal.TerminalSessionInfo>()
+        CreateMap<DTOs.Terminal.TerminalSessionInfoDto, TerminalSessionInfo>()
             .ReverseMap();
     }
 }

@@ -19,8 +19,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ReportServerPort\ReportServerPort.csproj" />
+      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
       <ProjectReference Include="..\ReportServerRPCClient\ReportServerRPCClient.csproj" />
+      <ProjectReference Include="..\ReportServer.RestClient\ReportServer.RestClient.csproj" />
       <ProjectReference Include="..\RsMcpServer.Web\RsMcpServer.Web.csproj" />
       <ProjectReference Include="..\RSChatApp.Web\RSChatApp.Web.csproj" />
       <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />

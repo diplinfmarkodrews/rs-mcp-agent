@@ -1,5 +1,5 @@
 using AutoMapper;
-using ReportServerPort.Contracts;
+using ReportServer.Abstraction.Contracts;
 using ReportServerRPCClient.Infrastructure;
 
 namespace ReportServerRPCClient.Services;

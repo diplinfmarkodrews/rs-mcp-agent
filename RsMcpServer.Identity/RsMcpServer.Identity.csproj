@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
     <ProjectReference Include="..\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj" />
   </ItemGroup>
 

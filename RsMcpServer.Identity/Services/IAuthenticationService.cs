@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
-using ReportServerPort;
+using ReportServer.Abstraction;
 using RsMcpServer.Identity.Models.Authentication;
 
 namespace RsMcpServer.Identity.Services;

@@ -1,5 +1,5 @@
 using AutoMapper;
-using ReportServerPort.Contracts.Authentication;
+using ReportServer.Abstraction.Contracts.Authentication;
 using ReportServerRPCClient.DTOs.Authentication;
 
 namespace ReportServerRPCClient.Mapper;

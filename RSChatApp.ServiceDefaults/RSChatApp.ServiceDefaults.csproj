@@ -23,7 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../ReportServerRPCClient/ReportServerRPCClient.csproj" />
-    <ProjectReference Include="../ReportServerPort/ReportServerPort.csproj" />
+    <ProjectReference Include="../ReportServer.RestClient/ReportServer.RestClient.csproj" />
+    <ProjectReference Include="../ReportServer.Abstraction/ReportServer.Abstraction.csproj" />
   </ItemGroup>
 
 </Project>

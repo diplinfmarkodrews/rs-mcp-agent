@@ -228,7 +228,7 @@ This will automatically:
   - **Services/**: Implementation of RPC client
   - **DTOs/**: Data transfer objects for RPC communication
 
-- **ReportServerPort/**: Interface definitions for Report Server communication
+- **ReportServer.Abstraction/**: Interface definitions for Report Server communication
   - **IReportServerClient.cs**: Main interface for communicating with ReportServer
   - **Contracts/**: Data contracts for the ReportServer API
 

@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
-using ReportServerPort.Contracts;
-using ReportServerPort.Exceptions;
+using ReportServer.Abstraction.Contracts;
+using ReportServer.Abstraction.Exceptions;
 using ReportServerRPCClient.DTOs;
 using ReportServerRPCClient.DTOs.Terminal;
 using ReportServerRPCClient.Infrastructure;
