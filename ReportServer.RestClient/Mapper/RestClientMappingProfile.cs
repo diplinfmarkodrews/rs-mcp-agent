@@ -4,7 +4,7 @@ using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.Abstraction.Contracts.FileServer;
 using ReportServer.RestClient.DTOs.Authentication;
 using ReportServer.RestClient.DTOs.Terminal;
-using ReportServer.RestClient.DTOs.FileServer;
+// using ReportServer.RestClient.DTOs.FileServer;
 
 namespace ReportServer.RestClient.Mapper;
 
@@ -12,6 +12,14 @@ public class RestClientMappingProfile : Profile
 {
     public RestClientMappingProfile()
     {
+        CreateMap<AuthenticationResultDto, AuthenticationResult>()
+            .ForMember(dest => dest.IsAuthenticated, opt => opt.MapFrom(src => src.Success))
+            .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+            .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.SessionId))
+            .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src.Token));
+            // .ForMember(dest => dest.ErrorMessage, opt => opt.MapFrom(src => src.ErrorMessage))
+            // .ForMember(dest => dest.LoginRestrictions, opt => opt.MapFrom(src => src.LoginRestrictions));
+
         // Authentication mappings
         CreateMap<UserDto, User>()
             .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username ?? string.Empty))
@@ -38,17 +46,12 @@ public class RestClientMappingProfile : Profile
             .ForMember(dest => dest.NewPrompt, opt => opt.MapFrom(src => src.NewPrompt ?? string.Empty));
 
         // File server mappings
-        CreateMap<FileInfoDto, FileTreeNode>()
-            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // REST API doesn't provide ID
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name ?? string.Empty))
-            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Path ?? string.Empty))
-            .ForMember(dest => dest.IsFolder, opt => opt.MapFrom(src => src.IsDirectory))
-            .ForMember(dest => dest.Children, opt => opt.MapFrom(src => new List<FileTreeNode>()));
-
-        // Reverse mappings for requests
-        CreateMap<User, AuthenticationRequestDto>()
-            .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username))
-            .ForMember(dest => dest.Password, opt => opt.Ignore()); // Password not available in User object
+        // CreateMap<FileInfoDto, FileTreeNode>()
+        //     .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // REST API doesn't provide ID
+        //     .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name ?? string.Empty))
+        //     .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Path ?? string.Empty))
+        //     .ForMember(dest => dest.IsFolder, opt => opt.MapFrom(src => src.IsDirectory))
+        //     .ForMember(dest => dest.Children, opt => opt.MapFrom(src => new List<FileTreeNode>()));
 
         CreateMap<AbstractNode, AbstractNodeDto>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))

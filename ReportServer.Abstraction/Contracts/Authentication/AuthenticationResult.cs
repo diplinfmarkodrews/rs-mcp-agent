@@ -5,6 +5,7 @@ public class AuthenticationResult : IContract
     public bool IsAuthenticated { get; set; }
     public User User { get; set; }
     public string SessionId { get; set; }
+    public string Token { get; set; }
 }
 
 public class User

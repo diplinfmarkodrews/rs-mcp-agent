@@ -27,22 +27,28 @@ public class Result
 public class Result<T> : Result
 {
     public T? Data { get; set; }
-    public Result(Exception exception)
+    public Result(Exception? exception)
     {
         IsSuccess = false;
-        Message = exception.Message;
-        Error = new SerializableException(exception);
+        Message = exception?.Message ?? string.Empty;
+        Error = exception != null ? new SerializableException(exception) : null;
     }
-    public Result(string message) 
-    { 
+    public Result(string message)
+    {
         IsSuccess = false;
         Message = message;
     }
-        
+
     public Result(T data)
     {
         IsSuccess = true;
         Data = data;
     }
+    public static new Result<T> Fail(string message, Exception? error = null)
+        => new Result<T>(error)
+        {
+            IsSuccess = false,
+            Message = message,            
+        };
 }
 

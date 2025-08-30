@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using ReportServer.Abstraction;
+using ReportServer.RestClient.Infrastructure;
 using ReportServer.RestClient.Services;
 using ReportServer.RestClient.Mapper;
 
@@ -17,9 +18,9 @@ public static class ServiceCollectionExtensions
 
         // Add AutoMapper
         services.AddAutoMapper(typeof(RestClientMappingProfile));
-
+        services.AddScoped<CookieContainerProvider>();
         // Configure HttpClient with retry policy
-        services.AddHttpClient<ReportServerRestClient>(client =>
+        services.AddHttpClient<IReportServerClient, RsRestClient>(client =>
         {
             client.BaseAddress = new Uri(baseUrl);
             client.Timeout = timeout ?? TimeSpan.FromMinutes(5);
@@ -27,8 +28,7 @@ public static class ServiceCollectionExtensions
         })
         .AddPolicyHandler(GetRetryPolicy());
 
-        // Register the client as IReportServerClient
-        services.AddScoped<IReportServerClient, ReportServerRestClient>();
+        
 
         return services;
     }
@@ -38,15 +38,16 @@ public static class ServiceCollectionExtensions
         if (configureClient == null)
             throw new ArgumentNullException(nameof(configureClient));
 
+        services.AddScoped<CookieContainerProvider>();
         // Add AutoMapper
         services.AddAutoMapper(typeof(RestClientMappingProfile));
 
         // Configure HttpClient with custom configuration and retry policy
-        services.AddHttpClient<ReportServerRestClient>(configureClient)
+        services.AddHttpClient("ReportServerRestClient", configureClient)
             .AddPolicyHandler(GetRetryPolicy());
 
         // Register the client as IReportServerClient
-        services.AddScoped<IReportServerClient, ReportServerRestClient>();
+        services.AddScoped<IReportServerClient, RsRestClient>();
 
         return services;
     }

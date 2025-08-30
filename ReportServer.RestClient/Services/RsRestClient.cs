@@ -4,13 +4,13 @@ using ReportServer.Abstraction;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Authentication;
 using ReportServer.Abstraction.Contracts.Terminal;
-using ReportServerRPCClient.DTOs.Terminal;
-using ReportServerRPCClient.Infrastructure;
+using ReportServer.RestClient.DTOs.Terminal;
+using ReportServer.RestClient.Infrastructure;
 
 
-namespace ReportServerRPCClient.Services;
+namespace ReportServer.RestClient.Services;
 
-public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportServerClient
+public class RsRestClient : RsRestClientBase, IReportServerClient
 {
     private readonly ILogger _logger;
     private readonly IMapper _mapper;
@@ -19,15 +19,15 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     private readonly RsGwtRpcRemoteServerClient _remoteServerClient;
     private readonly RsGwtRpcTerminalClient _terminalClient;
 
-    public ReportServerGwtRpcClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, 
+    public RsRestClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, 
         CookieContainerProvider cookieProvider, 
         IMapper mapper) 
-        : base(httpClientFactory.CreateClient("ReportServerGwtRpcClient"), cookieProvider)
+        : base(httpClientFactory.CreateClient("ReportServerRestClient"), cookieProvider)
     {
         _authenticationClient = new RsGwtRpcAuthenticationClient(_httpClient, cookieProvider);
         _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, cookieProvider);
         _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, cookieProvider);
-        _terminalClient = new RsGwtRpcTerminalClient(_httpClient, cookieProvider);
+        _terminalClient = new RsGwtRpcTerminalClient(loggerFactory, _httpClient, cookieProvider);
         _mapper = mapper;
         _logger = loggerFactory.CreateLogger<ReportServerGwtRpcClient>();
     }
@@ -53,6 +53,24 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         catch(Exception exception)
         {
             return new Result<AuthenticationResult>(exception);
+        }
+    }
+
+    public async Task<Result<string>> LogoutAsync()
+    {
+        try
+        {
+            var rsResponse = await _authenticationClient.LogoutAsync();
+            if (rsResponse.Success)
+            {
+                return new Result<string>(rsResponse.Result);
+            }
+
+            return new Result<string>(rsResponse.Exception);
+        }
+        catch(Exception exception)
+        {
+            return new Result<string>(exception);
         }
     }
     #endregion
@@ -81,11 +99,11 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     public async Task<Result> CloseSessionAsync(string sessionId)
     {
         var response = await _terminalClient.CloseSessionAsync(sessionId);
-        if (response)
+        if (response.Success)
         {
             return Result.Success("Session closed successfully");
         }
-        return Result.Fail("Error closing session");
+        return Result.Fail(response.Error, response.Exception);
     }
 
     public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null, Dictionary<string, string> mapper = null)
@@ -100,19 +118,19 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             }:
             null;
         
-        var response = await _terminalClient.InitSessionAsync();
-        if (string.IsNullOrEmpty(response?.SessionId) == false)
+        var response = await _terminalClient.InitSessionAsync(abstractNodeDto, mappings);
+        if (response.Success)
         {
             return new Result<TerminalSessionInfo>(
-                _mapper.Map<TerminalSessionInfo>(response));
+                _mapper.Map<TerminalSessionInfo>(response.Result));
         }
-        return new Result<TerminalSessionInfo>("Failed to initialize terminal session") { IsSuccess = false };
+        return new Result<TerminalSessionInfo>(response.Exception);
     }
 
     public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
     {
         var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken);
-        if (response is not null)
+        if (response.Success)
         {
             return new Result<CommandResult>(
                 _mapper.Map<CommandResult>(response.Result));
@@ -124,10 +142,6 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     {
         throw new NotImplementedException();
     }
-
-    public Task<Result<string>> LogoutAsync()
-    {
-        throw new NotImplementedException();
-    }
     #endregion
 }
+
