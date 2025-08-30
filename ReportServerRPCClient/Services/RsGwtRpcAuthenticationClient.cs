@@ -1,6 +1,5 @@
-using System.Net;
 using System.Text.RegularExpressions;
-using AutoMapper;
+using ReportServer.Abstraction.Contracts;
 using ReportServerRPCClient.DTOs;
 using ReportServerRPCClient.DTOs.Authentication;
 using ReportServerRPCClient.Infrastructure;
@@ -263,6 +262,11 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         var cookies = _cookieContainer.GetCookies(_httpClient.BaseAddress);
         var sessionCookie = cookies["JSESSIONID"];
         return sessionCookie?.Value;
+    }
+
+    public Task<Result<string>> LogoutAsync()
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

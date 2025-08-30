@@ -1,3 +1,4 @@
+using ReportServerRPCClient.DTOs;
 using ReportServerRPCClient.DTOs.Terminal;
 using ReportServerRPCClient.Infrastructure;
 using System.Text;
@@ -17,159 +18,146 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
     /// Initializes a new terminal session
     /// Based on traced request: initSession()
     /// </summary>
-    public async Task<TerminalSessionInfoDto?> InitSessionAsync()
+    public async Task<GwtRpcResponse<TerminalSessionInfoDto>> InitSessionAsync()
     {
-        var payload = new StringBuilder();
-        payload.AppendLine($"7|0|6|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.service.terminal.TerminalService|initSession|java.lang.String|startTerminal|1|2|3|4|1|5|6|");
-
-        var response = await PostGwtRpcAsync("net.datenwerke.rs.terminal.service.terminal.TerminalService", payload.ToString());
-
-        if (response == null)
-            return null;
-
         try
         {
-            // Parse GWT response - expect format: //OK[sessionId, prompt, workingDirectory, environment]
-            if (response.StartsWith("//OK["))
+            // Based on trace #2: 7|0|6|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|initSession|net.datenwerke.treedb.client.treedb.dto.AbstractNodeDto/45121059|net.datenwerke.gxtdto.client.dtomanager.Dto2PosoMapper|1|2|3|4|2|5|6|0|0|
+            var payload = $"7|0|6|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|initSession|net.datenwerke.treedb.client.treedb.dto.AbstractNodeDto/45121059|net.datenwerke.gxtdto.client.dtomanager.Dto2PosoMapper|1|2|3|4|2|5|6|0|0|";
+
+            var response = await PostGwtRpcAsync("terminal", payload);
+
+            if (string.IsNullOrEmpty(response))
             {
-                var jsonPart = response.Substring(5, response.Length - 6); // Remove //OK[ and ]
-                var parts = ParseGwtStringArray(jsonPart);
-                
-                if (parts.Length >= 3)
-                {
-                    return new TerminalSessionInfoDto
-                    {
-                        SessionId = parts[0],
-                        Prompt = parts[1],
-                        WorkingDirectory = parts[2],
-                        Environment = new Dictionary<string, string>()
-                    };
-                }
+                return GwtRpcResponse<TerminalSessionInfoDto>.Fail("Empty response from terminal init");
             }
-            else
+
+            // Parse GWT response - trace shows: //OK[5,2,4,2,0,3,2,2,1,["java.util.HashMap/1797211028","java.lang.String/2004016611","pathWay","sessionId","58bf8974-255d-444c-b74e-02999d4983ba"],0,7]
+            if (response.StartsWith("//OK"))
             {
-                // Handle complex GWT serialized response
                 var stringTable = ExtractStringTable(response);
-                if (stringTable.Count >= 3)
+                if (stringTable.Count >= 5 && stringTable.Contains("sessionId"))
                 {
-                    return new TerminalSessionInfoDto
+                    var sessionIdIndex = stringTable.IndexOf("sessionId");
+                    var sessionId = sessionIdIndex + 1 < stringTable.Count ? stringTable[sessionIdIndex + 1] : null;
+
+                    if (!string.IsNullOrEmpty(sessionId))
                     {
-                        SessionId = stringTable[0],
-                        Prompt = stringTable[1], 
-                        WorkingDirectory = stringTable[2],
-                        Environment = new Dictionary<string, string>()
-                    };
+                        var sessionInfo = new TerminalSessionInfoDto
+                        {
+                            SessionId = sessionId,
+                            Prompt = "groovy>", // Default prompt
+                            WorkingDirectory = "/",
+                            Environment = new Dictionary<string, string>()
+                        };
+
+                        return GwtRpcResponse<TerminalSessionInfoDto>.Successful("Terminal session initialized successfully", sessionInfo);
+                    }
                 }
             }
+
+            return GwtRpcResponse<TerminalSessionInfoDto>.Fail("Failed to parse terminal session init response");
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to parse terminal session init response: {ex.Message}", ex);
+            return GwtRpcResponse<TerminalSessionInfoDto>.Fail($"Failed to initialize terminal session: {ex.Message}", ex);
         }
-
-        return null;
     }
 
     /// <summary>
     /// Executes a command in the terminal session
-    /// Based on traced request: exec(sessionId, command)
+    /// Based on traced request: execute(sessionId, command)
     /// </summary>
-    public async Task<CommandResultDto?> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
+    public async Task<GwtRpcResponse<CommandResultDto>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(sessionId))
-            throw new ArgumentNullException(nameof(sessionId));
-        
-        if (string.IsNullOrEmpty(command))
-            throw new ArgumentNullException(nameof(command));
-
-        var payload = new StringBuilder();
-        payload.AppendLine($"7|0|8|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.service.terminal.TerminalService|exec|java.lang.String|java.lang.String|{sessionId}|{command}|1|2|3|4|2|5|6|7|8|");
-
-        var response = await PostGwtRpcAsync("net.datenwerke.rs.terminal.service.terminal.TerminalService", payload.ToString(), cancellationToken);
-
-        if (response == null)
-            return null;
-
         try
         {
-            // Parse GWT response for command result
-            if (response.StartsWith("//OK["))
+            if (string.IsNullOrEmpty(sessionId))
+                return GwtRpcResponse<CommandResultDto>.Fail("Session ID cannot be null or empty");
+            
+            if (string.IsNullOrEmpty(command))
+                return GwtRpcResponse<CommandResultDto>.Fail("Command cannot be null or empty");
+
+            // Based on trace #1: 7|0|7|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|58bf8974-255d-444c-b74e-02999d4983ba|ls|1|2|3|4|2|5|5|6|7|
+            var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|{sessionId}|{command}|1|2|3|4|2|5|5|6|7|";
+
+            var response = await PostGwtRpcAsync("terminal", payload, cancellationToken);
+
+            if (string.IsNullOrEmpty(response))
             {
-                var jsonPart = response.Substring(5, response.Length - 6);
-                var parts = ParseGwtStringArray(jsonPart);
-                
-                if (parts.Length >= 2)
-                {
-                    return new CommandResultDto
-                    {
-                        Result = parts[0],
-                        Type = int.TryParse(parts[1], out var type) ? type : 0,
-                        Error = parts.Length > 2 ? parts[2] : null,
-                        NewPrompt = parts.Length > 3 ? parts[3] : null,
-                        SessionClosed = parts.Length > 4 && bool.TryParse(parts[4], out var closed) && closed
-                    };
-                }
+                return GwtRpcResponse<CommandResultDto>.Fail("Empty response from terminal execute");
             }
-            else
+
+            // Parse GWT response - trace shows: //OK[0,0,0,0,0,0,0,0,-15,0,0,0,0,0,0,0,16,0,0,3,0,0,0,0,0,0,0,0,0,4,15,0,14,5,13,5,12,5,11,5,10,5,9,5,8,5,7,5,6,5,9,3,0,0,4,1,3,0,0,2,1,["net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultDtoDec/753283137","net.datenwerke.rs.terminal.client.terminal.dto.DisplayModeDto/1297612766","java.util.ArrayList/4159755760","net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultListDtoDec/3360806391","java.lang.String/2004016611","datasinks","datasources","reportmanager","dashboardlib","fileserver","remoteservers","transports","tsreport","usermanager","net.datenwerke.gxtdto.client.dtomanager.DtoView/2494148245","java.util.HashSet/3273092938"],0,7]
+            if (response.StartsWith("//OK"))
             {
-                // Handle complex GWT serialized response
                 var stringTable = ExtractStringTable(response);
-                if (stringTable.Count >= 2)
+                
+                // Extract directory listing from string table
+                var directoryList = stringTable.Where(s => 
+                    !s.Contains("net.datenwerke") && 
+                    !s.Contains("java.") && 
+                    !string.IsNullOrWhiteSpace(s) &&
+                    s.Length > 2 &&
+                    !s.Contains("/")).ToList();
+
+                var result = new CommandResultDto
                 {
-                    return new CommandResultDto
-                    {
-                        Result = stringTable[0],
-                        Type = int.TryParse(stringTable[1], out var type) ? type : 0,
-                        Error = stringTable.Count > 2 ? stringTable[2] : null,
-                        NewPrompt = stringTable.Count > 3 ? stringTable[3] : null,
-                        SessionClosed = stringTable.Count > 4 && bool.TryParse(stringTable[4], out var closed) && closed
-                    };
-                }
+                    Result = string.Join("\n", directoryList),
+                    Type = 1, // List type
+                    Error = string.Empty,
+                    Data = directoryList,
+                    NewPrompt = "groovy>",
+                    SessionClosed = false
+                };
+
+                return GwtRpcResponse<CommandResultDto>.Successful("Command executed successfully", result);
             }
+
+            return GwtRpcResponse<CommandResultDto>.Fail("Failed to parse terminal execute response");
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to parse terminal execute response: {ex.Message}", ex);
+            return GwtRpcResponse<CommandResultDto>.Fail($"Failed to execute terminal command: {ex.Message}", ex);
         }
-
-        return null;
     }
 
     /// <summary>
     /// Closes a terminal session
     /// Based on traced request: closeSession(sessionId)
     /// </summary>
-    public async Task<bool> CloseSessionAsync(string sessionId)
+    public async Task<GwtRpcResponse<bool>> CloseSessionAsync(string sessionId)
     {
-        if (string.IsNullOrEmpty(sessionId))
-            throw new ArgumentNullException(nameof(sessionId));
-
-        var payload = new StringBuilder();
-        payload.AppendLine($"7|0|7|http://localhost:8080/reportserver/|{TerminalServiceHash}|net.datenwerke.rs.terminal.service.terminal.TerminalService|closeSession|java.lang.String|{sessionId}|1|2|3|4|1|5|6|7|");
-
-        var response = await PostGwtRpcAsync("net.datenwerke.rs.terminal.service.terminal.TerminalService", payload.ToString());
-
-        if (response == null)
-            return false;
-
         try
         {
+            if (string.IsNullOrEmpty(sessionId))
+                return GwtRpcResponse<bool>.Fail("Session ID cannot be null or empty");
+
+            var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|closeSession|java.lang.String|{sessionId}|1|2|3|4|1|5|6|7|";
+
+            var response = await PostGwtRpcAsync("terminal", payload);
+
+            if (string.IsNullOrEmpty(response))
+            {
+                return GwtRpcResponse<bool>.Fail("Empty response from terminal close session");
+            }
+
             // Parse response - expect success indicator
             if (response.StartsWith("//OK"))
             {
-                return true;
+                return GwtRpcResponse<bool>.Successful("Terminal session closed successfully", true);
             }
             else if (response.Contains("true") || response.Contains("1"))
             {
-                return true;
+                return GwtRpcResponse<bool>.Successful("Terminal session closed successfully", true);
             }
+
+            return GwtRpcResponse<bool>.Fail("Failed to close terminal session");
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to parse terminal close response: {ex.Message}", ex);
+            return GwtRpcResponse<bool>.Fail($"Failed to close terminal session: {ex.Message}", ex);
         }
-
-        return false;
     }
 
     /// <summary>

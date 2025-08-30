@@ -168,7 +168,7 @@ public sealed class TerminalToolInteractionTests
                 {"Keycloak:ClientId", "reportserver-app"},
                 {"Keycloak:ClientSecret", "test-secret"},
                 {"Keycloak:RequireHttpsMetadata", "false"},
-                {"ReportServer:Address", "http://localhost:8081"}
+                {"ReportServer:Url", "http://localhost:8090"}
             })
             .Build();
         

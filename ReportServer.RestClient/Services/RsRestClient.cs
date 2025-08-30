@@ -14,22 +14,19 @@ public class RsRestClient : RsRestClientBase, IReportServerClient
 {
     private readonly ILogger _logger;
     private readonly IMapper _mapper;
-    private readonly RsGwtRpcAuthenticationClient _authenticationClient;
-    private readonly RsGwtRpcFileServerClient _fileServerClient;
-    private readonly RsGwtRpcRemoteServerClient _remoteServerClient;
-    private readonly RsGwtRpcTerminalClient _terminalClient;
+    private readonly RsRestAuthenticationClient _authenticationClient;
+    // private readonly RsRestFileServerClient _fileServerClient;
+    // private readonly RsRestRemoteServerClient _remoteServerClient;
+    private readonly RsRestTerminalClient _terminalClient;
 
     public RsRestClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, 
         CookieContainerProvider cookieProvider, 
         IMapper mapper) 
-        : base(httpClientFactory.CreateClient("ReportServerRestClient"), cookieProvider)
+        : base(httpClientFactory, cookieProvider)
     {
-        _authenticationClient = new RsGwtRpcAuthenticationClient(_httpClient, cookieProvider);
-        _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, cookieProvider);
-        _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, cookieProvider);
-        _terminalClient = new RsGwtRpcTerminalClient(loggerFactory, _httpClient, cookieProvider);
-        _mapper = mapper;
-        _logger = loggerFactory.CreateLogger<ReportServerGwtRpcClient>();
+        _authenticationClient = new RsRestAuthenticationClient(loggerFactory.CreateLogger<RsRestAuthenticationClient>(), httpClientFactory, cookieProvider);
+        _terminalClient = new RsRestTerminalClient(loggerFactory.CreateLogger<RsRestTerminalClient>(), httpClientFactory, cookieProvider);
+        _logger = loggerFactory.CreateLogger<RsRestClient>();
     }
     #region Authentication
     
@@ -75,22 +72,22 @@ public class RsRestClient : RsRestClientBase, IReportServerClient
     }
     #endregion
     #region FileServer Operations
-    public async Task<Result<string>> LoadFileTreeAsync()
-    {
-        try
-        {
-            var response = await _fileServerClient.LoadFileTreeAsync();
-            return new Result<string>(response)
-            {
-                IsSuccess = true
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load file tree");
-            return new Result<string>(ex);
-        }
-    }
+    // public async Task<Result<string>> LoadFileTreeAsync()
+    // {
+    //     try
+    //     {
+    //         var response = await _fileServerClient.LoadFileTreeAsync();
+    //         return new Result<string>(response)
+    //         {
+    //             IsSuccess = true
+    //         };
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Failed to load file tree");
+    //         return new Result<string>(ex);
+    //     }
+    // }
     #endregion
     #region Terminal Operations
     /// <summary>
@@ -98,27 +95,18 @@ public class RsRestClient : RsRestClientBase, IReportServerClient
     /// </summary>
     public async Task<Result> CloseSessionAsync(string sessionId)
     {
-        var response = await _terminalClient.CloseSessionAsync(sessionId);
-        if (response.Success)
-        {
-            return Result.Success("Session closed successfully");
-        }
-        return Result.Fail(response.Error, response.Exception);
+        // var response = await _terminalClient.CloseSessionAsync(sessionId);
+        // if (response.Success)
+        // {
+        //     return Result.Success("Session closed successfully");
+        // }
+        // return Result.Fail(response.Error, response.Exception);
+        throw new NotImplementedException();
     }
 
     public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null, Dictionary<string, string> mapper = null)
-    {
-        var abstractNodeDto = node is not null ?
-            _mapper.Map<AbstractNodeDto>(node) :
-            null;
-        var mappings = mapper is not null ?
-            new Dto2PosoMapper
-            {
-                Mappings = mapper
-            }:
-            null;
-        
-        var response = await _terminalClient.InitSessionAsync(abstractNodeDto, mappings);
+    {                
+        var response = await _terminalClient.InitSessionAsync();
         if (response.Success)
         {
             return new Result<TerminalSessionInfo>(
@@ -129,7 +117,7 @@ public class RsRestClient : RsRestClientBase, IReportServerClient
 
     public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
     {
-        var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken);
+        var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken: cancellationToken);
         if (response.Success)
         {
             return new Result<CommandResult>(

@@ -57,7 +57,7 @@ public class DistributedServicesFixture : IAsyncLifetime
                 {
                     config.AddInMemoryCollection(new Dictionary<string, string>
                     {
-                        ["RsMcpServer:Address"] = RsMcpServerBaseUrl,
+                        ["RsMcpServer:Url"] = RsMcpServerBaseUrl,
                     });
                 });
                 builder.ConfigureServices(services =>

@@ -22,10 +22,10 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 builder.Services.AddLegacyAuthentication();
 
 builder.Services.AddOpenApi();
-var reportServerAddress = builder.Configuration["ReportServer:Address"] 
-                          ?? throw new InvalidOperationException("ReportServer:Address");
+var reportServerUrl = builder.Configuration["ReportServer:Url"] 
+                          ?? throw new InvalidOperationException("ReportServer:Url");
 
-builder.Services.AddReportServerRpcClient(reportServerAddress);
+builder.Services.AddReportServerRpcClient(reportServerUrl);
 builder.Services.AddScoped<TerminalTool>();
 
 builder.Services.AddKernel()

@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Protocols.Configuration;
 public class OpenAISettings
 {
     public string Model { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
     public string EmbeddingModel { get; set; } = string.Empty; // optional
     public string ApiKey { get; set; } = string.Empty;
     // in Settings we configure only the name of the Env variable
@@ -16,6 +16,6 @@ public class OpenAISettings
 
     public bool IsValid()
     {
-        return !string.IsNullOrEmpty(Model) && !string.IsNullOrEmpty(Address) && !string.IsNullOrEmpty(ApiKey);
+        return !string.IsNullOrEmpty(Model) && !string.IsNullOrEmpty(Url) && !string.IsNullOrEmpty(ApiKey);
     }
 }

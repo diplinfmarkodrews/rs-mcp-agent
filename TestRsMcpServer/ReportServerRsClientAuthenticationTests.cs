@@ -11,7 +11,8 @@ using ReportServer.Abstraction;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Authentication;
 using ReportServer.Abstraction.Contracts.Terminal;
-using ReportServerRPCClient.Extensions;
+using ReportServer.RestClient.Extensions;
+using ReportServer.RestClient.Infrastructure;
 using RsMcpServer.Identity.Services;
 using RsMcpServer.Web.Mcp.Tools;
 using TestRsMcpServer.Utilities;
@@ -19,12 +20,13 @@ using TestRsMcpServer.Utilities;
 namespace TestRsMcpServer;
 
 /// <summary>
-/// Integration tests for ReportServerClient authentication against a real ReportServer instance
+/// Integration tests for ReportServer.RestClient authentication against a real ReportServer instance
 /// These tests validate the authentication flow between RsMcpServer and ReportServer
+/// // The Sidecar has to be started manually !!!
 /// </summary>
 [TestClass]
 [TestCategory("Integration")]
-public sealed class ReportServerAuthenticationTests
+public sealed class ReportServerRsClientAuthenticationTests
 {
     private IReportServerClient _reportServerClient = null!;
     private IServiceProvider _serviceProvider = null!;
@@ -35,6 +37,7 @@ public sealed class ReportServerAuthenticationTests
     [TestInitialize]
     public void Initialize()
     {
+        // The Sidecar has to be started manually !!!
         // Create services with the real ReportServerGwtRpcClient
         var services = new ServiceCollection();
         
@@ -42,7 +45,7 @@ public sealed class ReportServerAuthenticationTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                {"ReportServer:Url", "http://localhost:8090"}
+                {"ReportServer:Url", "http://localhost:8091"}
             })
             .Build();
         
@@ -56,7 +59,7 @@ public sealed class ReportServerAuthenticationTests
         });
         
         // Register the real ReportServerClient implementation
-        services.AddReportServerRpcClient("http://localhost:8090");
+        services.AddReportServerRestClient("http://localhost:8091");
         
         // Build service provider
         _serviceProvider = services.BuildServiceProvider();
@@ -79,8 +82,9 @@ public sealed class ReportServerAuthenticationTests
         
         // Arrange
         Assert.IsNotNull(_reportServerClient, "ReportServerClient should not be null");
-
+        
         // Act
+
         var authResult = await _reportServerClient.AuthenticateAsync(_testUsername, _testPassword);
 
         // Assert
@@ -189,33 +193,33 @@ public sealed class ReportServerAuthenticationTests
             using var httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(5);
             
-            // Try to reach ReportServer's base URL
-            var response = await httpClient.GetAsync("http://localhost:8081");
+            // Try to reach ReportServer's sidecar base URL
+            var response = await httpClient.GetAsync("http://localhost:8091");
             
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("✓ ReportServer is available for integration testing");
+                Console.WriteLine("✓ ReportServer sidecar is available for integration testing");
                 return true;
             }
             else
             {
-                Console.WriteLine($"⚠️ ReportServer returned status code: {response.StatusCode}");
+                Console.WriteLine($"⚠️ ReportServer sidecar returned status code: {response.StatusCode}");
                 return false;
             }
         }
         catch (HttpRequestException ex)
         {
-            Console.WriteLine($"⚠️ Cannot connect to ReportServer: {ex.Message}");
+            Console.WriteLine($"⚠️ Cannot connect to ReportServers sidecar: {ex.Message}");
             return false;
         }
         catch (TaskCanceledException)
         {
-            Console.WriteLine("⚠️ Connection to ReportServer timed out");
+            Console.WriteLine("⚠️ Connection to ReportServer sidecar timed out");
             return false;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️ Unexpected error connecting to ReportServer: {ex.Message}");
+            Console.WriteLine($"⚠️ Unexpected error connecting to ReportServer sidecar : {ex.Message}");
             return false;
         }
     }

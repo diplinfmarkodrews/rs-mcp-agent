@@ -42,8 +42,8 @@ builder.Services.AddCustomAuthenticationService();
 
 builder.Services.AddHttpClient("RsMcpServer", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Address"] 
-                                 ?? throw new InvalidOperationException("RsMcpServer:Address"));
+    client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
+                                 ?? throw new InvalidOperationException("RsMcpServer:Url"));
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
 }).AddStandardResilienceHandler(); // Only used without aspire 
 
@@ -58,8 +58,8 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
         new SseClientTransportOptions
         {
             Name = "RsMcpServer",
-            Endpoint = new Uri(builder.Configuration["RsMcpServer:Address"] 
-                               ?? throw new InvalidOperationException("RsMcpServer:Address")),
+            Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
+                               ?? throw new InvalidOperationException("RsMcpServer:Url")),
         },
         httpClient: scopedServiceProvider
             .GetRequiredService<IHttpClientFactory>()
@@ -107,7 +107,7 @@ foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpCl
     if (openAISettings.IsValid())
     {
         builder.Services.AddOpenAIChatClient(openAISettings.Model,
-            new Uri(openAISettings.Address),
+            new Uri(openAISettings.Url),
             openAISettings.ApiKey,
             openTelemetryConfig: config => config.EnableSensitiveData = false
         );       
@@ -184,7 +184,7 @@ foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpCl
         //         HasClientSecret = !string.IsNullOrEmpty(config["Keycloak:ClientSecret"]),
         //         RequireHttpsMetadata = config["Keycloak:RequireHttpsMetadata"],
         //         Scopes = config.GetSection("Keycloak:Scopes").Get<string[]>(),
-        //         ReportServerAddress = config["ReportServer:Address"]
+        //         ReportServerUrl = config["ReportServer:Url"]
         //     });
         // });
 

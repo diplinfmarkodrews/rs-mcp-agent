@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.RestClient.csproj" />
       <ProjectReference Include="..\ReportServerRPCClient\ReportServerRPCClient.csproj" />
       <ProjectReference Include="..\ReportServer.RestClient\ReportServer.RestClient.csproj" />
       <ProjectReference Include="..\RsMcpServer.Web\RsMcpServer.Web.csproj" />

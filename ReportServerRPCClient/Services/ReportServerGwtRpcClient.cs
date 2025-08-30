@@ -81,7 +81,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     public async Task<Result> CloseSessionAsync(string sessionId)
     {
         var response = await _terminalClient.CloseSessionAsync(sessionId);
-        if (response)
+        if (response.Success)
         {
             return Result.Success("Session closed successfully");
         }
@@ -101,7 +101,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
-        if (string.IsNullOrEmpty(response?.SessionId) == false)
+        if (string.IsNullOrEmpty(response?.Result.SessionId) == false)
         {
             return new Result<TerminalSessionInfo>(
                 _mapper.Map<TerminalSessionInfo>(response));

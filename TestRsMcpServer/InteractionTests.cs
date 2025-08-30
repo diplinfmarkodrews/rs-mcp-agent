@@ -188,7 +188,7 @@ public sealed class InteractionTests
                 {"Keycloak:ClientId", "reportserver-app"},
                 {"Keycloak:ClientSecret", ""},
                 {"Keycloak:RequireHttpsMetadata", "false"},
-                {"ReportServer:Address", "http://localhost:8081"}
+                {"ReportServer:Url", "http://localhost:8090"}
             })
             .Build();
         
