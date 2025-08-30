@@ -38,7 +38,7 @@ public static class HostExtension
                 config.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
         
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-        // services.AddScoped<IReportServerClient, ReportServerGwtRpcClient>();
+        services.AddScoped<IReportServerClient, ReportServerGwtRpcClient>();
         return services;
     }
 }

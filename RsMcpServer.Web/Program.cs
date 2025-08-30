@@ -17,15 +17,16 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 builder.Services.AddHealthChecks();
+var reportServerUrl = builder.Configuration["ReportServer:Url"] 
+                      ?? throw new InvalidOperationException("ReportServer:Url");
+
+builder.Services.AddReportServerRpcClient(reportServerUrl);
 // Add Keycloak authentication with enhanced features
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: true);
 builder.Services.AddLegacyAuthentication();
 
 builder.Services.AddOpenApi();
-var reportServerUrl = builder.Configuration["ReportServer:Url"] 
-                          ?? throw new InvalidOperationException("ReportServer:Url");
 
-builder.Services.AddReportServerRpcClient(reportServerUrl);
 builder.Services.AddScoped<TerminalTool>();
 
 builder.Services.AddKernel()
