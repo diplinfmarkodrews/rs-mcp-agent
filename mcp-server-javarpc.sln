@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Identity", "RsM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServer.RestClient", "ReportServer.RestClient\ReportServer.RestClient.csproj", "{8E6F5653-633C-4998-B90A-E58780470AAA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Mcp", "RSChatApp.Mcp\RSChatApp.Mcp.csproj", "{37812D22-3A9E-4126-8BC0-63D0BAE34B37}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{8E6F5653-633C-4998-B90A-E58780470AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E6F5653-633C-4998-B90A-E58780470AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E6F5653-633C-4998-B90A-E58780470AAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
