@@ -58,7 +58,16 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         });
         // ReportProgress(90, "Browser context created");
         var page = await context.NewPageAsync();
-        await page.GotoAsync(config.BaseUrl);
+        try
+        {
+            
+            await page.GotoAsync(config.BaseUrl);
+        } 
+        catch (PlaywrightException ex)
+        {
+              
+        }
+        
         // ReportProgress(100, "Page loaded");
         return new PlayWrightBrowserInstance(config, browser, context, page);
     }
