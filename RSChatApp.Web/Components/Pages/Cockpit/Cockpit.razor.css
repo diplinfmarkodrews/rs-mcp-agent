@@ -1,0 +1,64 @@
+.cockpit-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.browser-section {
+    flex: 2;
+    width: 66.666%;
+    height: 100%;
+    border-right: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.chat-section {
+    flex: 1;
+    width: 33.333%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure the browser viewer fills its container */
+.browser-section ::deep .browser-viewer-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Ensure the chat component fills its container */
+.chat-section ::deep .chat-component {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Remove any default margins/padding that might interfere */
+* {
+    box-sizing: border-box;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .cockpit-container {
+        flex-direction: column;
+    }
+
+    .browser-section {
+        flex: 1;
+        width: 100%;
+        height: 60%;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .chat-section {
+        flex: 1;
+        width: 100%;
+        height: 40%;
+    }
+}

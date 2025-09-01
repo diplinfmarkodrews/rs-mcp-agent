@@ -1,0 +1,19 @@
+@page "/"
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Options
+@using RSChatApp.Mcp.Browser.Configuration
+@using RSChatApp.Web.Components.Pages.Browser
+@using RSChatApp.Web.Components.Pages.Chat
+@inject IOptions<BrowserInstanceConfiguration> BrowserOptions
+<PageTitle>Report Server</PageTitle>
+
+<div class="cockpit-container">
+    <div class="browser-section">
+        <BrowserViewer InitialUrl="@BrowserOptions.Value.BaseUrl" />
+    </div>
+    <div class="chat-section">
+        <Chat />
+    </div>
+</div>

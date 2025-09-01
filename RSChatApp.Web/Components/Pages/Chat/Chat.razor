@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/chat"
 @* @attribute [Authorize] *@
 @attribute [AllowAnonymous]
 @inject IChatClient ChatClient
@@ -16,8 +16,6 @@
 @using RSChatApp.Web.Services.Authentication
 @using RSChatApp.Web.Services.SemanticSearch
 @implements IDisposable
-
-<PageTitle>Chat</PageTitle>
 
 <ChatHeader OnNewChat="@ResetConversationAsync" />
 

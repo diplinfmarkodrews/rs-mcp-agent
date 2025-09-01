@@ -1,18 +1,23 @@
 # Set default behavior to automatically normalize line endings
-* text=auto
+* text=auto eol=crlf
 
 # Explicitly declare text files you want to always be normalized and converted 
-# to native line endings on checkout
-*.cs text
-*.razor text
-*.js text
-*.css text
-*.json text
-*.md text
-*.xml text
-*.yml text
-*.yaml text
-*.txt text
+# to CRLF line endings on checkout
+*.cs text eol=crlf
+*.razor text eol=crlf
+*.js text eol=crlf
+*.css text eol=crlf
+*.json text eol=crlf
+*.md text eol=crlf
+*.xml text eol=crlf
+*.yml text eol=crlf
+*.yaml text eol=crlf
+*.txt text eol=crlf
+*.html text eol=crlf
+*.htm text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.sh text eol=crlf
 
 # Declare files that will always have CRLF line endings on checkout
 *.sln text eol=crlf
