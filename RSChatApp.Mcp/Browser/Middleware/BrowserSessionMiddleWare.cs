@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Core;
+using RSChatApp.Mcp.Browser.Interfaces;
 
 namespace RSChatApp.Mcp.Browser.Middleware;
 
@@ -26,6 +26,12 @@ public class BrowserSessionMiddleware
     {
         // Middleware to ensure a browser instance is associated with the current session
         _logger.LogDebug("BrowserSessionMiddleware invoked for {Path}", context.Request.Path);
+        if (ShouldSkipBrowserInstance(context))
+        {
+            _logger.LogDebug("Skipping browser instance creation for path: {Path}", context.Request.Path);
+            await _next(context);
+            return;
+        }
         var sessionId = context.Session.Id;
         if (sessionId != null)
         {
@@ -40,5 +46,53 @@ public class BrowserSessionMiddleware
         // Call the next middleware in the pipeline
         await _next(context);
     }
-    
+    private static bool ShouldSkipBrowserInstance(HttpContext context)
+    {
+        return false;
+        var path = context.Request.Path.Value?.ToLowerInvariant();
+        if (string.IsNullOrEmpty(path)) return false;
+        
+        // Skip static resources
+        if (path.StartsWith("/_framework/") ||
+            // path.StartsWith("/_content/") ||
+            path.StartsWith("/css/") ||
+            path.StartsWith("/js/") ||
+            path.StartsWith("/favicon.ico") ||
+            path.StartsWith("/health") ||
+            path.Contains(".css") ||
+            path.Contains(".js") ||
+            path.Contains(".map") ||
+            path.Contains(".woff") ||
+            path.Contains(".ttf") ||
+            path.Contains(".png") ||
+            path.Contains(".jpg") ||
+            path.Contains(".ico"))
+        {
+            return true;
+        }
+        
+        // Skip Blazor-specific endpoints that shouldn't create browser instances
+        if (path.StartsWith("/_blazor/") ||           // SignalR hub endpoints
+            path.StartsWith("/blazorhub") ||           // Custom hub names
+            path.Contains("/negotiate") ||             // SignalR negotiate
+            path.StartsWith("/api/") ||                // API calls
+            path.StartsWith("/hubs/") ||               // SignalR hubs
+            path.StartsWith("/_vs/") ||                // Visual Studio browser link
+            path.StartsWith("/hot-reload/") ||         // Hot reload endpoints
+            path.Contains("/circuitpack") )//||           // Blazor circuit pack
+            //context.Request.Headers.ContainsKey("X-Requested-With") || // AJAX requests
+            //context.Request.ContentType?.Contains("application/json") == true) // JSON requests
+        {
+            return true;
+        }
+        
+        // Skip if this is a SignalR connection
+        if (context.Request.Headers.ContainsKey("Connection") && 
+            context.Request.Headers["Connection"].ToString().Contains("Upgrade"))
+        {
+            return true;
+        }
+        
+        return false;
+    }
 }

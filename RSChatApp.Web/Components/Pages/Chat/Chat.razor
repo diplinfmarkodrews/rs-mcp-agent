@@ -8,10 +8,13 @@
 @inject IAuthenticationService AuthenticationService
 @inject ILoginModalService LoginModalService
 @inject ILogger<Chat> Logger
+@inject IOptions<OpenAISettings> OpenAISettings
+
 @using System.ComponentModel
 @using System.Diagnostics.CodeAnalysis
 @using System.Text
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Options
 @using Microsoft.Extensions.Primitives
 @using RSChatApp.Web.Services.Authentication
 @using RSChatApp.Web.Services.SemanticSearch
@@ -47,7 +50,8 @@
         - ReportServer-5_0-ScriptGuide-En.pdf
          
         Respect the language of each document, which is reflected by its ending En(english) or De(German). 
-          
+        You have a browsertool to have full control of the Reportserver front end. Stay in the initial domain,
+        except the user explitly asks you.  
         ";
 
     private readonly ChatOptions chatOptions = new();
@@ -56,11 +60,13 @@
     private ChatMessage? currentResponseMessage;
     private ChatInput? chatInput;
     private ChatSuggestions? chatSuggestions;
+    private bool IsOllama;
 
- 
     [Experimental("SKEXP0001")]
     protected override void OnInitialized()
     {
+        // For now, guaranty ollama compatibilty
+        IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model);
         messages.Add(new(ChatRole.System, SystemPrompt));
         
         // Debug logging to see what kernel plugins are available
@@ -84,8 +90,15 @@
         Logger.LogInformation("Total tools registered for chat: {allToolsCount}", allTools.Count);
         chatOptions.Tools = allTools;
     }
+    private Task AddUserMessageAsync(ChatMessage userMessage)
+    {
+        if (IsOllama)
+            return AddUserMessageSingleAsync(userMessage);
+        
+        return AddUserMessageStreamAsync(userMessage);
 
-    private async Task AddUserMessageAsync(ChatMessage userMessage)
+    }
+    private async Task AddUserMessageSingleAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();
 
@@ -103,6 +116,77 @@
         messages.AddMessages(response);
         chatSuggestions?.Update(messages);
     
+    }
+    private async Task AddUserMessageStreamAsync(ChatMessage userMessage)
+    {
+        CancelAnyCurrentResponse();
+
+        // Add the user message to the conversation
+        messages.Add(userMessage);
+        chatSuggestions?.Clear();
+        await chatInput!.FocusAsync();
+
+        // Display a new response from the IChatClient with streaming
+        currentResponseCancellation = new();
+        
+        // Initialize streaming response message
+        currentResponseMessage = new ChatMessage(ChatRole.Assistant, string.Empty);
+        var contentBuilder = new StringBuilder();
+
+        try
+        {
+            // Use streaming API to get progressive responses
+            await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, chatOptions, currentResponseCancellation.Token))
+            {
+                // Handle different types of streaming updates
+                foreach (var content in update.Contents)
+                {
+                    if (content is { } deltaContent)
+                    {
+                        contentBuilder.Append(deltaContent);
+                        
+                        // Update the current response message with accumulated content
+                        currentResponseMessage = new ChatMessage(ChatRole.Assistant, contentBuilder.ToString());
+                        
+                        // Trigger UI update to show streaming content
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+                
+                // Check for cancellation
+                currentResponseCancellation.Token.ThrowIfCancellationRequested();
+            }
+
+            // Finalize the response - add the complete message to conversation
+            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            {
+                messages.Add(currentResponseMessage);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Handle cancellation gracefully
+            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            {
+                messages.Add(currentResponseMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during streaming chat response");
+            
+            // Add error message to chat
+            var errorMessage = new ChatMessage(ChatRole.Assistant, 
+                $"Sorry, I encountered an error while processing your request: {ex.Message}");
+            messages.Add(errorMessage);
+        }
+        finally
+        {
+            // Clear the in-progress message and update suggestions
+            currentResponseMessage = null;
+            chatSuggestions?.Update(messages);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void CancelAnyCurrentResponse()
@@ -126,6 +210,8 @@
         await chatInput!.FocusAsync();
     }
 
+
+    // TODO: refactor this into MCP
     [Description("Searches for information using a phrase or keyword")]
     private async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,

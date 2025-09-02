@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Core;
+using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
 
 namespace RSChatApp.Mcp.Browser.Infrastructure;
@@ -32,7 +32,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
             async (entry) =>
                 {
                     // TODO: set callback to DisposeAsync
-                    return await _browserInstanceFactory.CreateAsync(config); // can be null
+                    return await _browserInstanceFactory.CreateInstanceAsync(config); // can be null
                 });
     }
     

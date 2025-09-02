@@ -26,9 +26,10 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     /// </summary>
     public async Task<GwtRpcResponse<AuthenticationResultDto>> AuthenticateAsync(string username, string password)
     {
-        // Build payload based on trace #4: 
-        // 7|0|7|http://localhost:8090/reportserver/|DFEDD0FBBBBBE222F217D04F50A95F56|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|root|1|2|3|4|1|5|5|1|6|7|7|
-        var payload = $"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|1|2|3|4|1|5|5|1|6|7|7|";
+        // Build payload based on trace #4
+        // 7|0|8|http://localhost:8090/reportserver/|DFEDD0FBBBBBE222F217D04F50A95F56|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|{password}|1|2|3
+        // UserPasswordAuthToken has two fields: username and password, both need to be in the string table
+        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|{password}|1|2|3";
         
         var response = await PostGwtRpcAsync("login", payload);
         var parsedResult = ParseAuthenticationResponse(response);

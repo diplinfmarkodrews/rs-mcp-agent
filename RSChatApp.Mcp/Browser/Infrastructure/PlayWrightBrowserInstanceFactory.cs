@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Core;
+using RSChatApp.Mcp.Browser.Interfaces;
 
 namespace RSChatApp.Mcp.Browser.Infrastructure;
 
@@ -23,7 +23,7 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         _httpContextAccessor = httpContextAccessor;
         _browserInstanceConfiguration = browserInstanceConfiguration;
     }
-    public async Task<IBrowserInstance> CreateAsync(BrowserInstanceConfiguration config = null)
+    public async Task<IBrowserInstance> CreateInstanceAsync(BrowserInstanceConfiguration config = null)
     {
         
         config ??= CreateBrowserConfig(_httpContextAccessor.HttpContext);

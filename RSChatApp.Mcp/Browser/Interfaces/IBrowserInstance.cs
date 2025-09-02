@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace RSChatApp.Mcp.Browser.Core;
+namespace RSChatApp.Mcp.Browser.Interfaces;
 
 public interface IBrowserInstance : IAsyncDisposable
 {

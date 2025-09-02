@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Security.Claims;
+using RSChatApp.Web.Models.Authentication;
 
 namespace RSChatApp.Web.Services.Authentication;
 
@@ -25,18 +26,7 @@ public interface IAuthenticationService
     Task LogoutAsync();
 }
 
-/// <summary>
-/// Information about the current authentication state
-/// </summary>
-public class AuthenticationInfo
-{
-    public bool IsAuthenticated { get; set; }
-    public string UserName { get; set; } = "";
-    public string DisplayName { get; set; } = "";
-    public string Email { get; set; } = "";
-    public IEnumerable<string> Roles { get; set; } = Enumerable.Empty<string>();
-    public ClaimsPrincipal? User { get; set; }
-}
+
 
 /// <summary>
 /// Implementation of authentication service that wraps ASP.NET Core authentication

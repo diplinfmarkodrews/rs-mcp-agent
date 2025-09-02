@@ -1,3 +1,4 @@
+@using RSChatApp.Web.Models.Authentication
 @using RSChatApp.Web.Services.Authentication
 @inject IAuthenticationService AuthenticationService
 @implements IDisposable
@@ -19,7 +20,7 @@ else
 {
     <button class="btn-default" @onclick="@OpenLoginModal">
         <i class="fas fa-sign-in-alt me-2"></i>
-        Login to ReportServer
+        Login
     </button>
 }
 

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Core;
+using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Infrastructure;
 using RSChatApp.Mcp.Browser.Tools;
 
@@ -19,7 +19,7 @@ public static class ServiceCollectionExtension
         services.AddMemoryCache();
         services.AddSingleton<IBrowserInstanceStore, InMemoryBrowserInstanceStore>();
         services.AddSingleton<IBrowserInstanceFactory, PlayWrightBrowserInstanceFactory>();        
-        services.AddScoped<IBrowserInstanceProvider, BrowserInstanceProvider>();
+        services.AddSingleton<IBrowserInstanceProvider, BrowserInstanceProvider>();
         services.AddScoped<BrowserTool>();
         return services;
     }

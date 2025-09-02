@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Core;
+using RSChatApp.Mcp.Browser.Interfaces;
 
 namespace RSChatApp.Mcp.Browser.Infrastructure;
 

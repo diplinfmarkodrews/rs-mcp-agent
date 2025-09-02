@@ -19,14 +19,15 @@ public class RsRestClient : RsRestClientBase, IReportServerClient
     // private readonly RsRestRemoteServerClient _remoteServerClient;
     private readonly RsRestTerminalClient _terminalClient;
 
-    public RsRestClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, 
-        CookieContainerProvider cookieProvider, 
-        IMapper mapper) 
+    public RsRestClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory,
+        CookieContainerProvider cookieProvider,
+        IMapper mapper)
         : base(httpClientFactory, cookieProvider)
     {
         _authenticationClient = new RsRestAuthenticationClient(loggerFactory.CreateLogger<RsRestAuthenticationClient>(), httpClientFactory, cookieProvider);
         _terminalClient = new RsRestTerminalClient(loggerFactory.CreateLogger<RsRestTerminalClient>(), httpClientFactory, cookieProvider);
         _logger = loggerFactory.CreateLogger<RsRestClient>();
+        _mapper = mapper;
     }
     #region Authentication
     

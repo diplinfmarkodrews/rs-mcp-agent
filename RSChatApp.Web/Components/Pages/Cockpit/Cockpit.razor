@@ -7,11 +7,9 @@
 @using RSChatApp.Web.Components.Pages.Browser
 @using RSChatApp.Web.Components.Pages.Chat
 @inject IOptions<BrowserInstanceConfiguration> BrowserOptions
-<PageTitle>Report Server</PageTitle>
-
 <div class="cockpit-container">
     <div class="browser-section">
-        <BrowserViewer InitialUrl="@BrowserOptions.Value.BaseUrl" />
+        <BrowserStreamingViewer InitialUrl="@BrowserOptions.Value.BaseUrl" />
     </div>
     <div class="chat-section">
         <Chat />

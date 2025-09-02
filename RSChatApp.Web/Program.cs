@@ -12,8 +12,8 @@ using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Extensions;
+using RSChatApp.Web.Hubs;
 using RsMcpServer.Identity.Extensions;
-
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,7 +55,7 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
 }).AddStandardResilienceHandler(); // Only used without aspire 
 
 builder.Services.AddBrowserTool(reportServerUrl);
-
+builder.Services.AddBrowserStreamingService();
 var kernelBuilder = builder.Services.AddKernel();
 var scopedServiceProvider = builder.Services.BuildServiceProvider()
     .CreateScope()
@@ -111,8 +111,11 @@ builder.Services.AddRazorComponents()
 // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
 builder.AddServiceDefaults();
 
-if (openAISettings.IsValid())
+if (string.IsNullOrEmpty(openAISettings.Model) == false)
 {
+    if (openAISettings.IsValid() == false)
+        throw new InvalidConfigurationException("OpenAI API key not set properly in env.");
+
     builder.Services.AddOpenAIChatClient(openAISettings.Model,
         new Uri(openAISettings.Url),
         openAISettings.ApiKey,
@@ -153,7 +156,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Use developer exception page in development
+// Configure the hub
+app.MapHub<BrowserStreamHub>("/browserstreamhub");
+app.UseCors();
 app.MapHealthChecks("/health");
 
 if (!app.Environment.IsDevelopment())

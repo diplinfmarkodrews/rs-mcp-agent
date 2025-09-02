@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using RSChatApp.Mcp.Browser.Extensions;
 
-namespace RSChatApp.Mcp.Browser.Core;
+namespace RSChatApp.Mcp.Browser.Interfaces;
 
 public class BrowserInstanceProvider : IBrowserInstanceProvider
 {
@@ -41,6 +41,14 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
         if (string.IsNullOrEmpty(sessionId))
             throw new InvalidOperationException("SessionId is null, HttpContext already disposed?!");
         
+        var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
+        if (browserInstance == null)
+            throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
+        
+        return browserInstance;
+    }
+    public async Task<IBrowserInstance> GetBrowserInstanceAsync(string sessionId)
+    {
         var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
         if (browserInstance == null)
             throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
