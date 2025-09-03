@@ -120,6 +120,57 @@ public sealed class ReportServerAuthenticationTests
     }
 
     [TestMethod]
+    [TestCategory("Authentication")]
+    public async Task ReportServerClient_GetHmacPassphrase_Success()
+    {
+        // This test only works if ReportServer is actually running and accessible
+        // Skip if ReportServer is not available
+        if (!await IsReportServerAvailable())
+        {
+            Assert.Inconclusive("ReportServer is not available. Skipping test.");
+            return;
+        }
+        
+        // Arrange - Cast to concrete implementation and use reflection to access private authentication client
+        var gwtRpcClient = _reportServerClient as ReportServer.RpcClient.Services.ReportServerGwtRpcClient;
+        Assert.IsNotNull(gwtRpcClient, "ReportServerClient should be castable to ReportServerGwtRpcClient");
+
+        // Use reflection to access the private _authenticationClient field
+        var authClientField = gwtRpcClient.GetType().GetField("_authenticationClient", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(authClientField, "Authentication client field should exist");
+        
+        var authClient = authClientField.GetValue(gwtRpcClient) as ReportServer.RpcClient.Services.RsGwtRpcAuthenticationClient;
+        Assert.IsNotNull(authClient, "Authentication client should not be null");
+
+        // Act
+        var hmacResult = await authClient.GetHmacPassphraseAsync();
+
+        // Assert
+        Assert.IsNotNull(hmacResult, "HMAC passphrase result should not be null");
+        
+        Console.WriteLine($"HMAC passphrase result: {(hmacResult.Success ? "Success" : "Failed")}");
+        Console.WriteLine($"Message: {hmacResult.Message}");
+        
+        if (hmacResult.Success)
+        {
+            Assert.IsNotNull(hmacResult.Result, "HMAC passphrase should not be null");
+            Assert.IsFalse(string.IsNullOrEmpty(hmacResult.Result), "HMAC passphrase should not be empty");
+            
+            Console.WriteLine($"✓ Successfully retrieved HMAC passphrase");
+            Console.WriteLine($"✓ Passphrase length: {hmacResult.Result.Length} characters");
+            Console.WriteLine($"✓ Passphrase preview: {hmacResult.Result.Substring(0, Math.Min(20, hmacResult.Result.Length))}...");
+            
+            // Verify it contains expected passphrase text
+            Assert.IsTrue(hmacResult.Result.Contains("Passphrase"), "HMAC passphrase should contain 'Passphrase' text");
+        }
+        else
+        {
+            Assert.Fail($"Failed to retrieve HMAC passphrase: {hmacResult.Error}");
+        }
+    }
+
+    [TestMethod]
     [TestCategory("Terminal")]
     public async Task ReportServerClient_TerminalSession_AfterAuthentication()
     {
