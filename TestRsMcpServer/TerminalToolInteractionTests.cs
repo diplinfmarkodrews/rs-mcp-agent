@@ -2,13 +2,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RsMcpServer.Identity.Services;
-using RsMcpServer.Web.Mcp.Tools;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.Abstraction.Contracts.Authentication; // Correct namespace
 using Microsoft.Extensions.FileProviders;
+using RSChatApp.Mcp.ReportServer.Tools;
 
 namespace TestRsMcpServer;
 

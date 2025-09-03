@@ -1,20 +1,8 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ReportServer.Abstraction;
-using ReportServer.Abstraction.Contracts;
-using ReportServer.Abstraction.Contracts.Authentication;
-using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServerRPCClient.Extensions;
-using RsMcpServer.Identity.Services;
-using RsMcpServer.Web.Mcp.Tools;
-using TestRsMcpServer.Utilities;
 
 namespace TestRsMcpServer;
 
@@ -187,10 +175,9 @@ public sealed class ReportServerAuthenticationTests
         try
         {
             using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(5);
             
             // Try to reach ReportServer's base URL
-            var response = await httpClient.GetAsync("http://localhost:8081");
+            var response = await httpClient.GetAsync("http://localhost:8090");
             
             if (response.IsSuccessStatusCode)
             {
