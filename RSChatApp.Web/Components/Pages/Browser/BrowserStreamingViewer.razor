@@ -133,7 +133,8 @@
         // Initialize SignalR connection
         hubConnection = new HubConnectionBuilder()
             .WithUrl("/browserstreamhub")
-            .WithAutomaticReconnect()
+            .WithStatefulReconnect()
+            @* .WithAutomaticReconnect() *@
             .Build();
 
         // Set up event handlers

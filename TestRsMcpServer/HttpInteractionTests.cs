@@ -10,7 +10,7 @@ namespace TestRsMcpServer;
 
 /// <summary>
 /// Tests for HTTP interaction patterns and logging expectations
-/// Documents what should happen when RSChatApp.Web calls RsMcpServer.Web
+/// Documents what should happen when RSChatApp.Web calls RsMcpServer.Api
 /// </summary>
 [TestClass]
 public sealed class HttpInteractionTests
@@ -30,7 +30,7 @@ public sealed class HttpInteractionTests
     {
         // This test documents the expected interaction flow between the applications
         
-        Console.WriteLine("=== Expected Flow: RSChatApp.Web -> RsMcpServer.Web ===");
+        Console.WriteLine("=== Expected Flow: RSChatApp.Web -> RsMcpServer.Api ===");
         Console.WriteLine("1. RSChatApp authenticates with Keycloak");
         Console.WriteLine("2. RSChatApp receives session and bearer token");
         Console.WriteLine("3. RSChatApp calls TerminalTool via MCP");
@@ -92,7 +92,7 @@ public sealed class HttpInteractionTests
             "=== END RESPONSE ==="
         };
 
-        Console.WriteLine("=== Expected RsMcpServer.Web Logging Structure ===");
+        Console.WriteLine("=== Expected RsMcpServer.Api Logging Structure ===");
         foreach (var expectedEntry in expectedLogEntries)
         {
             Console.WriteLine($"  ✓ {expectedEntry}");
@@ -105,7 +105,7 @@ public sealed class HttpInteractionTests
         Assert.IsTrue(_logMessages.Any(msg => msg.Contains("Test request logging verification")), 
             "Logging infrastructure should capture messages");
         
-        Console.WriteLine("\n✓ The RsMcpServer.Web RequestLoggingMiddleware will capture all this information");
+        Console.WriteLine("\n✓ The RsMcpServer.Api RequestLoggingMiddleware will capture all this information");
         Console.WriteLine("✓ When RSChatApp.Web makes authenticated MCP tool calls, you'll see:");
         Console.WriteLine("  - Complete request details (method, path, headers, body)");
         Console.WriteLine("  - SessionId from the authenticated session");
@@ -156,7 +156,7 @@ public sealed class HttpInteractionTests
         Console.WriteLine("   - Session gets a unique ID (GUID)");
         Console.WriteLine("   - SessionBridgeService can retrieve this ID");
         Console.WriteLine("");
-        Console.WriteLine("2. When RSChatApp.Web calls RsMcpServer.Web:");
+        Console.WriteLine("2. When RSChatApp.Web calls RsMcpServer.Api:");
         Console.WriteLine("   - Session context is passed in request");
         Console.WriteLine("   - RequestLoggingMiddleware logs the SessionId");
         Console.WriteLine("   - TerminalTool can access the same SessionId");

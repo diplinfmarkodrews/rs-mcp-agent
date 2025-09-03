@@ -15,7 +15,7 @@ using TestRsMcpServer.Utilities;
 namespace TestRsMcpServer;
 
 /// <summary>
-/// Integration tests for RSChatApp.Web and RsMcpServer.Web interaction
+/// Integration tests for RSChatApp.Web and RsMcpServer.Api interaction
 /// Tests the core services and session management functionality
 /// </summary>
 [TestClass]
@@ -95,7 +95,7 @@ public sealed class InteractionTests
     {
         // This test simulates the expected flow and documents what should happen
         
-        Console.WriteLine("=== Expected RSChatApp.Web -> RsMcpServer.Web Flow ===");
+        Console.WriteLine("=== Expected RSChatApp.Web -> RsMcpServer.Api Flow ===");
         Console.WriteLine("1. RSChatApp authenticates with Keycloak");
         Console.WriteLine("2. RSChatApp receives session and bearer token");
         Console.WriteLine("3. RSChatApp calls TerminalTool via MCP");
@@ -118,13 +118,13 @@ public sealed class InteractionTests
         
         Console.WriteLine($"✓ Without authentication: SessionId={initialSessionId}, IsAuthenticated={initialAuth}, HasToken={initialToken != null}");
         Console.WriteLine("✓ In real scenario with authentication, these would have actual values");
-        Console.WriteLine("✓ RsMcpServer.Web logging middleware will capture all this information");
+        Console.WriteLine("✓ RsMcpServer.Api logging middleware will capture all this information");
     }
 
     [TestMethod]
     public void TestExpectedLoggingStructure()
     {
-        // This test documents what logging structure we expect from RsMcpServer.Web
+        // This test documents what logging structure we expect from RsMcpServer.Api
         
         var expectedLogEntries = new[]
         {
@@ -142,7 +142,7 @@ public sealed class InteractionTests
             "=== END REQUEST INFO ==="
         };
 
-        Console.WriteLine("Expected RsMcpServer.Web logging structure:");
+        Console.WriteLine("Expected RsMcpServer.Api logging structure:");
         foreach (var entry in expectedLogEntries)
         {
             Console.WriteLine($"  - {entry}");

@@ -3,6 +3,7 @@
 @using RSChatApp.Mcp.Browser.Configuration
 @using RSChatApp.Web.Components.Pages.Browser
 @inject IOptions<BrowserInstanceConfiguration> BrowserConfig
+
 <div style="height: 100vh;">
     <BrowserStreamingViewer InitialUrl="@BrowserConfig.Value.BaseUrl"
         ShowDebugPanel="true"

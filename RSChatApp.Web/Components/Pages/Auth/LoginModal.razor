@@ -23,12 +23,72 @@
                                 <i class="fas fa-redo me-2"></i>
                                 Try Again
                             </button>
-                          
                         </div>
+                    </div>
+                }
+                else if (UseLegacyAuth)
+                {
+                    <!-- Legacy Login Form -->
+                    <div class="legacy-login-container">
+                        <div class="login-header">
+                            <h3>Welcome Back</h3>
+                            <p>Sign in to your ReportServer account</p>
+                        </div>
+                        
+                        <form @onsubmit="@HandleLegacyLogin" @onsubmit:preventDefault="true" class="login-form">
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" 
+                                       class="form-input" 
+                                       id="username" 
+                                       @bind="username" 
+                                       placeholder="Enter your username" 
+                                       required 
+                                       autocomplete="username" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" 
+                                       class="form-input" 
+                                       id="password" 
+                                       @bind="password" 
+                                       placeholder="Enter your password" 
+                                       required 
+                                       autocomplete="current-password" />
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-wrapper">
+                                    <input type="checkbox" @bind="rememberMe" class="checkbox-input" />
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-label">Remember me for 30 days</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="submit" class="btn-login" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <div class="btn-spinner"></div>
+                                        <span>Signing in...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Sign In</span>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M5 12h14"></path>
+                                            <path d="M12 5l7 7-7 7"></path>
+                                        </svg>
+                                    }
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 }
                 else if (showIframe)
                 {
+                    <!-- Keycloak Authentication Iframe -->
                     <iframe @ref="authIframe" 
                             src="@authUrl" 
                             style="width: 100%; height: 100%; border: none;"
@@ -64,6 +124,7 @@
     [Parameter] public bool Show { get; set; }
     [Parameter] public EventCallback<bool> ShowChanged { get; set; }
     [Parameter] public EventCallback OnLoginSuccess { get; set; }
+    [Parameter] public bool UseLegacyAuth { get; set; } = true; // Option to choose between legacy and Keycloak
 
     private bool isLoading = false;
     private bool showIframe = false;
@@ -71,6 +132,11 @@
     private string errorMessage = "";
     private string authUrl = "";
     private ElementReference authIframe;
+
+    // Legacy login form fields
+    private string username = "";
+    private string password = "";
+    private bool rememberMe = false;
 
     private async Task CloseModal()
     {
@@ -92,8 +158,13 @@
             hasError = false;
             errorMessage = "";
             
-            // Automatically start the authentication process
-            await LoadKeycloakInIframe();
+            // Start appropriate authentication based on UseLegacyAuth setting
+            if (!UseLegacyAuth)
+            {
+                // Automatically start the Keycloak authentication process
+                await LoadKeycloakInIframe();
+            }
+            // For legacy auth, just show the form (no auto-start needed)
         }
     }
 
@@ -139,8 +210,50 @@
         errorMessage = "";
         StateHasChanged();
 
-        // Reload the authentication by calling LoadKeycloakInIframe again
-        await LoadKeycloakInIframe();
+        // Reload the appropriate authentication type
+        if (UseLegacyAuth)
+        {
+            // For legacy auth, just clear the form errors (form is already shown)
+            return;
+        }
+        else
+        {
+            // Reload Keycloak authentication
+            await LoadKeycloakInIframe();
+        }
+    }
+
+    private async Task HandleLegacyLogin()
+    {
+        // TODO: Implement legacy authentication client call
+        // This method will handle the legacy login form submission
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Placeholder for legacy authentication logic
+            // Will use the RsGwtRpcAuthenticationClient here
+            
+            // For now, just simulate a delay
+            await Task.Delay(1000);
+            
+            // TODO: Call authentication service with username/password
+            // var result = await authenticationService.AuthenticateAsync(username, password);
+            // if (result.Success) { ... }
+            
+            ShowError("Legacy authentication not yet implemented");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during legacy authentication");
+            ShowError("Authentication failed. Please try again.");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     private void ShowError(string message)
@@ -212,135 +325,3 @@
         await CloseModal();
     }
 }
-
-<style>
-    .btn-close::before {
-        display: none !important;
-    }
-</style>
-
-<script>
-    window.setupAuthenticationListener = (dotNetRef) => {
-        window.authDotNetRef = dotNetRef;
-        console.log('Authentication listener set up');
-        
-        // Listen for messages from the iframe
-        window.addEventListener('message', function(event) {
-            console.log('Received message:', event.data);
-            if (event.data && typeof event.data === 'object') {
-                if (event.data.type === 'auth-success') {
-                    console.log('Authentication success received');
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationSuccess');
-                    }
-                } else if (event.data.type === 'auth-error') {
-                    console.log('Authentication error received:', event.data.message);
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', event.data.message || 'Authentication failed');
-                    }
-                } else if (event.data.type === 'auth-retry') {
-                    console.log('Authentication retry requested');
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationRetry');
-                    }
-                } else if (event.data.type === 'auth-close') {
-                    console.log('Authentication close requested');
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationClose');
-                    }
-                }
-            }
-        });
-    };
-
-    window.monitorAuthenticationIframe = (iframe) => {
-        console.log('Starting iframe monitoring');
-        let checkCount = 0;
-        const maxChecks = 120; // 2 minutes timeout
-        
-        const checkAuthStatus = () => {
-            checkCount++;
-            console.log('Checking auth status, attempt:', checkCount);
-            
-            try {
-                // Try to access iframe content
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                const iframeUrl = iframe.contentWindow.location.href;
-                console.log('Current iframe URL:', iframeUrl);
-                
-                // Check for success indicators
-                if (iframeUrl.includes('/auth/popup-auth-success') || 
-                    iframeUrl.includes('/signin-oidc') ||
-                    iframeUrl.includes('access_token') ||
-                    (iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.includes('Authentication Successful'))) {
-                    
-                    console.log('Success detected in iframe');
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationSuccess');
-                    }
-                    return;
-                }
-                
-                // Check for error indicators in URL
-                if (iframeUrl.includes('/auth/error') || 
-                    iframeUrl.includes('error=') ||
-                    iframeUrl.includes('access_denied')) {
-                    
-                    console.log('Error detected in iframe URL');
-                    // Extract error details from URL if available
-                    const urlParams = new URLSearchParams(iframeUrl.split('?')[1] || '');
-                    const errorParam = urlParams.get('error') || urlParams.get('error_description') || urlParams.get('message') || 'Authentication failed';
-                    
-                    if (window.authDotNetRef) {
-                        window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', errorParam);
-                    }
-                    return;
-                }
-                
-                // Check for error indicators in document content
-                if (iframeDoc && iframeDoc.body) {
-                    const bodyText = iframeDoc.body.innerText.toLowerCase();
-                    if (bodyText.includes('error') || 
-                        bodyText.includes('failed') || 
-                        bodyText.includes('invalid') ||
-                        bodyText.includes('denied')) {
-                        
-                        console.log('Error detected in iframe content');
-                        if (window.authDotNetRef) {
-                            window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', 'Authentication failed - please check your credentials');
-                        }
-                        return;
-                    }
-                }
-                
-            } catch (e) {
-                // Cross-origin restrictions prevent access - this is normal for external auth providers
-                console.log('Cross-origin access restricted (normal):', e.message);
-                // Continue monitoring unless we've hit the timeout
-            }
-            
-            // Check for timeout
-            if (checkCount >= maxChecks) {
-                console.log('Authentication timeout reached');
-                if (window.authDotNetRef) {
-                    window.authDotNetRef.invokeMethodAsync('OnAuthenticationError', 'Authentication timed out - please try again');
-                }
-                return;
-            }
-            
-            // Continue monitoring
-            setTimeout(checkAuthStatus, 1000);
-        };
-        
-        // Handle iframe load errors
-        iframe.addEventListener('error', function(e) {
-            console.log('Iframe load error:', e);
-            if (window.authDotNetRef) {
-                window.authDotNetRef.invokeMethodAsync('OnConnectionError');
-            }
-        });
-        
-        // Start monitoring after a short delay
-        setTimeout(checkAuthStatus, 500);
-    };
-</script>

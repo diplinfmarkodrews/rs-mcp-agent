@@ -26,13 +26,11 @@ var vectorDB = builder.AddQdrant("vectordb")
     .WithLifetime(ContainerLifetime.Persistent)
     .PublishAsConnectionString();
 
-var mcpServer = builder.AddProject<Projects.RsMcpServer_Web>("rs-mcp-server");
+var mcpServer = builder.AddProject<Projects.RsMcpServer_Api>("rs-mcp-server");
+
 bool loadJavaRsSidecar = builder.Configuration.GetValue<bool>("LoadRsRestSideCar");
 if (loadJavaRsSidecar)
-
     
-
-
     if (builder.Environment.IsDevelopment())
     {
         // In development, run the Java sidecar directly (requires JDK installed locally)

@@ -71,29 +71,29 @@ var kernelBuilder = builder.Services.AddKernel();
 // Add BrowserTool plugin
 kernelBuilder.Plugins.AddFromType<BrowserTool>();
 
-var scopedServiceProvider = builder.Services.BuildServiceProvider()
-    .CreateScope()
-    .ServiceProvider
-    ;
-var startupLogger = scopedServiceProvider.GetRequiredService<ILogger<Program>>();
-// Creating McpClient with SSE transport
-await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
-    new SseClientTransport(
-        new SseClientTransportOptions
-        {
-            Name = "RsMcpServer",
-            Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
-                               ?? throw new InvalidConfigurationException("RsMcpServer:Url")),
-        },
-        httpClient: scopedServiceProvider
-            .GetRequiredService<IHttpClientFactory>()
-            .CreateClient("RsMcpServer"),
-        loggerFactory: scopedServiceProvider
-            .GetRequiredService<ILoggerFactory>()
-    ));
-var toolsRs = await mcpClientRS.ListToolsAsync();
-startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
-    new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
+// var scopedServiceProvider = builder.Services.BuildServiceProvider()
+//     .CreateScope()
+//     .ServiceProvider
+//     ;
+// var startupLogger = scopedServiceProvider.GetRequiredService<ILogger<Program>>();
+// // Creating McpClient with SSE transport
+// await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
+//     new SseClientTransport(
+//         new SseClientTransportOptions
+//         {
+//             Name = "RsMcpServer",
+//             Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
+//                                ?? throw new InvalidConfigurationException("RsMcpServer:Url")),
+//         },
+//         httpClient: scopedServiceProvider
+//             .GetRequiredService<IHttpClientFactory>()
+//             .CreateClient("RsMcpServer"),
+//         loggerFactory: scopedServiceProvider
+//             .GetRequiredService<ILoggerFactory>()
+//     ));
+// var toolsRs = await mcpClientRS.ListToolsAsync();
+// startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
+//     new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
 // #pragma warning disable SKEXP0001
 // Add the RsMcpServer tools to kernel builder for static registration
@@ -162,12 +162,13 @@ var app = builder.Build();
 // Add session middleware before browser middleware
 app.UseRouting();
 app.UseAuthentication();
+app.UseStaticFiles();
+app.UseAntiforgery();
 
 app.UseSession();
 app.UseMiddleware<BrowserSessionMiddleware>();
-// app.UseCors();
-app.UseStaticFiles();
-app.UseAntiforgery();
+
+
 app.MapDefaultEndpoints();
 app.MapControllers();
 

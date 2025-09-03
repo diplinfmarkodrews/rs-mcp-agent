@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RSChatApp.Web\RSChatApp.Web.csproj" />
-    <ProjectReference Include="..\RsMcpServer.Web\RsMcpServer.Web.csproj" />
+    <ProjectReference Include="..\RsMcpServer.Api\RsMcpServer.Api.csproj" />
   </ItemGroup>
 
 </Project>

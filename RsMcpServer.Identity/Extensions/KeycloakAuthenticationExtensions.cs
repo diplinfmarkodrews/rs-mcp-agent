@@ -12,7 +12,7 @@ using Keycloak.AuthServices.Authentication;
 using Keycloak.AuthServices.Authorization;
 using Keycloak.AuthServices.Common;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using ReportServerRPCClient.Extensions;
+using ReportServer.RpcClient.Extensions;
 using RsMcpServer.Identity.Services;
 
 namespace RsMcpServer.Identity.Extensions;

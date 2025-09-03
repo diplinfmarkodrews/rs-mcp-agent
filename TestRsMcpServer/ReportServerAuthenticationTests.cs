@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
-using ReportServerRPCClient.Extensions;
+using ReportServer.RpcClient.Extensions;
 
 namespace TestRsMcpServer;
 

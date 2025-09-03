@@ -1,21 +1,8 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ReportServer.Abstraction;
-using ReportServer.Abstraction.Contracts;
-using ReportServer.Abstraction.Contracts.Authentication;
-using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.RestClient.Extensions;
-using ReportServer.RestClient.Infrastructure;
-using RsMcpServer.Identity.Services;
-using RsMcpServer.Web.Mcp.Tools;
-using TestRsMcpServer.Utilities;
 
 namespace TestRsMcpServer;
 
@@ -45,7 +32,7 @@ public sealed class ReportServerRsClientAuthenticationTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                {"ReportServer:Url", "http://localhost:8091"}
+                {"ReportServer:Url", "http://localhost:8090"}
             })
             .Build();
         
@@ -59,7 +46,7 @@ public sealed class ReportServerRsClientAuthenticationTests
         });
         
         // Register the real ReportServerClient implementation
-        services.AddReportServerRestClient("http://localhost:8091");
+        services.AddReportServerRestClient("http://localhost:8090");
         
         // Build service provider
         _serviceProvider = services.BuildServiceProvider();
@@ -191,10 +178,9 @@ public sealed class ReportServerRsClientAuthenticationTests
         try
         {
             using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(5);
             
             // Try to reach ReportServer's sidecar base URL
-            var response = await httpClient.GetAsync("http://localhost:8091");
+            var response = await httpClient.GetAsync("http://localhost:8090");
             
             if (response.IsSuccessStatusCode)
             {

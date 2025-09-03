@@ -16,7 +16,7 @@ public static class MSTestSettings
         Console.WriteLine("=".PadRight(80, '='));
         Console.WriteLine();
         Console.WriteLine("These tests will:");
-        Console.WriteLine("✓ Start both RSChatApp.Web and RsMcpServer.Web applications");
+        Console.WriteLine("✓ Start both RSChatApp.Web and RsMcpServer.Api applications");
         Console.WriteLine("✓ Test real HTTP communication between them");
         Console.WriteLine("✓ Verify SessionId tracking in actual requests");
         Console.WriteLine("✓ Test MCP tool calls with session context");

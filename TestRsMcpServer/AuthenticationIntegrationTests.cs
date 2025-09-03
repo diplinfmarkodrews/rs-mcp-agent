@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestRsMcpServer;
 
 /// <summary>
-/// Integration tests for authentication flow between RSChatApp.Web and RsMcpServer.Web
+/// Integration tests for authentication flow between RSChatApp.Web and RsMcpServer.Api
 /// These tests require Keycloak to be running for full authentication testing
 /// </summary>
 [TestClass]
@@ -89,7 +89,7 @@ public sealed class AuthenticationIntegrationTests
         // since we're just testing session persistence across requests
         
         Console.WriteLine("✓ Multiple requests completed with session persistence");
-        Console.WriteLine("✓ Check RsMcpServer.Web logs - SessionId should be:");
+        Console.WriteLine("✓ Check RsMcpServer.Api logs - SessionId should be:");
         Console.WriteLine("  - Same across all three requests");
         Console.WriteLine("  - Non-null value (actual GUID)");
         Console.WriteLine("  - Consistent session tracking");
@@ -207,7 +207,7 @@ public sealed class AuthenticationIntegrationTests
         // Output verification instructions
         Console.WriteLine("✓ Request logging integration test completed");
         Console.WriteLine();
-        Console.WriteLine("=== VERIFY IN RsMcpServer.Web CONSOLE LOGS ===");
+        Console.WriteLine("=== VERIFY IN RsMcpServer.Api CONSOLE LOGS ===");
         Console.WriteLine("You should see 4 request log entries, each containing:");
         Console.WriteLine();
         Console.WriteLine("=== INCOMING REQUEST ===");

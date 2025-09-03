@@ -24,6 +24,7 @@ public interface IAuthenticationService
     /// Triggers a logout request
     /// </summary>
     Task LogoutAsync();
+    
 }
 
 

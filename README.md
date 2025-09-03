@@ -1,6 +1,6 @@
 # Enterprise MCP Server for ReportServer Integration
 
-A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development.
+A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration via front and backend with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development.
 
 ## 🏗️ Architecture Overview
 
@@ -9,18 +9,18 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │                          RSChatApp.Web (Browser-Based Workspace)                │
 │                                   (Blazor UI)                                   │
 │                                                                                 │
-│  ┌─────────────────────────────────────────┐    ┌─────────────────────────────┐  │
-│  │         LLM Provider Layer              │    │    Session Management       │  │
-│  │                                         │    │                             │  │
-│  │  ┌─────────────┐  ┌─────────────────┐   │    │  Current: In-Memory         │  │
-│  │  │   Ollama    │  │   Anthropic     │   │    │  • Browser Session          │  │
-│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │    │  • Conversation Context     │  │
-│  │  │             │  │                 │   │    │                             │  │
-│  │  │ • Mistral   │  │ • Claude-3.5    │   │    │  Future: Persistent         │  │
-│  │  │ • Llama     │  │ • Claude-3      │   │    │  • Topic-Based History      │  │
-│  │  │ • Qwen      │  │ • Claude Haiku  │   │    │  • Cross-Session Context    │  │
-│  │  └─────────────┘  └─────────────────┘   │    └─────────────────────────────┘  │
-│  │                                         │                                     │
+│  ┌─────────────────────────────────────────┐    ┌─────────────────────────────┐ │
+│  │         LLM Provider Layer              │    │    Session Management       │ │
+│  │                                         │    │                             │ │
+│  │  ┌─────────────┐  ┌─────────────────┐   │    │  Current: In-Memory         │ │
+│  │  │   Ollama    │  │   Anthropic     │   │    │  • Browser Session          │ │
+│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │    │  • Conversation Context     │ │
+│  │  │             │  │                 │   │    │                             │ │
+│  │  │ • Mistral   │  │ • Claude-3.5    │   │    │  Future: Persistent         │ │
+│  │  │ • Llama     │  │ • Claude-3      │   │    │  • Topic-Based History      │ │
+│  │  │ • Qwen      │  │ • Claude Haiku  │   │    │  • Cross-Session Context    │ │
+│  │  └─────────────┘  └─────────────────┘   │    └─────────────────────────────┘ │
+│  │                                         │                                    │
 │  │  ┌─────────────┐  ┌─────────────────┐   │    ┌─────────────────┐             │
 │  │  │   OpenAI    │  │    Azure AI     │   │    │     Qdrant      │             │
 │  │  │  (GPT-4/o1) │  │    (OpenAI)     │   │    │   (VectorDB)    │             │
@@ -37,7 +37,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │  └─────────────────────────────────────────┘            │                       │
 │                          ┌─────────────────────────────────────────────┐        │
 │                          │           Ingested Content                  │        │
-│                          │                                             │        │  │                          │  📚 Documentation    🔧 Groovy Scripts      │        │
+│                          │                                             │        │         │                          │  📚 Documentation    🔧 Groovy Scripts      │        │
 │                          │  • PDFs, Markdown    • .groovy files        │        │
 │                          │  • API Docs          • Build scripts        │        │
 │                          │  • User Manuals      • Automation scripts   │        │
@@ -47,6 +47,20 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │                          │  • Command syntax                           │        │
 │                          │  • Shell scripts                            │        │
 │                          └─────────────────────────────────────────────┘        │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                    🌐 (Legacy)Software Integration                      │    │
+│  │                                                                         │    │
+│  │  ┌─────────────────────────────────────────────────────────────────┐    │    │
+│  │  │ 🎭 Playwright Browser Tool                                      │    │    │
+│  │  │   • Visual UI automation for legacy applications                │    │    │
+│  │  │   • ReportServer frontend interaction                           │    │    │
+│  │  │   • Screenshot capture & visual analysis                        │    │    │
+│  │  │   • User workflow simulation & testing                          │    │    │
+│  │  │   • Cross-browser compatibility (Chrome, Firefox, Safari)       │    │    │
+│  │  │   • Element inspection & interaction                            │    │    │
+│  │  └─────────────────────────────────────────────────────────────────┘    │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       │ MCP Protocol
@@ -55,11 +69,18 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
                     │         RsMcpServer.Web                 │
                     │         (MCP Server)                    │
                     │                                         │
-                    │  Current Implementation:                │
+                    │  Backend Integration Tools:             │
                     │  ┌─────────────────────────────────┐    │
-                    │  │     Basic Terminal Tool         │    │
+                    │  │ ✅ Basic Terminal Tool          │    │
                     │  │   • Command execution           │    │
                     │  │   • Process management          │    │
+                    │  └─────────────────────────────────┘    │
+                    │  ┌─────────────────────────────────┐    │
+                    │  │ ✅ Backend RPC Integration      │    │
+                    │  │   • Direct Java RPC calls       │    │
+                    │  │   • GWT protocol support        │    │
+                    │  │   • Session management          │    │
+                    │  │   • Authentication bridge       │    │
                     │  └─────────────────────────────────┘    │
                     │                                         │
                     │  Future Extensions:                     │
@@ -70,13 +91,21 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
                     │  │ • Workflow Automation Tool      │    │
                     │  └─────────────────────────────────┘    │
                     └─────────────────────────────────────────┘
-                                      │
-                                      │ RPC/HTTP
-                                      ▼
-                    ┌─────────────────────────────────┐
-                    │      ReportServer               │
-                    │      (Java/GWT)                 │
-                    └─────────────────────────────────┘
+                         │                              │
+                         │ Playwright                   │ RPC/HTTP
+                         │ Browser                      │ Backend
+                         │ Automation                   │ API
+                         ▼                              ▼
+                    ┌─────────────────────────────────────────┐
+                    │           ReportServer                  │
+                    │           (Java/GWT)                    │
+                    │                                         │
+                    │  Frontend UI ◄──────────► Backend API  │
+                    │  • Web Interface           • RPC Server │
+                    │  • User Actions           • Data Layer  │
+                    │  • Visual Elements        • Business    │
+                    │  • Report Rendering         Logic      │
+                    └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Authentication Layer                         │
@@ -84,8 +113,20 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │    RSChatApp.Web ◄──────► Keycloak ◄──────► RsMcpServer.Web     │
 │                           (OIDC)                                │
 │                                                                 │
-│                     ReportServer ◄─────────► Keycloak           │
-│                     (Session Bridge)                            │
+│         │                                         │             │
+│         │ Legacy Auth                             │ Modern Auth │
+│         ▼                                         ▼             │
+│    ┌─────────────────┐              ┌─────────────────────────┐ │
+│    │ ReportServer    │              │      Keycloak           │ │
+│    │ Native Login    │              │   (OIDC Provider)       │ │
+│    │                 │              │                         │ │
+│    │ • Username/Pass │              │ • SSO Integration       │ │
+│    │ • Session Bridge│              │ • JWT Tokens           │ │
+│    │ • GWT RPC Auth  │              │ • Role Management       │ │
+│    └─────────────────┘              └─────────────────────────┘ │
+│                                                                 │
+│              ReportServer ◄─────────► Authentication            │
+│              (Dual Mode Support)     (Keycloak + Legacy)        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -113,17 +154,43 @@ The system ingests diverse content types into Qdrant vector database for intelli
 
 - **Ollama/Qdrant**: Powerful local embedding Model, provides vector search, embeddings, and semantic RAG capabilities for context-aware responses
 
-**🔧 MCP Server Evolution (RsMcpServer.Web)**
-- **Current State**: Implements basic terminal tool for command execution and process management
-- **Future Roadmap**: Extensible architecture planned for advanced report tools, file management, database queries, and workflow automation
+**🤖 AI Chat Application with Legacy Software Integration (RSChatApp.Web)**
+The chat application provides an **innovative AI interface for legacy software integration**:
 
-**🔐 Enterprise Authentication**
-Centralized Keycloak OIDC authentication ensures secure access across all components with session bridging to ReportServer for seamless enterprise integration.
+- **🌐 Frontend Integration via Playwright Browser Tool**:
+  - **Visual UI Automation**: AI-powered browser automation for legacy applications like ReportServer
+  - **Screenshot Analysis**: AI can capture and analyze visual interfaces to understand application state
+  - **User Workflow Simulation**: Automate complex user interactions through natural language commands
+  - **Cross-Browser Compatibility**: Support for Chromium, Firefox, and WebKit browsers
+  - **Element Inspection**: AI can identify and interact with web elements dynamically
+
+**🔧 MCP Server Backend Integration (RsMcpServer.Web)**
+The MCP server provides **backend integration capabilities** for ReportServer:
+
+- **⚙️ Backend Integration (RPC Client)**:
+  - **Direct Java RPC Communication**: Low-level API access for programmatic operations
+  - **GWT Protocol Support**: Native communication with ReportServer's GWT backend
+  - **Session Management**: Efficient authentication and session handling
+  - **High-Performance Operations**: Bulk data operations and system administration
+
+- **🔄 Dual Integration Strategy**: AI agents can leverage both frontend and backend approaches:
+  - **Frontend Tasks**: Use Playwright in the chat app for visual verification and user workflow testing
+  - **Backend Tasks**: Use RPC via MCP server for bulk operations and system configuration
+  - **Hybrid Workflows**: Combine both approaches for comprehensive automation scenarios
+
+**🔐 Dual Authentication Support**
+The system supports both modern and legacy authentication methods:
+
+- **🆕 Modern Keycloak OIDC**: Enterprise-grade authentication with SSO, JWT tokens, and role management
+- **🔧 Legacy ReportServer Authentication**: Direct username/password authentication with GWT RPC session bridging
+- **🔄 Flexible Authentication Mode**: AI agents can authenticate using the most appropriate method based on deployment configuration
 
 ## 🚀 Key Features
 
 ### **Enterprise Authentication & Security**
+- ✅ **Dual Authentication Support**: Both modern Keycloak OIDC and legacy ReportServer authentication
 - ✅ **Centralized Keycloak OIDC Authentication** with PKCE support
+- ✅ **Legacy GWT RPC Authentication** for existing ReportServer deployments
 - ✅ **Seamless ReportServer Integration** through session bridging
 - ✅ **JWT Token Management** with automatic refresh
 - ✅ **Cross-System Session Synchronization**
@@ -140,9 +207,24 @@ Centralized Keycloak OIDC authentication ensures secure access across all compon
 - ✅ **Document Ingestion Pipeline** with PDF support
 - ✅ **Semantic Search** across ingested documents
 
+### **AI-Powered Legacy Software Integration**
+- ✅ **Frontend Integration via Chat App Playwright Tool**:
+  - **Visual UI Automation** integrated directly into the AI chat interface
+  - **Natural Language Interface** for legacy application interaction
+  - **Screenshot Analysis** and visual feedback within chat
+  - **Cross-Browser Support** (Chromium, Firefox, WebKit)
+  - **Element Inspection** and dynamic interaction capabilities
+- ✅ **Backend Integration via MCP Server RPC Client**:
+  - **Direct Java RPC Communication** for programmatic operations
+  - **GWT Protocol Support** for native ReportServer API access
+  - **High-Performance Bulk Operations** and system administration
+  - **Session Management** with authentication bridging
+- ✅ **Hybrid AI Workflows** combining both approaches for comprehensive automation
+
 ### **MCP Server Integration**
 - ✅ **Microsoft Extensions AI Framework** for MCP protocol
 - ✅ **Direct ReportServer RPC Client** for Java interoperability
+- ✅ **Playwright Browser Automation** for UI testing and interaction
 - ✅ **Tool Integration** for AI agent functionality
 - ✅ **Terminal Operations** support for ReportServer CLI
 - ✅ **HTTP & SSE Transport** protocols

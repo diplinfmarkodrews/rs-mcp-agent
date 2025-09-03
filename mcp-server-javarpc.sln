@@ -2,11 +2,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServerRPCClient", "ReportServerRPCClient\ReportServerRPCClient.csproj", "{FBEC7CD7-5B9D-42DD-A449-CAAE7E753A58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServer.RpcClient", "ReportServer.RpcClient\ReportServer.RpcClient.csproj", "{FBEC7CD7-5B9D-42DD-A449-CAAE7E753A58}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServer.Abstraction", "ReportServer.Abstraction\ReportServer.Abstraction.csproj", "{58EB89E4-3E33-443E-A4DC-969880EC0258}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Web", "RsMcpServer.Web\RsMcpServer.Web.csproj", "{1ECAB3A2-ABAD-41B4-AF14-E87930324658}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Api", "RsMcpServer.Api\RsMcpServer.Api.csproj", "{1ECAB3A2-ABAD-41B4-AF14-E87930324658}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.AppHost", "RSChatApp.AppHost\RSChatApp.AppHost.csproj", "{79AB773D-B79B-445F-8146-DD15C4E11A93}"
 EndProject
