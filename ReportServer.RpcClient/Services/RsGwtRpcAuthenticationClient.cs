@@ -26,9 +26,25 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     /// </summary>
     public async Task<GwtRpcResponse<AuthenticationResultDto>> AuthenticateAsync(string username, string password)
     {
-        // Build payload based on actual trace #4 - matches exact format
-        // 7|0|7|http://localhost:8090/reportserver/|DFEDD0FBBBBBE222F217D04F50A95F56|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|root|1|2|3|4|1|5|5|1|6|7|7|
-        var payload = $"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|1|2|3|4|1|5|5|1|6|7|7|";
+        // First get the HMAC passphrase (trace #3)
+        var passphraseResponse = await GetHmacPassphraseAsync();
+        if (passphraseResponse.Success == false || passphraseResponse.Result is null)
+        {
+            return new GwtRpcResponse<AuthenticationResultDto>
+            {
+                Success = false,
+                Error = "Failed to get HMAC passphrase",
+                Exception = new Exception("Failed to get HMAC passphrase")
+            };
+        }
+        
+        // Encode password with HMAC using the passphrase
+        var encodedPassword = ComputeHmacHash(password, passphraseResponse.Result
+            ?? throw new InvalidOperationException("HMAC passphrase is null"));
+        
+        // Build payload with both username and encoded password - updated string count from 7 to 8
+        // Original trace shows only username, but UserPasswordAuthToken class has both username and password fields
+        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|{encodedPassword}|1|2|3|4|1|5|6|1|7|8|8|";
         
         var response = await PostGwtRpcAsync("login", payload);
         var parsedResult = ParseAuthenticationResponse(response);
