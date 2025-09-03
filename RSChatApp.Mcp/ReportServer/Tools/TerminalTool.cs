@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Security.Authentication;
-using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using ReportServer.Abstraction;
@@ -9,7 +9,7 @@ using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
 using RsMcpServer.Identity.Services;
 
-namespace RsMcpServer.Web.Mcp.Tools;
+namespace RSChatApp.Mcp.ReportServer.Tools;
 
 /// <summary>
 /// MCP Server implementation for terminal commands using Microsoft.Extensions.AI MCP SDK

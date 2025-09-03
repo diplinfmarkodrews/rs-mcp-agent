@@ -1,7 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 
-namespace RsMcpServer.Web.Extensions;
+namespace RSChatApp.Mcp.ReportServer.Extensions;
 
 public static class McpServerBuilderExtension
 {

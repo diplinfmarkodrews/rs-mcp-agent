@@ -23,13 +23,16 @@
       <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
       <ProjectReference Include="..\ReportServerRPCClient\ReportServerRPCClient.csproj" />
       <ProjectReference Include="..\ReportServer.RestClient\ReportServer.RestClient.csproj" />
+      <ProjectReference Include="..\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
       <ProjectReference Include="..\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj" />
       <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Extensions\" />
       <Folder Include="Mcp\Prompts\" />
       <Folder Include="Mcp\Ressources\" />
+      <Folder Include="Mcp\Tools\" />
     </ItemGroup>
 
 </Project>

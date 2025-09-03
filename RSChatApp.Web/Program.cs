@@ -46,7 +46,15 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 // Add custom authentication service
 builder.Services.AddCustomAuthenticationService();
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = "RsAIChatApp";
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 builder.Services.AddHttpClient("RsMcpServer", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
@@ -56,10 +64,17 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
 
 builder.Services.AddBrowserTool(reportServerUrl);
 builder.Services.AddBrowserStreamingService();
+
+// Create kernel and register plugins
 var kernelBuilder = builder.Services.AddKernel();
+
+// Add BrowserTool plugin
+kernelBuilder.Plugins.AddFromType<BrowserTool>();
+
 var scopedServiceProvider = builder.Services.BuildServiceProvider()
     .CreateScope()
-    .ServiceProvider;
+    .ServiceProvider
+    ;
 var startupLogger = scopedServiceProvider.GetRequiredService<ILogger<Program>>();
 // Creating McpClient with SSE transport
 await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
@@ -80,29 +95,28 @@ var toolsRs = await mcpClientRS.ListToolsAsync();
 startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
     new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
-#pragma warning disable SKEXP0001
-kernelBuilder.Plugins.AddFromFunctions("RsMcpServer", 
-    toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
-kernelBuilder.Plugins.AddFromType<BrowserTool>();
-#pragma warning restore SKEXP0001
-foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpClientConfiguration>())
-{
-    // Create an MCPClient for each configured client
-    await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
-    {
-        Name = clientConfig.Name,
-        Command = clientConfig.Command,
-        Arguments = clientConfig.Arguments?.ToArray() ?? Array.Empty<string>(),
-    }));
-    var tools = await mcpClient.ListToolsAsync();
-    startupLogger.LogInformation("Register McpClient: {clientConfigName} with toolCalls: {toolCalls}", clientConfig.Name, 
-        new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
-#pragma warning disable SKEXP0001
-    kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, 
-        tools.Select(aiFunction => aiFunction.AsKernelFunction()));
-#pragma warning restore SKEXP0001
-}
-
+// #pragma warning disable SKEXP0001
+// Add the RsMcpServer tools to kernel builder for static registration
+// kernelBuilder.Plugins.AddFromFunctions("RsMcpServer", 
+    // toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
+// #pragma warning restore SKEXP0001
+// foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpClientConfiguration>())
+// {
+//     // Create an MCPClient for each configured client
+//     await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
+//     {
+//         Name = clientConfig.Name,
+//         Command = clientConfig.Command,
+//         Arguments = clientConfig.Arguments?.ToArray() ?? Array.Empty<string>(),
+//     }));
+//     var tools = await mcpClient.ListToolsAsync();
+//     startupLogger.LogInformation("Register McpClient: {clientConfigName} with toolCalls: {toolCalls}", clientConfig.Name, 
+//         new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
+// #pragma warning disable SKEXP0001
+//     kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, 
+//         tools.Select(aiFunction => aiFunction.AsKernelFunction()));
+// #pragma warning restore SKEXP0001
+// }
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
@@ -145,6 +159,15 @@ builder.Services.AddSingleton<SemanticSearch>();
 builder.Services.AddControllers();
 var app = builder.Build();
 
+// Add session middleware before browser middleware
+app.UseRouting();
+app.UseAuthentication();
+
+app.UseSession();
+app.UseMiddleware<BrowserSessionMiddleware>();
+// app.UseCors();
+app.UseStaticFiles();
+app.UseAntiforgery();
 app.MapDefaultEndpoints();
 app.MapControllers();
 
@@ -158,18 +181,13 @@ if (!app.Environment.IsDevelopment())
 
 // Configure the hub
 app.MapHub<BrowserStreamHub>("/browserstreamhub");
-app.UseCors();
+
 app.MapHealthChecks("/health");
 
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-app.UseStaticFiles();
-app.UseAntiforgery();
 
-// Add session middleware before browser middleware
-app.UseSession();
-app.UseMiddleware<BrowserSessionMiddleware>();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

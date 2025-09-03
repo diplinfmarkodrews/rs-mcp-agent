@@ -28,7 +28,7 @@ public static class ServiceExtensions
             options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
         });
 
-        // Register the browser streaming service
+        // Register the browser streaming service as singleton since browser services are singleton
         services.AddSingleton<IBrowserStreamingService, BrowserStreamingService>();
 
         

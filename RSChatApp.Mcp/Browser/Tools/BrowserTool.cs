@@ -18,13 +18,14 @@ public class BrowserTool
     /// <summary>
     /// Navigate to a specific URL
     /// </summary>
-    [KernelFunction, Description("Navigate to a specific URL. Stay on the baseUrls domain, except the user tells you otherwise.")]
+    [KernelFunction, Description("Navigate to a specific URL.")]
     public async Task<string> NavigateToUrlAsync(
         [Description("The URL to navigate to")] string url,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
         try
         {
+            
             var response = await _browserInstance.Page.GotoAsync(url, new PageGotoOptions
             {
                 Timeout = timeoutMs,

@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
 using ReportServerRPCClient.Extensions;
+using RSChatApp.Mcp.ReportServer.Tools;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
-using RsMcpServer.Web.Mcp.Tools;
 
 // Make the Program accessible to the test project
 [assembly: InternalsVisibleTo("TestRsMcpServer")]
@@ -27,7 +27,7 @@ builder.Services.AddLegacyAuthentication();
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<TerminalTool>();
+builder.Services.AddSingleton<TerminalTool>();
 
 builder.Services.AddKernel()
     .Plugins.AddFromType<TerminalTool>();

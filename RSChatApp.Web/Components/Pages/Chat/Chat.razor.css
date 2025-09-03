@@ -1,11 +1,26 @@
+/* Chat page should adapt to its container */
+.chat-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Use full height of parent container */
+    max-height: calc(100vh - 60px); /* Fallback for standalone chat page */
+    overflow: hidden;
+}
+
+/* Message area should take available space and scroll when overflow */
+.chat-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Important for flexbox scrolling */
+}
+
+/* Input container stays at bottom - fixed height */
 .chat-container {
-    position: sticky; 
-    bottom: 0; 
-    padding-left: 1.5rem;
-    padding-right: 1.5rem; 
-    padding-top: 0.75rem; 
-    padding-bottom: 1.5rem; 
-    border-top-width: 1px; 
-    background-color: #F3F4F6; 
-    border-color: #E5E7EB;
+    flex-shrink: 0; /* Don't shrink */
+    padding: 1.5rem;
+    background-color: #F3F4F6;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }

@@ -1,22 +1,42 @@
 .message-list-container {
     margin: 2rem 1.5rem;
     flex-grow: 1;
+    min-height: 0; /* Important for flexbox scrolling */
 }
 
 .message-list {
     display: flex; 
     flex-direction: column; 
-    gap: 1.25rem; 
+    gap: 1.25rem;
+    padding-bottom: 2rem;
 }
 
 .no-messages {
     text-align: center;
     font-size: 1.25rem;
     color: #999;
-    margin-top: calc(40vh - 18rem);
+    margin-top: calc(20vh);
+}iner {
+    margin: 2rem 1.5rem;
+    flex-grow: 1;
+    min-height: 0; /* Important for flexbox scrolling */
+}
+
+.message-list {
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.25rem;
+    padding-bottom: 2rem;
+}
+
+.no-messages {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #999;
+    margin-top: calc(30vh);
 }
 
 chat-messages > ::deep div:last-of-type {
-    /* Adds some vertical buffer to so that suggestions don't overlap the output when they appear */
-    margin-bottom: 2rem;
+    /* Minimal margin since the layout handles spacing */
+    margin-bottom: 1rem;
 }

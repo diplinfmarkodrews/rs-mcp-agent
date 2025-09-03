@@ -20,16 +20,41 @@ window.customElements.define('chat-messages', class ChatMessages extends HTMLEle
             const addedUserMessage = mutations.some(m => Array.from(m.addedNodes).some(n => n.parentElement === this && n.classList?.contains('user-message')));
             const elem = this.lastElementChild;
             if (ChatMessages._isFirstAutoScroll || addedUserMessage || this._elemIsNearScrollBoundary(elem, 300)) {
-                elem.scrollIntoView({ behavior: ChatMessages._isFirstAutoScroll ? 'instant' : 'smooth' });
+                // Use our custom scroll method for better container handling
+                this._scrollToBottom(ChatMessages._isFirstAutoScroll ? 'instant' : 'smooth');
                 ChatMessages._isFirstAutoScroll = false;
             }
         });
     }
 
     _elemIsNearScrollBoundary(elem, threshold) {
-        const maxScrollPos = document.body.scrollHeight - window.innerHeight;
-        const remainingScrollDistance = maxScrollPos - window.scrollY;
-        return remainingScrollDistance < elem.offsetHeight + threshold;
+        // Find the scrollable container (chat-messages-area)
+        const scrollContainer = this.closest('.chat-messages-area');
+        if (scrollContainer) {
+            // Use container-specific scroll calculations
+            const maxScrollPos = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+            const remainingScrollDistance = maxScrollPos - scrollContainer.scrollTop;
+            return remainingScrollDistance < elem.offsetHeight + threshold;
+        } else {
+            // Fallback to page-level scrolling for backward compatibility
+            const maxScrollPos = document.body.scrollHeight - window.innerHeight;
+            const remainingScrollDistance = maxScrollPos - window.scrollY;
+            return remainingScrollDistance < elem.offsetHeight + threshold;
+        }
+    }
+
+    // Custom method to scroll to bottom with proper container handling
+    _scrollToBottom(behavior = 'smooth') {
+        const scrollContainer = this.closest('.chat-messages-area');
+        if (scrollContainer) {
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: behavior
+            });
+        } else {
+            // Fallback
+            this.lastElementChild?.scrollIntoView({ behavior });
+        }
     }
 });
 

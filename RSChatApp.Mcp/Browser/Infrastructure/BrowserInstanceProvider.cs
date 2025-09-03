@@ -7,15 +7,13 @@ namespace RSChatApp.Mcp.Browser.Interfaces;
 public class BrowserInstanceProvider : IBrowserInstanceProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IBrowserInstanceStore _browserStore;
+    
     private readonly IMemoryCache _memoryCache;
 
     public BrowserInstanceProvider(IHttpContextAccessor httpContextAccessor, 
-        IMemoryCache memoryCache,
-        IBrowserInstanceStore browserStore)
+        IMemoryCache memoryCache)
     {
         _httpContextAccessor = httpContextAccessor;
-        _browserStore = browserStore;
         _memoryCache = memoryCache;
     }
     
@@ -35,24 +33,24 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
         
         throw new InvalidDataException($"BrowserCacheEntry is not IBrowserInstance, type: {memoryCacheEntry.GetType().FullName}");
     }
-    public async Task<IBrowserInstance> GetBrowserInstanceAsync()
-    {
-        string sessionId = _httpContextAccessor.HttpContext.Session.Id;
-        if (string.IsNullOrEmpty(sessionId))
-            throw new InvalidOperationException("SessionId is null, HttpContext already disposed?!");
-        
-        var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
-        if (browserInstance == null)
-            throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
-        
-        return browserInstance;
-    }
-    public async Task<IBrowserInstance> GetBrowserInstanceAsync(string sessionId)
-    {
-        var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
-        if (browserInstance == null)
-            throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
-        
-        return browserInstance;
-    }
+    // public async Task<IBrowserInstance> GetBrowserInstanceAsync()
+    // {
+    //     string sessionId = _httpContextAccessor.HttpContext.Session.Id;
+    //     if (string.IsNullOrEmpty(sessionId))
+    //         throw new InvalidOperationException("SessionId is null, HttpContext already disposed?!");
+    //     
+    //     var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
+    //     if (browserInstance == null)
+    //         throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
+    //     
+    //     return browserInstance;
+    // }
+    // public async Task<IBrowserInstance> GetBrowserInstanceAsync(string sessionId)
+    // {
+    //     var browserInstance = await _browserStore.GetOrCreateBrowserInstanceAsync(sessionId);
+    //     if (browserInstance == null)
+    //         throw new InvalidOperationException("SessionId not found in BrowserInstanceStore");
+    //     
+    //     return browserInstance;
+    // }
 }

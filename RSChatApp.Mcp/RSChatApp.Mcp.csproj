@@ -15,9 +15,17 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="ModelContextProtocol">
+        <HintPath>..\..\..\..\..\.nuget\packages\modelcontextprotocol\0.3.0-preview.3\lib\net9.0\ModelContextProtocol.dll</HintPath>
+      </Reference>
       <Reference Include="ModelContextProtocol.Core">
         <HintPath>..\..\..\..\..\.nuget\packages\modelcontextprotocol.core\0.3.0-preview.3\lib\net9.0\ModelContextProtocol.Core.dll</HintPath>
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+      <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
     </ItemGroup>
 
 </Project>

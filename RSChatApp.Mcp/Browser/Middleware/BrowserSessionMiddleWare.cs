@@ -10,19 +10,16 @@ namespace RSChatApp.Mcp.Browser.Middleware;
 public class BrowserSessionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IBrowserInstanceStore _browserInstanceStore;
     private readonly ILogger<BrowserSessionMiddleware> _logger;
  
     public BrowserSessionMiddleware(RequestDelegate next,
-        IBrowserInstanceStore browserInstanceStore,
         ILogger<BrowserSessionMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _browserInstanceStore = browserInstanceStore;
     }
     
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IBrowserInstanceStore browserInstanceStore)
     {
         // Middleware to ensure a browser instance is associated with the current session
         _logger.LogDebug("BrowserSessionMiddleware invoked for {Path}", context.Request.Path);
@@ -32,11 +29,12 @@ public class BrowserSessionMiddleware
             await _next(context);
             return;
         }
+        // await context.Session.LoadAsync();
         var sessionId = context.Session.Id;
         if (sessionId != null)
         {
             _logger.LogDebug("Session ID: {SessionId}", sessionId);
-            _ = await _browserInstanceStore.GetOrCreateBrowserInstanceAsync(sessionId);
+            _ = await browserInstanceStore.GetOrCreateBrowserInstanceAsync(sessionId);
             _logger.LogInformation("Browser instance ensured for session {SessionId}", sessionId);
         }
         else
@@ -48,10 +46,11 @@ public class BrowserSessionMiddleware
     }
     private static bool ShouldSkipBrowserInstance(HttpContext context)
     {
-        return false;
+        
         var path = context.Request.Path.Value?.ToLowerInvariant();
         if (string.IsNullOrEmpty(path)) return false;
-        
+        if (path == "/") return false; // Main page
+        return false;
         // Skip static resources
         if (path.StartsWith("/_framework/") ||
             // path.StartsWith("/_content/") ||
@@ -72,19 +71,20 @@ public class BrowserSessionMiddleware
         }
         
         // Skip Blazor-specific endpoints that shouldn't create browser instances
-        if (path.StartsWith("/_blazor/") ||           // SignalR hub endpoints
-            path.StartsWith("/blazorhub") ||           // Custom hub names
-            path.Contains("/negotiate") ||             // SignalR negotiate
-            path.StartsWith("/api/") ||                // API calls
-            path.StartsWith("/hubs/") ||               // SignalR hubs
-            path.StartsWith("/_vs/") ||                // Visual Studio browser link
-            path.StartsWith("/hot-reload/") ||         // Hot reload endpoints
-            path.Contains("/circuitpack") )//||           // Blazor circuit pack
-            //context.Request.Headers.ContainsKey("X-Requested-With") || // AJAX requests
-            //context.Request.ContentType?.Contains("application/json") == true) // JSON requests
-        {
-            return true;
-        }
+        // if (//path.StartsWith("/_blazor/connect") ||           // SignalR hub endpoints
+        //     path.StartsWith("/_blazor/disconnect") ||
+        //     path.StartsWith("/blazorhub") ||           // Custom hub names
+        //     path.Contains("/negotiate") ||             // SignalR negotiate
+        //     path.StartsWith("/api/") ||                // API calls
+        //     path.StartsWith("/hubs/") ||               // SignalR hubs
+        //     path.StartsWith("/_vs/") ||                // Visual Studio browser link
+        //     path.StartsWith("/hot-reload/") ||         // Hot reload endpoints
+        //     path.Contains("/circuitpack") )//||           // Blazor circuit pack
+        //     //context.Request.Headers.ContainsKey("X-Requested-With") || // AJAX requests
+        //     //context.Request.ContentType?.Contains("application/json") == true) // JSON requests
+        // {
+        //     return true;
+        // }
         
         // Skip if this is a SignalR connection
         if (context.Request.Headers.ContainsKey("Connection") && 

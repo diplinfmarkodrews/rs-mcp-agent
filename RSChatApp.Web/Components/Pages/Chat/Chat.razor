@@ -20,21 +20,29 @@
 @using RSChatApp.Web.Services.SemanticSearch
 @implements IDisposable
 
-<ChatHeader OnNewChat="@ResetConversationAsync" />
+<div class="chat-page">
+    <ChatHeader OnNewChat="@ResetConversationAsync" />
+    
+    <div class="chat-messages-area">
+        <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
+            <NoMessagesContent>
+                <div>Welcome to the ReportServer Agent.</div>
+                <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
+                <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
+                <ChatCitation File="ReportServer-5_0-AdminGuide-En.pdf"/>
+                <ChatCitation File="ReportServer-5_0-ScriptGuide-En.pdf"/>
+            </NoMessagesContent>
+        </ChatMessageList>
+    </div>
 
-<ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
-    <NoMessagesContent>
-        <div>Welcome to the ReportServer Agent.</div>
-        <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
-        <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
-        <ChatCitation File="ReportServer-5_0-AdminGuide-En.pdf"/>
-        <ChatCitation File="ReportServer-5_0-ScriptGuide-En.pdf"/>
-    </NoMessagesContent>
-</ChatMessageList>
-
-<div class="chat-container">
-    <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" />
-    <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
+    <div class="chat-container">
+        <div class="chat-suggestions">
+            <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions"/>
+        </div>
+        <div class="chat-input">
+            <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput"/>
+        </div>
+    </div>
 </div>
 
 @code {
@@ -50,8 +58,8 @@
         - ReportServer-5_0-ScriptGuide-En.pdf
          
         Respect the language of each document, which is reflected by its ending En(english) or De(German). 
-        You have a browsertool to have full control of the Reportserver front end. Stay in the initial domain,
-        except the user explitly asks you.  
+        You have a browsertool to have full control of the Reportserver front end. 
+          
         ";
 
     private readonly ChatOptions chatOptions = new();
@@ -66,7 +74,9 @@
     protected override void OnInitialized()
     {
         // For now, guaranty ollama compatibilty
-        IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model);
+        IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model) == false;
+        
+        Logger.LogInformation("Chat initialized with Ollama compatibility: {IsOllama}", IsOllama);
         messages.Add(new(ChatRole.System, SystemPrompt));
         
         // Debug logging to see what kernel plugins are available
@@ -211,7 +221,7 @@
     }
 
 
-    // TODO: refactor this into MCP
+  
     [Description("Searches for information using a phrase or keyword")]
     private async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,

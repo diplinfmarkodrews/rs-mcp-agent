@@ -20,7 +20,8 @@ public static class ServiceCollectionExtension
         services.AddSingleton<IBrowserInstanceStore, InMemoryBrowserInstanceStore>();
         services.AddSingleton<IBrowserInstanceFactory, PlayWrightBrowserInstanceFactory>();        
         services.AddSingleton<IBrowserInstanceProvider, BrowserInstanceProvider>();
-        services.AddScoped<BrowserTool>();
+        services.AddSingleton<BrowserTool>();
+        
         return services;
     }
 }
