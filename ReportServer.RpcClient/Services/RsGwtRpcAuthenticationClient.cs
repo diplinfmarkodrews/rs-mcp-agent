@@ -44,7 +44,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         
         // Build payload with both username and encoded password - updated string count from 7 to 8
         // Original trace shows only username, but UserPasswordAuthToken class has both username and password fields
-        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|{encodedPassword}|1|2|3|4|1|5|6|1|7|8|8|";
+        var payload = $"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/{encodedPassword}|{username}|1|2|3|4|1|5|5|1|6|7|7|";
         
         var response = await PostGwtRpcAsync("login", payload);
         var parsedResult = ParseAuthenticationResponse(response);
