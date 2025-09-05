@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
@@ -9,9 +10,6 @@ namespace RSChatApp.Mcp.Browser.Infrastructure;
 
 public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
 {
-    
-    //TODO: refactor to IMemoryCache with expiration
-    private readonly ConcurrentDictionary<string, IBrowserInstance> _browserInstances = new ();
     private readonly ILogger<InMemoryBrowserInstanceStore> _logger;
     private readonly IBrowserInstanceFactory _browserInstanceFactory;
     private readonly IMemoryCache _memoryCache;
@@ -31,8 +29,21 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
             sessionId.CreatBrowserInstanceCacheKey(), 
             async (entry) =>
                 {
-                    // TODO: set callback to DisposeAsync
-                    return await _browserInstanceFactory.CreateInstanceAsync(config); // can be null
+                    entry.PostEvictionCallbacks.Add(    
+                        new PostEvictionCallbackRegistration
+                        {
+                            EvictionCallback = async (key, value, reason, state) =>
+                            {
+                                if (value is IBrowserInstance browserInstance)
+                                {
+                                    _logger.LogInformation("Evicting browser instance for session {SessionId} due to {Reason}", sessionId, reason);
+                                    await browserInstance.DisposeAsync();
+                                }
+                            }
+                        });
+                    var instance = await _browserInstanceFactory.CreateInstanceAsync(config);
+                    instance.Disconnected += BrowserOnDisconnected;
+                    return instance;
                 });
     }
     
@@ -44,6 +55,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
         if (instance != null && instance is IBrowserInstance browserInstance)
         {
             _memoryCache.Remove(sessionKey);
+            browserInstance.Disconnected -= BrowserOnDisconnected;
             await browserInstance.DisposeAsync();
             _logger.LogInformation("Disposed browser instance for session {SessionId}", sessionId);
         }
@@ -51,5 +63,11 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
         {
             _logger.LogWarning("No browser instance found for session {SessionId} to dispose", sessionId);
         }
+    }
+
+    private void BrowserOnDisconnected(object? sender, IBrowserInstance e)
+    {
+        _logger.LogInformation("Browser instance disconnected for session {SessionId}. Clear cacheEntry", e.SessionId);
+        _memoryCache.Remove(e.SessionId.CreatBrowserInstanceCacheKey());
     }
 }

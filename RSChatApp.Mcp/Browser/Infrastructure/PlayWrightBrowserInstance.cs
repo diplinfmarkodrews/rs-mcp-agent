@@ -6,7 +6,7 @@ namespace RSChatApp.Mcp.Browser.Infrastructure;
 
 public class PlayWrightBrowserInstance : IBrowserInstance
 {
-    public IBrowser Browser => _instance;
+    public IBrowser Browser => _browser;
     public IBrowserContext BrowserContext
     {
         get => _context;
@@ -19,7 +19,14 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         set => _page = value;
     }
 
-    private readonly IBrowser _instance;
+    public string SessionId
+    {
+        get => _config.SessionId;
+    }
+
+    public event EventHandler<IBrowserInstance> Disconnected;
+    
+    private readonly IBrowser _browser;
     private readonly BrowserInstanceConfiguration _config;
     private IBrowserContext _context;
     private IPage _page;
@@ -28,11 +35,16 @@ public class PlayWrightBrowserInstance : IBrowserInstance
     public PlayWrightBrowserInstance(BrowserInstanceConfiguration config, IBrowser browser, IBrowserContext context, IPage page)
     {
         _config = config;   
-        _instance = browser;
+        _browser = browser;
         _context = context;
         _page = page;
+        _browser.Disconnected += OnDisconnected;
     }
-    
+    private void OnDisconnected(object? sender, IBrowser browser)
+    {
+        Console.WriteLine("Browser disconnected");
+        Disconnected?.Invoke(this, this);
+    }
     public async Task LoginAsync(string username, string password)
     {
         throw new NotImplementedException();
@@ -50,7 +62,8 @@ public class PlayWrightBrowserInstance : IBrowserInstance
     
     public async ValueTask DisposeAsync()
     {
+        _browser.Disconnected -= OnDisconnected;
         await _context.DisposeAsync();
-        await _instance.DisposeAsync();
+        await _browser.DisposeAsync();
     }
 }

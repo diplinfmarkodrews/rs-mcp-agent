@@ -9,9 +9,24 @@
 @inject IOptions<BrowserInstanceConfiguration> BrowserOptions
 <div class="cockpit-container">
     <div class="browser-section">
-        <BrowserStreamingViewer InitialUrl="@BrowserOptions.Value.BaseUrl" />
+        <BrowserViewer InitialUrl="@BrowserOptions.Value.BaseUrl" 
+                       UseScreenshotByDefault="true"
+                       OnNavigate="HandleNavigation"
+                       OnPageTitleChanged="HandleTitleChanged" />
     </div>
     <div class="chat-section">
         <Chat />
     </div>
 </div>
+
+@code {
+    private void HandleNavigation(string url)
+    {
+        Console.WriteLine($"Navigated to: {url}");
+    }
+
+    private void HandleTitleChanged(string title)
+    {
+        Console.WriteLine($"Page title changed: {title}");
+    }
+}

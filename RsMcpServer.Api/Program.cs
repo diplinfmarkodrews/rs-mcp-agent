@@ -29,9 +29,24 @@ builder.Services.AddOpenApi();
 
 // builder.Services.AddSingleton<TerminalTool>();
 
-builder.Services.AddKernel()
-    .Plugins.AddFromType<TerminalTool>();
+// Create kernel and register plugins
+builder.Services.AddSingleton((serviceProvider) => {
+    KernelPluginCollection pluginCollection = [];
+    pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
+    return pluginCollection;
+});
 
+// Register IEnumerable<KernelPlugin> for the Kernel constructor
+builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
+    var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
+    return pluginCollection;
+});
+
+// Create the kernel service
+builder.Services.AddSingleton<Kernel>((serviceProvider) => {
+    KernelPluginCollection pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
+    return new Kernel(serviceProvider, pluginCollection);
+});
 
 builder.Services.AddMcpServer()
     .WithTools<TerminalTool>()

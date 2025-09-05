@@ -3,6 +3,7 @@ using Microsoft.SemanticKernel;
 using RSChatApp.Mcp.Browser.Interfaces;
 using Microsoft.Playwright;
 using System.Text.Json;
+using ModelContextProtocol.Server;
 
 namespace RSChatApp.Mcp.Browser.Tools;
 
@@ -160,7 +161,7 @@ public class BrowserTool
     /// <summary>
     /// Take a screenshot of the current page
     /// </summary>
-    [KernelFunction, Description("Take a screenshot of the current page")]
+    [KernelFunction, McpServerTool, Description("Take a screenshot of the current page")]
     public async Task<string> TakeScreenshotAsync(
         [Description("Screenshot format (png, jpeg) - default: png")] string format = "png",
         [Description("Full page screenshot (default: true)")] bool fullPage = true,
@@ -209,7 +210,7 @@ public class BrowserTool
     /// <summary>
     /// Get the current page content as HTML
     /// </summary>
-    [KernelFunction, Description("Get the current page content as HTML")]
+    [KernelFunction, McpServerTool, Description("Get the current page content as HTML")]
     public async Task<string> GetPageContentAsync()
     {
         try

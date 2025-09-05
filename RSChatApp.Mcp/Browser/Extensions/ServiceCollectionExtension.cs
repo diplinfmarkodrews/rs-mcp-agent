@@ -8,9 +8,8 @@ namespace RSChatApp.Mcp.Browser.Extensions;
 
 public static class ServiceCollectionExtension
 {
-    public static IServiceCollection AddBrowserTool(this IServiceCollection services, string reportServerUrl)
+    public static IServiceCollection AddBrowserInstance(this IServiceCollection services, string reportServerUrl)
     {
-        
         services.AddHttpContextAccessor();
         services.Configure<BrowserInstanceConfiguration>(config =>
         {

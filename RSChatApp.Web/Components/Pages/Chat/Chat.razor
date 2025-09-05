@@ -16,8 +16,11 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.Extensions.Options
 @using Microsoft.Extensions.Primitives
+@using OpenAI.Chat
+@using RSChatApp.Mcp.Browser.Tools
 @using RSChatApp.Web.Services.Authentication
 @using RSChatApp.Web.Services.SemanticSearch
+@using ChatMessage = Microsoft.Extensions.AI.ChatMessage
 @implements IDisposable
 
 <div class="chat-page">
@@ -71,8 +74,9 @@
     private bool IsOllama;
 
     [Experimental("SKEXP0001")]
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        // kernel.InvokeAsync<BrowserTool>("")
         // For now, guaranty ollama compatibilty
         IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model) == false;
         
@@ -94,8 +98,12 @@
         // Add MCP tools
         foreach (var plugin in kernelPlugins)
         {
-            var aiFunctions = plugin.AsAIFunctions();
-            allTools.AddRange(aiFunctions);
+            foreach (var aiFunction in plugin)
+            {
+                allTools.Add(
+                    aiFunction.AsKernelFunction()
+                        .WithKernel(Kernel));
+            }
         }
         Logger.LogInformation("Total tools registered for chat: {allToolsCount}", allTools.Count);
         chatOptions.Tools = allTools;
@@ -145,12 +153,13 @@
 
         try
         {
-            // Use streaming API to get progressive responses
+            // Use streaming API to get progressive responses ChatClient.GetStreamingResponseAsync(
             await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, chatOptions, currentResponseCancellation.Token))
             {
                 // Handle different types of streaming updates
                 foreach (var content in update.Contents)
                 {
+                    
                     if (content is { } deltaContent)
                     {
                         contentBuilder.Append(deltaContent);

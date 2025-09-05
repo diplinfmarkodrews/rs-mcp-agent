@@ -1,17 +1,21 @@
 @page "/browser"
 @using Microsoft.Extensions.Options
 @using RSChatApp.Mcp.Browser.Configuration
-@using RSChatApp.Web.Components.Pages.Browser
+
 @inject IOptions<BrowserInstanceConfiguration> BrowserConfig
 
 <div style="height: 100vh;">
-    <BrowserStreamingViewer InitialUrl="@BrowserConfig.Value.BaseUrl"
-        ShowDebugPanel="true"
-        OnNavigate="HandleNavigation"
-        OnPageTitleChanged="HandleTitleChanged" />
+    <BrowserViewer InitialUrl="@BrowserConfig.Value.BaseUrl"
+                   UseScreenshotByDefault="true"
+                   ShowDebugPanel="true"
+                   OnNavigate="HandleNavigation"
+                   OnPageTitleChanged="HandleTitleChanged" />
 </div>
 
 @code {
+    
+   
+    
     private void HandleNavigation(string url)
     {
         Console.WriteLine($"Navigated to: {url}");

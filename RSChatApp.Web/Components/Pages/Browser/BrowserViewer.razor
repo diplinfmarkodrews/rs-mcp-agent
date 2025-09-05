@@ -1,0 +1,360 @@
+@using RSChatApp.Mcp.Browser.Interfaces
+@inject IBrowserInstanceProvider BrowserProvider
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="browser-viewer">
+    <!-- Browser Controls -->
+    <div class="browser-controls">
+        <div class="navigation-bar">
+            <button @onclick="GoBack" disabled="@(!canGoBack)" title="Back">⬅️</button>
+            <button @onclick="GoForward" disabled="@(!canGoForward)" title="Forward">➡️</button>
+            <button @onclick="Refresh" title="Refresh">🔄</button>
+            
+            <input @bind="navigationUrl" 
+                   @onkeydown="HandleKeyPress"
+                   @onfocus="SelectUrl"
+                   class="url-input" 
+                   placeholder="Enter URL..." />
+            
+            <button @onclick="NavigateToUrl" class="go-button">Go</button>
+            <button @onclick="ToggleViewMode" class="view-mode-button" title="Toggle View Mode">
+                @(useScreenshot ? "📷" : "📄")
+            </button>
+        </div>
+        
+        <div class="status-bar">
+            <span class="page-title">@pageTitle</span>
+            <span class="current-url">@currentUrl</span>
+            <span class="view-mode">@(useScreenshot ? "Screenshot Mode" : "Content Mode")</span>
+        </div>
+    </div>
+
+    <!-- Browser Content -->
+    <div class="browser-content">
+        @if (isLoading)
+        {
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading...</p>
+            </div>
+        }
+        else if (useScreenshot && !string.IsNullOrEmpty(screenshotData))
+        {
+            <div class="screenshot-container">
+                <img src="data:image/png;base64,@screenshotData" 
+                     alt="Browser Screenshot" 
+                     class="browser-screenshot"
+                     @onclick="OnScreenshotClick"
+                     @onmousemove="OnMouseMove" />
+                
+                <!-- Mouse cursor indicator -->
+                @if (showCursor)
+                {
+                    <div class="mouse-cursor" style="left: @(mouseX)px; top: @(mouseY)px;"></div>
+                }
+            </div>
+        }
+        else if (!useScreenshot && !string.IsNullOrEmpty(htmlContent))
+        {
+            <div class="iframe-container">
+                <iframe srcdoc="@htmlContent" 
+                        class="browser-iframe"
+                        @onload="OnIframeLoad"></iframe>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">🌐</div>
+                <h3>Browser Ready</h3>
+                <p>Enter a URL to start browsing</p>
+            </div>
+        }
+    </div>
+
+    <!-- Debug Panel (optional) -->
+    @if (ShowDebugPanel)
+    {
+        <div class="debug-panel">
+            <h4>Debug Information</h4>
+            <div class="debug-info">
+                <div>View Mode: @(useScreenshot ? "Screenshot" : "Content")</div>
+                <div>Current URL: @currentUrl</div>
+                <div>Page Title: @pageTitle</div>
+                <div>Can Go Back: @canGoBack</div>
+                <div>Can Go Forward: @canGoForward</div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string InitialUrl { get; set; } = "";
+    [Parameter] public EventCallback<string> OnNavigate { get; set; }
+    [Parameter] public EventCallback<string> OnPageTitleChanged { get; set; }
+    [Parameter] public bool ShowDebugPanel { get; set; } = false;
+    [Parameter] public bool UseScreenshotByDefault { get; set; } = true;
+
+    private IBrowserInstance? browserInstance;
+    private string navigationUrl = "";
+    private string currentUrl = "";
+    private string pageTitle = "";
+    private string screenshotData = "";
+    private string htmlContent = "";
+    
+    private bool useScreenshot = true;
+    private bool isLoading = false;
+    private bool canGoBack = false;
+    private bool canGoForward = false;
+    private bool showCursor = true;
+    
+    private double mouseX = 0;
+    private double mouseY = 0;
+    
+    // Browser viewport configuration - should match BrowserInstanceConfiguration
+    private const int BROWSER_WIDTH = 1280;
+    private const int BROWSER_HEIGHT = 800;
+
+    protected override async Task OnInitializedAsync()
+    {
+        useScreenshot = UseScreenshotByDefault;
+        
+        try
+        {
+            browserInstance = BrowserProvider.GetBrowserInstance();
+            
+            if (!string.IsNullOrEmpty(InitialUrl))
+            {
+                navigationUrl = InitialUrl;
+                await NavigateToUrl();
+            }
+            else
+            {
+                await RefreshContent();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing browser: {ex.Message}");
+        }
+    }
+
+    private async Task NavigateToUrl()
+    {
+        if (string.IsNullOrWhiteSpace(navigationUrl) || browserInstance == null)
+            return;
+
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            await browserInstance.Page.GotoAsync(navigationUrl);
+            await RefreshContent();
+            await OnNavigate.InvokeAsync(navigationUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Navigation failed: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshContent()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            // Update page info
+            currentUrl = browserInstance.Page.Url;
+            pageTitle = await browserInstance.Page.TitleAsync();
+            navigationUrl = currentUrl;
+            
+            // Check navigation state
+            // Note: Playwright doesn't have direct canGoBack/canGoForward methods
+            // You might need to track history yourself or use page.goBack/goForward with try/catch
+            
+            if (useScreenshot)
+            {
+                await RefreshScreenshot();
+            }
+            else
+            {
+                await RefreshHtmlContent();
+            }
+
+            await OnPageTitleChanged.InvokeAsync(pageTitle);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing content: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshScreenshot()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            var screenshot = await browserInstance.Page.ScreenshotAsync(new Microsoft.Playwright.PageScreenshotOptions
+            {
+                Type = Microsoft.Playwright.ScreenshotType.Png,
+                FullPage = false // Use viewport screenshot for better performance
+            });
+            screenshotData = Convert.ToBase64String(screenshot);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error taking screenshot: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshHtmlContent()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            htmlContent = await browserInstance.Page.ContentAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting page content: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleViewMode()
+    {
+        useScreenshot = !useScreenshot;
+        await RefreshContent();
+    }
+
+    private async Task Refresh()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            await browserInstance.Page.ReloadAsync();
+            await RefreshContent();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing page: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GoBack()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            await browserInstance.Page.GoBackAsync();
+            await RefreshContent();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error going back: {ex.Message}");
+        }
+    }
+
+    private async Task GoForward()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            await browserInstance.Page.GoForwardAsync();
+            await RefreshContent();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error going forward: {ex.Message}");
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await NavigateToUrl();
+        }
+    }
+
+    private async Task SelectUrl()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("selectText", ".url-input");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error selecting URL text: {ex.Message}");
+        }
+    }
+
+    private async Task OnScreenshotClick(MouseEventArgs e)
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            // Calculate scaled coordinates if needed
+            // For now, assume 1:1 mapping - you can add scaling logic later if needed
+            await browserInstance.Page.ClickAsync($"{e.OffsetX},{e.OffsetY}");
+            
+            // Refresh content after interaction
+            await Task.Delay(100); // Small delay to let page update
+            await RefreshContent();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error clicking: {ex.Message}");
+        }
+    }
+
+    private void OnMouseMove(MouseEventArgs e)
+    {
+        mouseX = e.OffsetX;
+        mouseY = e.OffsetY;
+        StateHasChanged();
+    }
+
+    private async Task OnIframeLoad()
+    {
+        // Handle iframe load events if needed
+        await Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Browser instance is managed by the provider, don't dispose it here
+        await Task.CompletedTask;
+    }
+}
+
+<script>
+    window.selectText = (selector) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.select();
+        }
+    };
+</script>

@@ -1,5 +1,4 @@
 using RSChatApp.Web.Services.Authentication;
-using RSChatApp.Web.Services.Browser;
 
 namespace RSChatApp.Web.Extensions;
 
@@ -19,33 +18,5 @@ public static class ServiceExtensions
         services.AddScoped<ILoginModalService, LoginModalService>();
         return services;
     }
-    public static IServiceCollection AddBrowserStreamingService(this IServiceCollection services)
-    {
-        services.AddSignalR(options =>
-        {
-            options.EnableDetailedErrors = true;
-            options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-            options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-        });
-
-        // Register the browser streaming service as singleton since browser services are singleton
-        services.AddSingleton<IBrowserStreamingService, BrowserStreamingService>();
-
-        
-        // Optional: Add CORS if needed for external access
-        // services.AddCors(options =>
-        // {
-        //     options.AddDefaultPolicy(policy =>
-        //     {
-        //         policy.WithOrigins("https://localhost:7000") // Your app URL
-        //             .AllowAnyHeader()
-        //             .AllowAnyMethod()
-        //             .AllowCredentials();
-        //     });
-        // });
-
-        
-
-        return services;
-    }
+    
 }

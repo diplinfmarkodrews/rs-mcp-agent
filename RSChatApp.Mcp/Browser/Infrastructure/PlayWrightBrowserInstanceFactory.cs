@@ -25,15 +25,19 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
     }
     public async Task<IBrowserInstance> CreateInstanceAsync(BrowserInstanceConfiguration config = null)
     {
-        
+        if (config == null && _httpContextAccessor.HttpContext == null)
+        {
+            throw new ArgumentNullException("Both config and HttpContext are null");
+        }
         config ??= CreateBrowserConfig(_httpContextAccessor.HttpContext);
-            
+        _logger.LogDebug("Creating new instance {config}", config);
+
         var playwright = await Playwright.CreateAsync();
         IBrowser browser = config.BrowserType.ToLower() switch
         {
             "chromium" => await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                ChromiumSandbox = true,
+                // ChromiumSandbox = true,
                 Headless = config.Headless,
                 Timeout = config.Timeout
             }),
@@ -60,12 +64,11 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         var page = await context.NewPageAsync();
         try
         {
-            
             await page.GotoAsync(config.BaseUrl);
         } 
         catch (PlaywrightException ex)
         {
-              
+            _logger.LogError(ex, ex.Message);
         }
         
         // ReportProgress(100, "Page loaded");
