@@ -4,16 +4,22 @@ using RSChatApp.Mcp.Browser.Interfaces;
 using Microsoft.Playwright;
 using System.Text.Json;
 using ModelContextProtocol.Server;
+using Microsoft.Extensions.Logging;
 
 namespace RSChatApp.Mcp.Browser.Tools;
 
 public class BrowserTool 
 {
+    private readonly ILogger<BrowserTool> _logger;
     private readonly IBrowserInstance _browserInstance;
 
-    public BrowserTool(IBrowserInstanceProvider browserProvider)
+    public BrowserTool(ILogger<BrowserTool> logger, IBrowserInstanceProvider browserProvider)
     {
-        _browserInstance = browserProvider.GetBrowserInstance();
+        _logger = logger 
+                  ?? throw new ArgumentNullException(nameof(logger));
+        _browserInstance = browserProvider?.GetBrowserInstance()
+                  ?? throw new ArgumentNullException(nameof(browserProvider));
+       
     }
 
     /// <summary>
@@ -24,25 +30,27 @@ public class BrowserTool
         [Description("The URL to navigate to")] string url,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("NavigateToUrlAsync called with URL: {Url}, Timeout: {TimeoutMs}ms", url, timeoutMs);
+        
         try
         {
+            await _browserInstance.NavigateAsync(url);
             
-            var response = await _browserInstance.Page.GotoAsync(url, new PageGotoOptions
-            {
-                Timeout = timeoutMs,
-                WaitUntil = WaitUntilState.Load
-            });
-
+            var currentUrl = _browserInstance.CurrentUrl;
+            var title = await _browserInstance.GetTitleAsync();
+            
+            _logger.LogInformation("Successfully navigated to {Url}. Current URL: {CurrentUrl}, Title: {Title}", url, currentUrl, title);
+            
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                url = _browserInstance.Page.Url,
-                title = await _browserInstance.Page.TitleAsync(),
-                status = response?.Status ?? 0
+                url = currentUrl,
+                title = title
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to navigate to URL: {Url}", url);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -59,21 +67,25 @@ public class BrowserTool
         [Description("CSS selector for the element to click")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("ClickElementAsync called with selector: {Selector}, Timeout: {TimeoutMs}ms", selector, timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.ClickAsync(selector, new PageClickOptions
-            {
-                Timeout = timeoutMs
-            });
+            await _browserInstance.ClickElementAsync(selector, timeoutMs);
+
+            var currentUrl = _browserInstance.CurrentUrl;
+            _logger.LogInformation("Successfully clicked element: {Selector}. Current URL: {CurrentUrl}", selector, currentUrl);
 
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                message = $"Successfully clicked element: {selector}"
+                message = $"Successfully clicked element: {selector}",
+                url = currentUrl
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to click element: {Selector}", selector);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -92,25 +104,28 @@ public class BrowserTool
         [Description("Clear field before typing (default: true)")] bool clearFirst = true,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("TypeTextAsync called with selector: {Selector}, Text length: {TextLength}, ClearFirst: {ClearFirst}, Timeout: {TimeoutMs}ms", 
+            selector, text?.Length ?? 0, clearFirst, timeoutMs);
+        
         try
         {
             if (clearFirst)
             {
-                await _browserInstance.Page.FillAsync(selector, text, new PageFillOptions
-                {
-                    Timeout = timeoutMs
-                });
+                await _browserInstance.FillElementAsync(selector, text ?? "", timeoutMs);
+                _logger.LogDebug("Filled element {Selector} with new text", selector);
             }
             else
             {
-                // Clear the field first, then add the new text
-                var currentValue = await _browserInstance.Page.InputValueAsync(selector);
-                await _browserInstance.Page.FillAsync(selector, currentValue + text, new PageFillOptions
-                {
-                    Timeout = timeoutMs
-                });
+                // Get current value and append the new text
+                var currentValue = await _browserInstance.GetElementValueAsync(selector, timeoutMs) ?? "";
+                var newText = text ?? "";
+                await _browserInstance.FillElementAsync(selector, currentValue + newText, timeoutMs);
+                _logger.LogDebug("Appended text to element {Selector}. Previous length: {PreviousLength}, New length: {NewLength}", 
+                    selector, currentValue.Length, (currentValue + newText).Length);
             }
 
+            _logger.LogInformation("Successfully typed text into element: {Selector}", selector);
+            
             return JsonSerializer.Serialize(new
             {
                 success = true,
@@ -119,6 +134,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to type text into element: {Selector}", selector);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -135,13 +151,14 @@ public class BrowserTool
         [Description("CSS selector for the element")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("GetElementTextAsync called with selector: {Selector}, Timeout: {TimeoutMs}ms", selector, timeoutMs);
+        
         try
         {
-            var text = await _browserInstance.Page.TextContentAsync(selector, new PageTextContentOptions
-            {
-                Timeout = timeoutMs
-            });
+            var text = await _browserInstance.GetElementTextAsync(selector, timeoutMs);
 
+            _logger.LogInformation("Successfully retrieved text from element: {Selector}. Text length: {TextLength}", selector, text?.Length ?? 0);
+            
             return JsonSerializer.Serialize(new
             {
                 success = true,
@@ -150,6 +167,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get text from element: {Selector}", selector);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -167,27 +185,14 @@ public class BrowserTool
         [Description("Full page screenshot (default: true)")] bool fullPage = true,
         [Description("Image quality for jpeg (1-100, default: 80)")] int quality = 80)
     {
+        _logger.LogInformation("TakeScreenshotAsync called with format: {Format}, FullPage: {FullPage}, Quality: {Quality}", format, fullPage, quality);
+        
         try
         {
-            var options = new PageScreenshotOptions
-            {
-                FullPage = fullPage
-            };
-
-            // Set quality only for JPEG format
-            if (format.ToLower() == "jpeg")
-            {
-                options.Quality = quality;
-                options.Type = ScreenshotType.Jpeg;
-            }
-            else
-            {
-                options.Type = ScreenshotType.Png;
-            }
-            
-            var screenshot = await _browserInstance.Page.ScreenshotAsync(options);
-
+            var screenshot = await _browserInstance.TakeScreenshotAsync();
             var base64Image = Convert.ToBase64String(screenshot);
+
+            _logger.LogInformation("Successfully took screenshot. Size: {Size} bytes, Base64 length: {Base64Length}", screenshot.Length, base64Image.Length);
 
             return JsonSerializer.Serialize(new
             {
@@ -199,6 +204,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to take screenshot");
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -213,20 +219,28 @@ public class BrowserTool
     [KernelFunction, McpServerTool, Description("Get the current page content as HTML")]
     public async Task<string> GetPageContentAsync()
     {
+        _logger.LogInformation("GetPageContentAsync called");
+        
         try
         {
-            var content = await _browserInstance.Page.ContentAsync();
+            var content = await _browserInstance.GetHtmlContentAsync();
+            var currentUrl = _browserInstance.CurrentUrl;
+            var title = await _browserInstance.GetTitleAsync();
+
+            _logger.LogInformation("Successfully retrieved page content. URL: {Url}, Title: {Title}, Content length: {ContentLength}", 
+                currentUrl, title, content?.Length ?? 0);
 
             return JsonSerializer.Serialize(new
             {
                 success = true,
                 html = content,
-                url = _browserInstance.Page.Url,
-                title = await _browserInstance.Page.TitleAsync()
+                url = currentUrl,
+                title = title
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get page content");
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -243,13 +257,13 @@ public class BrowserTool
         [Description("CSS selector for the element to wait for")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("WaitForElementAsync called with selector: {Selector}, Timeout: {TimeoutMs}ms", selector, timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
-            {
-                Timeout = timeoutMs,
-                State = WaitForSelectorState.Visible
-            });
+            await _browserInstance.WaitForElementAsync(selector, timeoutMs);
+
+            _logger.LogInformation("Successfully found element: {Selector}", selector);
 
             return JsonSerializer.Serialize(new
             {
@@ -259,6 +273,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to find element: {Selector} within {TimeoutMs}ms", selector, timeoutMs);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -276,11 +291,15 @@ public class BrowserTool
         [Description("Pixels to scroll horizontally (positive = right, negative = left)")] int deltaX = 0,
         [Description("Optional CSS selector to scroll to element")] string? scrollToElement = null)
     {
+        _logger.LogInformation("ScrollPageAsync called with deltaX: {DeltaX}, deltaY: {DeltaY}, scrollToElement: {ScrollToElement}", 
+            deltaX, deltaY, scrollToElement);
+        
         try
         {
             if (!string.IsNullOrEmpty(scrollToElement))
             {
-                await _browserInstance.Page.Locator(scrollToElement).ScrollIntoViewIfNeededAsync();
+                await _browserInstance.ScrollToElementAsync(scrollToElement);
+                _logger.LogInformation("Successfully scrolled to element: {ScrollToElement}", scrollToElement);
                 return JsonSerializer.Serialize(new
                 {
                     success = true,
@@ -289,7 +308,8 @@ public class BrowserTool
             }
             else
             {
-                await _browserInstance.Page.Mouse.WheelAsync(deltaX, deltaY);
+                await _browserInstance.ScrollAsync(deltaX, deltaY);
+                _logger.LogInformation("Successfully scrolled by deltaX: {DeltaX}, deltaY: {DeltaY}", deltaX, deltaY);
                 return JsonSerializer.Serialize(new
                 {
                     success = true,
@@ -299,6 +319,8 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to scroll. DeltaX: {DeltaX}, DeltaY: {DeltaY}, ScrollToElement: {ScrollToElement}", 
+                deltaX, deltaY, scrollToElement);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -316,12 +338,14 @@ public class BrowserTool
         [Description("Value to fill")] string value,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("FillFormFieldAsync called with selector: {Selector}, Value length: {ValueLength}, Timeout: {TimeoutMs}ms", 
+            selector, value?.Length ?? 0, timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.FillAsync(selector, value, new PageFillOptions
-            {
-                Timeout = timeoutMs
-            });
+            await _browserInstance.FillElementAsync(selector, value ?? "", timeoutMs);
+
+            _logger.LogInformation("Successfully filled form field: {Selector}", selector);
 
             return JsonSerializer.Serialize(new
             {
@@ -331,6 +355,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to fill form field: {Selector}", selector);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -349,38 +374,14 @@ public class BrowserTool
         [Description("Selection method: value, label, or index")] string method = "value",
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("SelectDropdownAsync called with selector: {Selector}, Value: {Value}, Method: {Method}, Timeout: {TimeoutMs}ms", 
+            selector, value, method, timeoutMs);
+        
         try
         {
-            switch (method.ToLower())
-            {
-                case "value":
-                    await _browserInstance.Page.SelectOptionAsync(selector, value, new PageSelectOptionOptions
-                    {
-                        Timeout = timeoutMs
-                    });
-                    break;
-                case "label":
-                    await _browserInstance.Page.SelectOptionAsync(selector, new SelectOptionValue { Label = value }, new PageSelectOptionOptions
-                    {
-                        Timeout = timeoutMs
-                    });
-                    break;
-                case "index":
-                    if (int.TryParse(value, out var index))
-                    {
-                        await _browserInstance.Page.SelectOptionAsync(selector, new SelectOptionValue { Index = index }, new PageSelectOptionOptions
-                        {
-                            Timeout = timeoutMs
-                        });
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Invalid index value for dropdown selection");
-                    }
-                    break;
-                default:
-                    throw new ArgumentException("Invalid selection method. Use 'value', 'label', or 'index'");
-            }
+            await _browserInstance.SelectOptionAsync(selector, value ?? "", method, timeoutMs);
+
+            _logger.LogInformation("Successfully selected {Method}: {Value} from dropdown: {Selector}", method, value, selector);
 
             return JsonSerializer.Serialize(new
             {
@@ -390,6 +391,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to select {Method}: {Value} from dropdown: {Selector}", method, value, selector);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -405,9 +407,15 @@ public class BrowserTool
     public async Task<string> ExecuteJavaScriptAsync(
         [Description("JavaScript code to execute")] string script)
     {
+        _logger.LogInformation("ExecuteJavaScriptAsync called with script length: {ScriptLength}", script?.Length ?? 0);
+        _logger.LogDebug("JavaScript to execute: {Script}", script);
+        
         try
         {
-            var result = await _browserInstance.Page.EvaluateAsync(script);
+            var result = await _browserInstance.ExecuteScriptAsync(script ?? "");
+
+            _logger.LogInformation("Successfully executed JavaScript. Result type: {ResultType}", result?.GetType().Name ?? "null");
+            _logger.LogDebug("JavaScript execution result: {Result}", result);
 
             return JsonSerializer.Serialize(new
             {
@@ -417,6 +425,7 @@ public class BrowserTool
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to execute JavaScript: {Script}", script);
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -431,18 +440,32 @@ public class BrowserTool
     [KernelFunction, Description("Get current page information (URL, title, etc.)")]
     public async Task<string> GetPageInfoAsync()
     {
+        _logger.LogInformation("GetPageInfoAsync called");
+        
         try
         {
+            var currentUrl = _browserInstance.CurrentUrl;
+            var title = await _browserInstance.GetTitleAsync();
+            var canGoBack = _browserInstance.CanGoBack;
+            var canGoForward = _browserInstance.CanGoForward;
+            var isLoading = _browserInstance.IsLoading;
+
+            _logger.LogInformation("Retrieved page info - URL: {Url}, Title: {Title}, CanGoBack: {CanGoBack}, CanGoForward: {CanGoForward}, IsLoading: {IsLoading}", 
+                currentUrl, title, canGoBack, canGoForward, isLoading);
+
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                url = _browserInstance.Page.Url,
-                title = await _browserInstance.Page.TitleAsync(),
-                viewport = _browserInstance.Page.ViewportSize
+                url = currentUrl,
+                title = title,
+                canGoBack = canGoBack,
+                canGoForward = canGoForward,
+                isLoading = isLoading
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get page information");
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -458,23 +481,25 @@ public class BrowserTool
     public async Task<string> GoBackAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("GoBackAsync called with timeout: {TimeoutMs}ms", timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.GoBackAsync(new PageGoBackOptions
-            {
-                Timeout = timeoutMs,
-                WaitUntil = WaitUntilState.Load
-            });
+            await _browserInstance.GoBackAsync();
+
+            var currentUrl = _browserInstance.CurrentUrl;
+            _logger.LogInformation("Successfully navigated back to: {Url}", currentUrl);
 
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                url = _browserInstance.Page.Url,
+                url = currentUrl,
                 message = "Successfully navigated back"
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to navigate back");
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -490,23 +515,25 @@ public class BrowserTool
     public async Task<string> GoForwardAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("GoForwardAsync called with timeout: {TimeoutMs}ms", timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.GoForwardAsync(new PageGoForwardOptions
-            {
-                Timeout = timeoutMs,
-                WaitUntil = WaitUntilState.Load
-            });
+            await _browserInstance.GoForwardAsync();
+
+            var currentUrl = _browserInstance.CurrentUrl;
+            _logger.LogInformation("Successfully navigated forward to: {Url}", currentUrl);
 
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                url = _browserInstance.Page.Url,
+                url = currentUrl,
                 message = "Successfully navigated forward"
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to navigate forward");
             return JsonSerializer.Serialize(new
             {
                 success = false,
@@ -522,23 +549,25 @@ public class BrowserTool
     public async Task<string> RefreshPageAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
+        _logger.LogInformation("RefreshPageAsync called with timeout: {TimeoutMs}ms", timeoutMs);
+        
         try
         {
-            await _browserInstance.Page.ReloadAsync(new PageReloadOptions
-            {
-                Timeout = timeoutMs,
-                WaitUntil = WaitUntilState.Load
-            });
+            await _browserInstance.RefreshAsync();
+
+            var currentUrl = _browserInstance.CurrentUrl;
+            _logger.LogInformation("Successfully refreshed page: {Url}", currentUrl);
 
             return JsonSerializer.Serialize(new
             {
                 success = true,
-                url = _browserInstance.Page.Url,
+                url = currentUrl,
                 message = "Successfully refreshed page"
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to refresh page");
             return JsonSerializer.Serialize(new
             {
                 success = false,

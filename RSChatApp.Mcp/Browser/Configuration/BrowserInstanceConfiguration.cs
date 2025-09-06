@@ -12,6 +12,11 @@ public class BrowserInstanceConfiguration
     public int Height_Viewport { get; set; } = 800;
     public string BaseUrl { get; set; }
     
+    // Debounce Configuration (in milliseconds)
+    public int NavigationDebounceMs { get; set; } = 300;
+    public int ContentRefreshDebounceMs { get; set; } = 150;
+    public int UserInteractionDebounceMs { get; set; } = 100;
+    
     public BrowserInstanceConfiguration Clone()
     {
         return new BrowserInstanceConfiguration(this);
@@ -29,5 +34,8 @@ public class BrowserInstanceConfiguration
         Width_Viewport = config.Width_Viewport;
         Height_Viewport = config.Height_Viewport;
         BaseUrl = config.BaseUrl;
+        NavigationDebounceMs = config.NavigationDebounceMs;
+        ContentRefreshDebounceMs = config.ContentRefreshDebounceMs;
+        UserInteractionDebounceMs = config.UserInteractionDebounceMs;
     }
 }

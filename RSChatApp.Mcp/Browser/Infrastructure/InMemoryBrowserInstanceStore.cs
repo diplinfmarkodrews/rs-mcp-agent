@@ -1,10 +1,9 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
+using System.Collections.Concurrent;
 
 namespace RSChatApp.Mcp.Browser.Infrastructure;
 
@@ -13,6 +12,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
     private readonly ILogger<InMemoryBrowserInstanceStore> _logger;
     private readonly IBrowserInstanceFactory _browserInstanceFactory;
     private readonly IMemoryCache _memoryCache;
+    private readonly ConcurrentDictionary<string, DisconnectedEventHandler> _eventHandlers = new();
 
     public InMemoryBrowserInstanceStore(ILogger<InMemoryBrowserInstanceStore> logger, 
         IMemoryCache memoryCache,
@@ -23,8 +23,9 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
         _browserInstanceFactory = browserInstanceFactory;
     }
     
-    public async Task<IBrowserInstance> GetOrCreateBrowserInstanceAsync(string sessionId, BrowserInstanceConfiguration config = null)
+    public async Task<IBrowserInstance> GetOrCreateBrowserInstanceAsync(string sessionId, BrowserInstanceConfiguration? config = null)
     {
+#pragma warning disable CS8603 // Possible null reference return.
         return await _memoryCache.GetOrCreateAsync(
             sessionId.CreatBrowserInstanceCacheKey(), 
             async (entry) =>
@@ -42,9 +43,13 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
                             }
                         });
                     var instance = await _browserInstanceFactory.CreateInstanceAsync(config);
-                    instance.Disconnected += BrowserOnDisconnected;
+                    // Store event handler for proper unsubscription
+                    DisconnectedEventHandler eventHandler = () => BrowserOnDisconnected(instance);
+                    _eventHandlers[sessionId] = eventHandler;
+                    instance.Disconnected += eventHandler;
                     return instance;
                 });
+#pragma warning restore CS8603 // Possible null reference return.
     }
     
 
@@ -55,7 +60,13 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
         if (instance != null && instance is IBrowserInstance browserInstance)
         {
             _memoryCache.Remove(sessionKey);
-            browserInstance.Disconnected -= BrowserOnDisconnected;
+            
+            // Remove the stored event handler
+            if (_eventHandlers.TryRemove(sessionId, out var eventHandler))
+            {
+                browserInstance.Disconnected -= eventHandler;
+            }
+            
             await browserInstance.DisposeAsync();
             _logger.LogInformation("Disposed browser instance for session {SessionId}", sessionId);
         }
@@ -65,9 +76,11 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
         }
     }
 
-    private void BrowserOnDisconnected(object? sender, IBrowserInstance e)
+    private Task BrowserOnDisconnected(IBrowserInstance browserInstance)
     {
-        _logger.LogInformation("Browser instance disconnected for session {SessionId}. Clear cacheEntry", e.SessionId);
-        _memoryCache.Remove(e.SessionId.CreatBrowserInstanceCacheKey());
+        var sessionId = browserInstance.SessionId;
+        _logger.LogInformation("Browser instance disconnected for session {SessionId}. Cleaning up cache entry.", sessionId);
+        _memoryCache.Remove(sessionId.CreatBrowserInstanceCacheKey());
+        return Task.CompletedTask;
     }
 }

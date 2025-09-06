@@ -1,15 +1,16 @@
 @using RSChatApp.Mcp.Browser.Interfaces
 @inject IBrowserInstanceProvider BrowserProvider
 @inject IJSRuntime JSRuntime
+@inject ILogger<BrowserViewer> Logger
 @implements IAsyncDisposable
 
 <div class="browser-viewer">
     <!-- Browser Controls -->
     <div class="browser-controls">
         <div class="navigation-bar">
-            <button @onclick="GoBack" disabled="@(!canGoBack)" title="Back">⬅️</button>
-            <button @onclick="GoForward" disabled="@(!canGoForward)" title="Forward">➡️</button>
-            <button @onclick="Refresh" title="Refresh">🔄</button>
+            <button @onclick="GoBack" disabled="@(!browserInstance?.CanGoBack ?? true)" title="Back">⬅️</button>
+            <button @onclick="GoForward" disabled="@(!browserInstance?.CanGoForward ?? true)" title="Forward">➡️</button>
+            <button @onclick="Refresh" disabled="@(browserInstance == null)" title="Refresh">🔄</button>
             
             <input @bind="navigationUrl" 
                    @onkeydown="HandleKeyPress"
@@ -17,50 +18,31 @@
                    class="url-input" 
                    placeholder="Enter URL..." />
             
-            <button @onclick="NavigateToUrl" class="go-button">Go</button>
-            <button @onclick="ToggleViewMode" class="view-mode-button" title="Toggle View Mode">
-                @(useScreenshot ? "📷" : "📄")
-            </button>
+            <button @onclick="NavigateToUrl" disabled="@(browserInstance == null)" class="go-button">Go</button>
         </div>
         
         <div class="status-bar">
             <span class="page-title">@pageTitle</span>
             <span class="current-url">@currentUrl</span>
-            <span class="view-mode">@(useScreenshot ? "Screenshot Mode" : "Content Mode")</span>
         </div>
     </div>
 
     <!-- Browser Content -->
     <div class="browser-content">
-        @if (isLoading)
+        @if (browserInstance?.IsLoading ?? isLoading)
         {
             <div class="loading-state">
                 <div class="spinner"></div>
                 <p>Loading...</p>
             </div>
         }
-        else if (useScreenshot && !string.IsNullOrEmpty(screenshotData))
-        {
-            <div class="screenshot-container">
-                <img src="data:image/png;base64,@screenshotData" 
-                     alt="Browser Screenshot" 
-                     class="browser-screenshot"
-                     @onclick="OnScreenshotClick"
-                     @onmousemove="OnMouseMove" />
-                
-                <!-- Mouse cursor indicator -->
-                @if (showCursor)
-                {
-                    <div class="mouse-cursor" style="left: @(mouseX)px; top: @(mouseY)px;"></div>
-                }
-            </div>
-        }
-        else if (!useScreenshot && !string.IsNullOrEmpty(htmlContent))
+        else if (!string.IsNullOrEmpty(htmlContent))
         {
             <div class="iframe-container">
                 <iframe srcdoc="@htmlContent" 
                         class="browser-iframe"
-                        @onload="OnIframeLoad"></iframe>
+                        @onload="OnIframeLoad"
+                        @ref="iframeRef"></iframe>
             </div>
         }
         else
@@ -79,11 +61,13 @@
         <div class="debug-panel">
             <h4>Debug Information</h4>
             <div class="debug-info">
-                <div>View Mode: @(useScreenshot ? "Screenshot" : "Content")</div>
-                <div>Current URL: @currentUrl</div>
+                <div>Current URL: @(browserInstance?.CurrentUrl ?? currentUrl)</div>
                 <div>Page Title: @pageTitle</div>
-                <div>Can Go Back: @canGoBack</div>
-                <div>Can Go Forward: @canGoForward</div>
+                <div>Can Go Back: @(browserInstance?.CanGoBack ?? false)</div>
+                <div>Can Go Forward: @(browserInstance?.CanGoForward ?? false)</div>
+                <div>HTML Content Length: @(htmlContent?.Length ?? 0)</div>
+                <div>Is Loading: @(browserInstance?.IsLoading ?? isLoading)</div>
+                <div>Browser Connected: @(browserInstance != null)</div>
             </div>
         </div>
     }
@@ -94,147 +78,230 @@
     [Parameter] public EventCallback<string> OnNavigate { get; set; }
     [Parameter] public EventCallback<string> OnPageTitleChanged { get; set; }
     [Parameter] public bool ShowDebugPanel { get; set; } = false;
-    [Parameter] public bool UseScreenshotByDefault { get; set; } = true;
 
     private IBrowserInstance? browserInstance;
     private string navigationUrl = "";
     private string currentUrl = "";
     private string pageTitle = "";
-    private string screenshotData = "";
     private string htmlContent = "";
+    private ElementReference iframeRef;
     
-    private bool useScreenshot = true;
+    // Local loading state for fallback when browserInstance.IsLoading is not available
     private bool isLoading = false;
-    private bool canGoBack = false;
-    private bool canGoForward = false;
-    private bool showCursor = true;
-    
-    private double mouseX = 0;
-    private double mouseY = 0;
-    
-    // Browser viewport configuration - should match BrowserInstanceConfiguration
-    private const int BROWSER_WIDTH = 1280;
-    private const int BROWSER_HEIGHT = 800;
 
     protected override async Task OnInitializedAsync()
     {
-        useScreenshot = UseScreenshotByDefault;
+        Logger.LogDebug("BrowserViewer initializing...");
         
         try
         {
             browserInstance = BrowserProvider.GetBrowserInstance();
             
+            // Set up typed event handlers
+            if (browserInstance != null)
+            {
+                browserInstance.NavigationCompleted += OnNavigationCompleted;
+                browserInstance.UrlChanged += OnUrlChanged;
+                browserInstance.TitleChanged += OnTitleChanged;
+                browserInstance.LoadingStateChanged += OnLoadingStateChanged;
+                browserInstance.PageError += OnPageError;
+                browserInstance.Disconnected += OnDisconnected;
+                
+                // Initialize state from browser instance
+                currentUrl = browserInstance.CurrentUrl;
+                navigationUrl = currentUrl;
+                pageTitle = await browserInstance.GetTitleAsync();
+                await RefreshHtmlContent();
+            }
+            
             if (!string.IsNullOrEmpty(InitialUrl))
             {
                 navigationUrl = InitialUrl;
+                Logger.LogDebug("Navigating to initial URL: {Url}", InitialUrl);
                 await NavigateToUrl();
-            }
-            else
-            {
-                await RefreshContent();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error initializing browser: {ex.Message}");
+            Logger.LogError(ex, "Error initializing browser: {Message}", ex.Message);
+        }
+    }
+
+    // Typed event handlers
+    private async Task OnNavigationCompleted(string url, string title)
+    {
+        Logger.LogDebug("Navigation completed: {Url} - {Title}", url, title);
+        currentUrl = url;
+        navigationUrl = url;
+        pageTitle = title;
+        await RefreshHtmlContent(); // Refresh content after navigation
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnUrlChanged(string newUrl)
+    {
+        Logger.LogDebug("URL changed: {Url}", newUrl);
+        
+        await InvokeAsync(() =>
+        {
+            currentUrl = newUrl;
+            navigationUrl = newUrl;
+            StateHasChanged();
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task OnTitleChanged(string newTitle)
+    {
+        Logger.LogDebug("Title changed: {Title}", newTitle);
+        pageTitle = newTitle;
+        
+        // Safely invoke the callback and UI update
+        await InvokeAsync(async () =>
+        {
+            await OnPageTitleChanged.InvokeAsync(newTitle);
+            StateHasChanged();
+        });
+    }
+
+    private async Task OnLoadingStateChanged(bool loading)
+    {
+        Logger.LogDebug("Loading state changed: {IsLoading}", loading);
+        
+        await InvokeAsync(() =>
+        {
+            isLoading = loading; // Keep local fallback for UI
+            StateHasChanged();
+            return Task.CompletedTask;
+        });
+    }
+
+    private Task OnPageError(string message, string source)
+    {
+        Logger.LogError("Page error: {Message} from {Source}", message, source);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnDisconnected()
+    {
+        Logger.LogWarning("Browser instance disconnected");
+        
+        // Clear content and update UI
+        htmlContent = "";
+        currentUrl = "";
+        pageTitle = "Disconnected";
+        isLoading = false;
+        
+        await InvokeAsync(StateHasChanged);
+        
+        // Optionally try to reconnect
+        try
+        {
+            browserInstance = BrowserProvider.GetBrowserInstance();
+            if (browserInstance != null)
+            {
+                // Re-subscribe to events
+                browserInstance.NavigationCompleted += OnNavigationCompleted;
+                browserInstance.UrlChanged += OnUrlChanged;
+                browserInstance.TitleChanged += OnTitleChanged;
+                browserInstance.LoadingStateChanged += OnLoadingStateChanged;
+                browserInstance.PageError += OnPageError;
+                browserInstance.Disconnected += OnDisconnected;
+                
+                Logger.LogInformation("Browser instance reconnected");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to reconnect browser instance: {Message}", ex.Message);
         }
     }
 
     private async Task NavigateToUrl()
     {
         if (string.IsNullOrWhiteSpace(navigationUrl) || browserInstance == null)
+        {
+            Logger.LogWarning("Cannot navigate: URL is empty or browser instance is null");
             return;
+        }
 
         try
         {
-            isLoading = true;
-            StateHasChanged();
-
-            await browserInstance.Page.GotoAsync(navigationUrl);
-            await RefreshContent();
+            Logger.LogDebug("Starting navigation to: {Url}", navigationUrl);
+            
+            // Use the new IBrowserInstance NavigateAsync method
+            // Events will handle UI updates automatically
+            await browserInstance.NavigateAsync(navigationUrl);
+            
             await OnNavigate.InvokeAsync(navigationUrl);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Navigation failed: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task RefreshContent()
-    {
-        if (browserInstance == null) return;
-
-        try
-        {
-            // Update page info
-            currentUrl = browserInstance.Page.Url;
-            pageTitle = await browserInstance.Page.TitleAsync();
-            navigationUrl = currentUrl;
             
-            // Check navigation state
-            // Note: Playwright doesn't have direct canGoBack/canGoForward methods
-            // You might need to track history yourself or use page.goBack/goForward with try/catch
-            
-            if (useScreenshot)
-            {
-                await RefreshScreenshot();
-            }
-            else
-            {
-                await RefreshHtmlContent();
-            }
-
-            await OnPageTitleChanged.InvokeAsync(pageTitle);
-            StateHasChanged();
+            Logger.LogDebug("Navigation initiated successfully");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error refreshing content: {ex.Message}");
-        }
-    }
-
-    private async Task RefreshScreenshot()
-    {
-        if (browserInstance == null) return;
-
-        try
-        {
-            var screenshot = await browserInstance.Page.ScreenshotAsync(new Microsoft.Playwright.PageScreenshotOptions
-            {
-                Type = Microsoft.Playwright.ScreenshotType.Png,
-                FullPage = false // Use viewport screenshot for better performance
-            });
-            screenshotData = Convert.ToBase64String(screenshot);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error taking screenshot: {ex.Message}");
+            Logger.LogError(ex, "Navigation failed to '{Url}': {Message}", navigationUrl, ex.Message);
         }
     }
 
     private async Task RefreshHtmlContent()
     {
-        if (browserInstance == null) return;
+        if (browserInstance == null) 
+        {
+            Logger.LogWarning("Browser instance is null, cannot get HTML content");
+            return;
+        }
 
         try
         {
-            htmlContent = await browserInstance.Page.ContentAsync();
+            Logger.LogDebug("Getting page content...");
+            
+            // Wait a moment for any dynamic content to load
+            await Task.Delay(300);
+            
+            htmlContent = await browserInstance.GetHtmlContentAsync();
+            Logger.LogDebug("HTML content retrieved, length: {Length}", htmlContent?.Length ?? 0);
+            
+            if (string.IsNullOrEmpty(htmlContent))
+            {
+                Logger.LogWarning("HTML content is empty");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting page content: {ex.Message}");
+            Logger.LogError(ex, "Error getting page content: {Message}", ex.Message);
         }
     }
 
-    private async Task ToggleViewMode()
+    private async Task RefreshHtmlContentWithDynamicWait()
     {
-        useScreenshot = !useScreenshot;
-        await RefreshContent();
+        if (browserInstance == null) 
+        {
+            Logger.LogWarning("Browser instance is null, cannot get HTML content");
+            return;
+        }
+
+        try
+        {
+            Logger.LogDebug("Getting page content with dynamic wait...");
+            
+            // Wait for page to stabilize and dynamic content to load
+            await browserInstance.WaitForStablePageAsync();
+            
+            // Additional wait for popup/hover content
+            await Task.Delay(800);
+            
+            htmlContent = await browserInstance.GetHtmlContentAsync();
+            Logger.LogDebug("HTML content with dynamic wait retrieved, length: {Length}", htmlContent?.Length ?? 0);
+            
+            if (string.IsNullOrEmpty(htmlContent))
+            {
+                Logger.LogWarning("HTML content is empty after dynamic wait");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting page content with dynamic wait: {Message}", ex.Message);
+        }
     }
 
     private async Task Refresh()
@@ -243,20 +310,13 @@
 
         try
         {
-            isLoading = true;
-            StateHasChanged();
-
-            await browserInstance.Page.ReloadAsync();
-            await RefreshContent();
+            Logger.LogDebug("Refreshing page");
+            await browserInstance.RefreshAsync();
+            // Events will handle UI updates automatically
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error refreshing page: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
+            Logger.LogError(ex, "Error refreshing page: {Message}", ex.Message);
         }
     }
 
@@ -266,12 +326,13 @@
 
         try
         {
-            await browserInstance.Page.GoBackAsync();
-            await RefreshContent();
+            Logger.LogDebug("Going back");
+            await browserInstance.GoBackAsync();
+            // Events will handle UI updates automatically
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error going back: {ex.Message}");
+            Logger.LogError(ex, "Error going back: {Message}", ex.Message);
         }
     }
 
@@ -281,17 +342,19 @@
 
         try
         {
-            await browserInstance.Page.GoForwardAsync();
-            await RefreshContent();
+            Logger.LogDebug("Going forward");
+            await browserInstance.GoForwardAsync();
+            // Events will handle UI updates automatically
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error going forward: {ex.Message}");
+            Logger.LogError(ex, "Error going forward: {Message}", ex.Message);
         }
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
+        Logger.LogDebug("Key pressed: {Key}", e.Key);
         if (e.Key == "Enter")
         {
             await NavigateToUrl();
@@ -300,61 +363,350 @@
 
     private async Task SelectUrl()
     {
+        Logger.LogDebug("Selecting URL text");
         try
         {
-            await JSRuntime.InvokeVoidAsync("selectText", ".url-input");
+            if (browserUtilModule != null)
+            {
+                await browserUtilModule.InvokeVoidAsync("selectText", ".url-input");
+            }
+            else
+            {
+                // Fallback for when module isn't loaded yet
+                await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.url-input')?.select()");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error selecting URL text: {ex.Message}");
+            Logger.LogError(ex, "Error selecting URL text: {Message}", ex.Message);
         }
     }
 
-    private async Task OnScreenshotClick(MouseEventArgs e)
-    {
-        if (browserInstance == null) return;
+    private IJSObjectReference? jsModule;
+    private IJSObjectReference? browserUtilModule;
+    private IJSObjectReference? appModule;
 
-        try
-        {
-            // Calculate scaled coordinates if needed
-            // For now, assume 1:1 mapping - you can add scaling logic later if needed
-            await browserInstance.Page.ClickAsync($"{e.OffsetX},{e.OffsetY}");
-            
-            // Refresh content after interaction
-            await Task.Delay(100); // Small delay to let page update
-            await RefreshContent();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error clicking: {ex.Message}");
-        }
-    }
-
-    private void OnMouseMove(MouseEventArgs e)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        mouseX = e.OffsetX;
-        mouseY = e.OffsetY;
-        StateHasChanged();
+        if (firstRender)
+        {
+            try
+            {
+                // Load component-specific, browser utility, and app-wide modules
+                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
+                    "./Components/Pages/Browser/BrowserViewer.razor.js");
+                browserUtilModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
+                    "./js/browser-util.js");
+                appModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
+                    "./js/app-utils.js");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to load JavaScript modules: {Message}", ex.Message);
+            }
+        }
     }
 
     private async Task OnIframeLoad()
     {
-        // Handle iframe load events if needed
-        await Task.CompletedTask;
+        Logger.LogDebug("Iframe loaded, setting up event forwarding");
+        
+        try
+        {
+            if (jsModule != null)
+            {
+                // Set up JavaScript event forwarding from iframe to Playwright page
+                await jsModule.InvokeVoidAsync("setupIframeEventForwarding", iframeRef, 
+                    DotNetObjectReference.Create(this));
+            }
+            else
+            {
+                Logger.LogWarning("JavaScript module not loaded, cannot setup event forwarding");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup iframe event forwarding: {Message}", ex.Message);
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardClick(double x, double y)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding click to ({X}, {Y})", x, y);
+                await browserInstance.ClickAsync(x, y);
+                
+                // Wait longer for page to update, especially for interactive elements like cookie banners
+                await Task.Delay(1000); // Reduced from 1500 since we have better waiting logic
+                await RefreshHtmlContent();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward click: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardCookieBannerClick(double x, double y)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding interactive element click to ({X}, {Y})", x, y);
+                await browserInstance.ClickAsync(x, y);
+                
+                // Use enhanced refresh for interactive elements that might trigger dynamic content
+                await RefreshHtmlContentWithDynamicWait();
+                await InvokeAsync(StateHasChanged);
+                
+                Logger.LogDebug("Interactive element click processed and content refreshed");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward interactive element click: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardHover(double x, double y)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding hover to ({X}, {Y})", x, y);
+                await browserInstance.HoverAsync(x, y);
+                
+                // Use enhanced refresh for hover to capture popup content
+                await RefreshHtmlContentWithDynamicWait();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward hover: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardMouseLeave()
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding mouse leave");
+                // Move mouse to a neutral position to trigger any hover state cleanup
+                await browserInstance.HoverAsync(0, 0);
+                
+                // Use regular refresh for mouse leave
+                await RefreshHtmlContent();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward mouse leave: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardKeyPress(string key)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding key press: {Key}", key);
+                await browserInstance.KeyPressAsync(key);
+                
+                // Refresh content after interaction to show changes
+                await Task.Delay(100); // Small delay to allow page to update
+                await RefreshHtmlContent();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward key press: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardType(string text)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding type: {Text}", text);
+                await browserInstance.TypeAsync(text);
+                
+                // Refresh content after interaction to show changes
+                await Task.Delay(100); // Small delay to allow page to update
+                await RefreshHtmlContent();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward type: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task ForwardNavigation(string url)
+    {
+        if (browserInstance != null)
+        {
+            try
+            {
+                Logger.LogDebug("Forwarding navigation to: {Url}", url);
+                await browserInstance.NavigateAsync(url);
+                
+                // Update the navigation URL in the UI
+                navigationUrl = url;
+                await InvokeAsync(StateHasChanged);
+                
+                // Refresh content after navigation
+                await Task.Delay(1000); // Longer delay for navigation
+                await RefreshHtmlContent();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to forward navigation: {Message}", ex.Message);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task RefreshContent()
+    {
+        try
+        {
+            Logger.LogDebug("Refreshing content via JavaScript callback");
+            await RefreshHtmlContent();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to refresh content: {Message}", ex.Message);
+        }
+    }
+
+    // Helper methods to call JavaScript functions from C#
+    public async Task ShowToastAsync(string message, string type = "info", int duration = 3000)
+    {
+        if (appModule != null)
+        {
+            try
+            {
+                await appModule.InvokeVoidAsync("showToast", message, type, duration);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to show toast: {Message}", ex.Message);
+            }
+        }
+    }
+
+    public async Task<bool> CopyToClipboardAsync(string text)
+    {
+        if (appModule != null)
+        {
+            try
+            {
+                await appModule.InvokeVoidAsync("copyToClipboard", text);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to copy to clipboard: {Message}", ex.Message);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public async Task<int> HighlightElementAsync(string selector, int duration = 2000)
+    {
+        if (browserUtilModule != null)
+        {
+            try
+            {
+                return await browserUtilModule.InvokeAsync<int>("highlightElement", selector, duration);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to highlight element: {Message}", ex.Message);
+                return 0;
+            }
+        }
+        return 0;
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Browser instance is managed by the provider, don't dispose it here
+        Logger.LogDebug("BrowserViewer disposing");
+        
+        // Dispose JavaScript modules
+        if (jsModule != null)
+        {
+            try
+            {
+                await jsModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Error disposing BrowserViewer JavaScript module: {Message}", ex.Message);
+            }
+        }
+        
+        if (browserUtilModule != null)
+        {
+            try
+            {
+                await browserUtilModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Error disposing BrowserUtil JavaScript module: {Message}", ex.Message);
+            }
+        }
+        
+        if (appModule != null)
+        {
+            try
+            {
+                await appModule.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Error disposing App JavaScript module: {Message}", ex.Message);
+            }
+        }
+        
+        // Unsubscribe from events to prevent memory leaks
+        if (browserInstance != null)
+        {
+            browserInstance.NavigationCompleted -= OnNavigationCompleted;
+            browserInstance.UrlChanged -= OnUrlChanged;
+            browserInstance.TitleChanged -= OnTitleChanged;
+            browserInstance.LoadingStateChanged -= OnLoadingStateChanged;
+            browserInstance.PageError -= OnPageError;
+            browserInstance.Disconnected -= OnDisconnected;
+        }
+        
+        // Browser instance is managed by the InstanceStore, don't dispose it here
         await Task.CompletedTask;
     }
 }
-
-<script>
-    window.selectText = (selector) => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.select();
-        }
-    };
-</script>

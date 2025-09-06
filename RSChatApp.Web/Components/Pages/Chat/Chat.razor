@@ -62,7 +62,8 @@
          
         Respect the language of each document, which is reflected by its ending En(english) or De(German). 
         You have a browsertool to have full control of the Reportserver front end. 
-          
+        The official reportserver documentation is available at 'https://reportserver.net/de/dokumentation'
+        Its the content of your knowledgebase, found in Searchtool.
         ";
 
     private readonly ChatOptions chatOptions = new();
@@ -74,18 +75,18 @@
     private bool IsOllama;
 
     [Experimental("SKEXP0001")]
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         // kernel.InvokeAsync<BrowserTool>("")
         // For now, guaranty ollama compatibilty
         IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model) == false;
         
-        Logger.LogInformation("Chat initialized with Ollama compatibility: {IsOllama}", IsOllama);
+        Logger.LogDebug("Chat initialized with Ollama compatibility: {IsOllama}", IsOllama);
         messages.Add(new(ChatRole.System, SystemPrompt));
         
         // Debug logging to see what kernel plugins are available
         var kernelPlugins = Kernel.Plugins.ToList();
-        Logger.LogInformation("Total kernel plugins available: {kernelPluginsCount}", kernelPlugins.Count);
+        Logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}", kernelPlugins.Count);
 
         // Create a list of all tools (local search + MCP tools)
         var allTools = new List<AITool>
@@ -125,15 +126,35 @@
         chatSuggestions?.Clear();
         await chatInput!.FocusAsync();
 
-        // Display a new response from the IChatClient, streaming responses
-        // aren't supported because Ollama will not support both streaming and using Tools
-        currentResponseCancellation = new();
-        var response = await ChatClient.GetResponseAsync(messages, chatOptions, currentResponseCancellation.Token);
+        try
+        {
+            // Display a new response from the IChatClient, streaming responses
+            // aren't supported because Ollama will not support both streaming and using Tools
+            currentResponseCancellation = new();
+            var response = await ChatClient.GetResponseAsync(messages, chatOptions, currentResponseCancellation.Token);
 
-        // Store responses in the conversation, and begin getting suggestions
-        messages.AddMessages(response);
-        chatSuggestions?.Update(messages);
-    
+            // Store responses in the conversation, and begin getting suggestions
+            messages.AddMessages(response);
+            chatSuggestions?.Update(messages);
+        }
+        catch (OperationCanceledException)
+        {
+            // Handle cancellation gracefully - conversation is preserved
+            Logger.LogDebug("Chat response was cancelled");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during chat response");
+            
+            // Add error message to chat
+            var errorMessage = new ChatMessage(ChatRole.Assistant, 
+                $"Sorry, I encountered an error while processing your request: {ex.Message}");
+            messages.Add(errorMessage);
+            
+            // Update suggestions and UI
+            chatSuggestions?.Update(messages);
+            await InvokeAsync(StateHasChanged);
+        }
     }
     private async Task AddUserMessageStreamAsync(ChatMessage userMessage)
     {
@@ -159,10 +180,10 @@
                 // Handle different types of streaming updates
                 foreach (var content in update.Contents)
                 {
-                    
-                    if (content is { } deltaContent)
+                    // Only append text content, ignore tool calls and other content types
+                    if (content is Microsoft.Extensions.AI.TextContent textContent)
                     {
-                        contentBuilder.Append(deltaContent);
+                        contentBuilder.Append(textContent.Text);
                         
                         // Update the current response message with accumulated content
                         currentResponseMessage = new ChatMessage(ChatRole.Assistant, contentBuilder.ToString());
@@ -170,6 +191,8 @@
                         // Trigger UI update to show streaming content
                         await InvokeAsync(StateHasChanged);
                     }
+                    // Note: Tool calls and other content types are handled by the underlying system
+                    // and will be included in the final complete message
                 }
                 
                 // Check for cancellation
@@ -194,10 +217,19 @@
         {
             Logger.LogError(ex, "Error during streaming chat response");
             
-            // Add error message to chat
+            // Add any partial response that was being built
+            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            {
+                messages.Add(currentResponseMessage);
+            }
+            
+            // Add error message to chat - ensure it's added to the conversation
             var errorMessage = new ChatMessage(ChatRole.Assistant, 
                 $"Sorry, I encountered an error while processing your request: {ex.Message}");
             messages.Add(errorMessage);
+            
+            // Force UI update to show the error message
+            await InvokeAsync(StateHasChanged);
         }
         finally
         {
@@ -216,7 +248,11 @@
             messages.Add(currentResponseMessage);
         }
 
-        currentResponseCancellation?.Cancel();
+        // Cancel the current operation if it exists
+        if (currentResponseCancellation != null && !currentResponseCancellation.Token.IsCancellationRequested)
+        {
+            currentResponseCancellation?.Cancel();
+        }
         currentResponseMessage = null;
     }
 
@@ -234,7 +270,8 @@
     [Description("Searches for information using a phrase or keyword")]
     private async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
-        [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null)
+        [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
+        [Description("The maximum number of results to return. Default is 15.")] int maxResults = 100)
     {
         await InvokeAsync(StateHasChanged);
         var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults: 15);

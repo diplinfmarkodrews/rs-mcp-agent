@@ -13,13 +13,15 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
 {
     private readonly ILogger<PlayWrightBrowserInstanceFactory> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly IOptions<BrowserInstanceConfiguration> _browserInstanceConfiguration;
 
-    public PlayWrightBrowserInstanceFactory(ILogger<PlayWrightBrowserInstanceFactory> logger, 
+    public PlayWrightBrowserInstanceFactory(ILoggerFactory loggerFactory, 
         IOptions<BrowserInstanceConfiguration> browserInstanceConfiguration,
         IHttpContextAccessor httpContextAccessor)
     {
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger<PlayWrightBrowserInstanceFactory>();
+        _loggerFactory = loggerFactory;
         _httpContextAccessor = httpContextAccessor;
         _browserInstanceConfiguration = browserInstanceConfiguration;
     }
@@ -53,26 +55,13 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
             }),
             _ => throw new ArgumentException("Unsupported browser type")
         };
-        // ReportProgress(70, "Browser launched");
-        var context = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            UserAgent = config.UserAgent,
-            Locale = config.Language,
-            ViewportSize = new ViewportSize { Width = config.Width_Viewport, Height = config.Height_Viewport }
-        });
-        // ReportProgress(90, "Browser context created");
-        var page = await context.NewPageAsync();
-        try
-        {
-            await page.GotoAsync(config.BaseUrl);
-        } 
-        catch (PlaywrightException ex)
-        {
-            _logger.LogError(ex, ex.Message);
-        }
-        
+        var browserInstance = new PlayWrightBrowserInstance(
+            _loggerFactory.CreateLogger<PlayWrightBrowserInstance>(),
+            config,
+            browser);
         // ReportProgress(100, "Page loaded");
-        return new PlayWrightBrowserInstance(config, browser, context, page);
+        await browserInstance.NewContextAsync();
+        return browserInstance;
     }
     private BrowserInstanceConfiguration CreateBrowserConfig(HttpContext context)
     {
