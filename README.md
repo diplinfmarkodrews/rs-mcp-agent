@@ -5,63 +5,63 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 ## 🏗️ Architecture Overview
 
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          RSChatApp.Web (Browser-Based Workspace)                │
-│                                   (Blazor UI)                                   │
-│                                                                                 │
-│  ┌─────────────────────────────────────────┐    ┌─────────────────────────────┐ │
-│  │         LLM Provider Layer              │    │    Session Management       │ │
-│  │                                         │    │                             │ │
-│  │  ┌─────────────┐  ┌─────────────────┐   │    │  Current: In-Memory         │ │
-│  │  │   Ollama    │  │   Anthropic     │   │    │  • Browser Session          │ │
-│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │    │  • Conversation Context     │ │
-│  │  │             │  │                 │   │    │                             │ │
-│  │  │ • Mistral   │  │ • Claude-3.5    │   │    │  Future: Persistent         │ │
-│  │  │ • Llama     │  │ • Claude-3      │   │    │  • Topic-Based History      │ │
-│  │  │ • Qwen      │  │ • Claude Haiku  │   │    │  • Cross-Session Context    │ │
-│  │  └─────────────┘  └─────────────────┘   │    └─────────────────────────────┘ │
-│  │                                         │                                    │
-│  │  ┌─────────────┐  ┌─────────────────┐   │    ┌─────────────────┐             │
-│  │  │   OpenAI    │  │    Azure AI     │   │    │     Qdrant      │             │
-│  │  │  (GPT-4/o1) │  │    (OpenAI)     │   │    │   (VectorDB)    │             │
-│  │  │             │  │                 │   │    │                 │             │
-│  │  │ • GPT-4o    │  │ • GPT-4         │   │    │ • Vector Search │             │
-│  │  │ • GPT-4     │  │ • GPT-3.5       │   │    │ • Embeddings    │             │
-│  │  │ • o1-mini   │  │ • Text Embedding│   │    │ • Semantic RAG  │             │
-│  │  └─────────────┘  └─────────────────┘   │    └─────────────────┘             │
-│  │                                         │            ▲                       │
-│  │    🔄 Intelligent Provider Selection    │            │                       │
-│  │    • Cost optimization                  │ Knowledge  │                       │
-│  │    • Performance-based routing          │ Base       │                       │
-│  │    • Fallback mechanisms                │ Ingestion  │                       │
-│  └─────────────────────────────────────────┘            │                       │
-│                          ┌─────────────────────────────────────────────┐        │
-│                          │           Ingested Content                  │        │
-│                          │                                             │        │         │                          │  📚 Documentation    🔧 Groovy Scripts      │        │
-│                          │  • PDFs, Markdown    • .groovy files        │        │
-│                          │  • API Docs          • Build scripts        │        │
-│                          │  • User Manuals      • Automation scripts   │        │
-│                          │                                             │        │
-│                          │  💻 Terminal Commands                       │        │
-│                          │  • CLI usage examples                       │        │
-│                          │  • Command syntax                           │        │
-│                          │  • Shell scripts                            │        │
-│                          └─────────────────────────────────────────────┘        │
-│                                                                                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                    🌐 (Legacy)Software Integration                      │    │
-│  │                                                                         │    │
-│  │  ┌─────────────────────────────────────────────────────────────────┐    │    │
-│  │  │ 🎭 Playwright Browser Tool                                      │    │    │
-│  │  │   • Visual UI automation for legacy applications                │    │    │
-│  │  │   • ReportServer frontend interaction                           │    │    │
-│  │  │   • Screenshot capture & visual analysis                        │    │    │
-│  │  │   • User workflow simulation & testing                          │    │    │
-│  │  │   • Cross-browser compatibility (Chrome, Firefox, Safari)       │    │    │
-│  │  │   • Element inspection & interaction                            │    │    │
-│  │  └─────────────────────────────────────────────────────────────────┘    │    │
-│  └─────────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                          RSChatApp.Web (Browser-Based Workspace)              │
+│                                   (Blazor UI)                                 │
+│                                                                               │
+│  ┌─────────────────────────────────────────┐  ┌─────────────────────────────┐ │
+│  │         LLM Provider Layer              │  │    Session Management       │ │
+│  │                                         │  │                             │ │
+│  │  ┌─────────────┐  ┌─────────────────┐   │  │  Current: In-Memory         │ │
+│  │  │   Ollama    │  │   Anthropic     │   │  │  • Browser Session          │ │
+│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │  │  • Conversation Context     │ │
+│  │  │             │  │                 │   │  │                             │ │
+│  │  │ • Mistral   │  │ • Claude-3.5    │   │  │  Future: Persistent         │ │
+│  │  │ • Llama     │  │ • Claude-3      │   │  │  • Topic-Based History      │ │
+│  │  │ • Qwen      │  │ • Claude Haiku  │   │  │  • Cross-Session Context    │ │
+│  │  └─────────────┘  └─────────────────┘   │  └─────────────────────────────┘ │
+│  │                                         │                                  │
+│  │  ┌─────────────┐  ┌─────────────────┐   │  ┌─────────────────┐             │
+│  │  │   OpenAI    │  │    Azure AI     │   │  │     Qdrant      │             │
+│  │  │  (GPT-4/o1) │  │    (OpenAI)     │   │  │   (VectorDB)    │             │
+│  │  │             │  │                 │   │  │                 │             │
+│  │  │ • GPT-4o    │  │ • GPT-4         │   │  │ • Vector Search │             │
+│  │  │ • GPT-4     │  │ • GPT-3.5       │   │  │ • Embeddings    │             │
+│  │  │ • o1-mini   │  │ • Text Embedding│   │  │ • Semantic RAG  │             │
+│  │  └─────────────┘  └─────────────────┘   │  └─────────────────┘             │
+│  │                                         │           ▲                      │
+│  │    🔄 Intelligent Provider Selection    │           │                      │
+│  │    • Cost optimization                  │ Knowledge │                      │
+│  │    • Performance-based routing          │ Base      │                      │
+│  │    • Fallback mechanisms                │ Ingestion │                      │
+│  └─────────────────────────────────────────┘           │                      │
+│                          ┌───────────────────────────────────────────┐        │
+│                          │           Ingested Content                │        │
+│                          │                                           │        │         │                          │  📚 Documentation    🔧 Groovy Scripts    │        │
+│                          │  • PDFs, Markdown    • .groovy files      │        │
+│                          │  • API Docs          • Build scripts      │        │
+│                          │  • User Manuals      • Automation scripts │        │
+│                          │                                           │        │
+│                          │  💻 Terminal Commands                     │        │
+│                          │  • CLI usage examples                     │        │
+│                          │  • Command syntax                         │        │
+│                          │  • Shell scripts                          │        │
+│                          └───────────────────────────────────────────┘        │
+│                                                                               │
+│  ┌───────────────────────────────────────────────────────────────────────┐    │
+│  │                    🌐 (Legacy)Software Integration                    │    │
+│  │                                                                       │    │
+│  │  ┌───────────────────────────────────────────────────────────────┐    │    │
+│  │  │ 🎭 Playwright Browser Tool                                    │    │    │
+│  │  │   • Visual UI automation for legacy applications              │    │    │
+│  │  │   • ReportServer frontend interaction                         │    │    │
+│  │  │   • Screenshot capture & visual analysis                      │    │    │
+│  │  │   • User workflow simulation & testing                        │    │    │
+│  │  │   • Cross-browser compatibility (Chrome, Firefox, Safari)     │    │    │
+│  │  │   • Element inspection & interaction                          │    │    │
+│  │  └───────────────────────────────────────────────────────────────┘    │    │
+│  └───────────────────────────────────────────────────────────────────────┘    │
+└───────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       │ MCP Protocol
                                       ▼
@@ -100,11 +100,11 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
                     │           ReportServer                  │
                     │           (Java/GWT)                    │
                     │                                         │
-                    │  Frontend UI ◄──────────► Backend API  │
+                    │  Frontend UI ◄──────────► Backend API   │
                     │  • Web Interface           • RPC Server │
                     │  • User Actions           • Data Layer  │
                     │  • Visual Elements        • Business    │
-                    │  • Report Rendering         Logic      │
+                    │  • Report Rendering         Logic       │
                     └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -121,7 +121,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 │    │ Native Login    │              │   (OIDC Provider)       │ │
 │    │                 │              │                         │ │
 │    │ • Username/Pass │              │ • SSO Integration       │ │
-│    │ • Session Bridge│              │ • JWT Tokens           │ │
+│    │ • Session Bridge│              │ • JWT Tokens            │ │
 │    │ • GWT RPC Auth  │              │ • Role Management       │ │
 │    └─────────────────┘              └─────────────────────────┘ │
 │                                                                 │

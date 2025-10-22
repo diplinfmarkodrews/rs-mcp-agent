@@ -1,4 +1,5 @@
 @using RSChatApp.Mcp.Browser.Interfaces
+@using System.Text.Json
 @inject IBrowserInstanceProvider BrowserProvider
 @inject IJSRuntime JSRuntime
 @inject ILogger<BrowserViewer> Logger
@@ -19,15 +20,96 @@
                    placeholder="Enter URL..." />
             
             <button @onclick="NavigateToUrl" disabled="@(browserInstance == null)" class="go-button">Go</button>
+            <button @onclick="ToggleFormPanel" disabled="@(browserInstance == null)" class="form-button" title="Form Tools">📝</button>
+            <button @onclick="ToggleDebugOverlay" disabled="@(browserInstance == null)" class="debug-button" title="@(showDebugOverlay ? "Disable Debug Mode" : "Enable Debug Mode")">@(showDebugOverlay ? "🔴" : "⚪")</button>
         </div>
         
         <div class="status-bar">
             <span class="page-title">@pageTitle</span>
             <span class="current-url">@currentUrl</span>
+            @if (showDebugOverlay)
+            {
+                <span class="debug-status" style="color: red; font-weight: bold; margin-left: 10px;">🔴 DEBUG MODE ACTIVE</span>
+            }
         </div>
     </div>
 
-    <!-- Browser Content -->
+    <!-- Form Filling Panel -->
+    @if (showFormPanel && browserInstance != null)
+    {
+        <div class="form-panel">
+            <div class="form-panel-header">
+                <h4>Form Tools</h4>
+                <button @onclick="ToggleFormPanel" class="close-button">✕</button>
+            </div>
+            
+            <div class="form-panel-content">
+                <!-- Fill Input Field -->
+                <div class="form-tool">
+                    <h5>Fill Input Field</h5>
+                    <div class="form-tool-inputs">
+                        <input @bind="fillSelector" placeholder="CSS Selector (e.g., #username)" class="selector-input" />
+                        <input @bind="fillValue" placeholder="Value to fill" class="value-input" />
+                        <button @onclick="FillField" disabled="@(string.IsNullOrEmpty(fillSelector))" class="action-button">Fill</button>
+                    </div>
+                </div>
+
+                <!-- Select Dropdown Option -->
+                <div class="form-tool">
+                    <h5>Select Dropdown Option</h5>
+                    <div class="form-tool-inputs">
+                        <input @bind="selectSelector" placeholder="CSS Selector (e.g., #country)" class="selector-input" />
+                        <input @bind="selectValue" placeholder="Option value or text" class="value-input" />
+                        <select @bind="selectMethod" class="method-select">
+                            <option value="value">By Value</option>
+                            <option value="text">By Text</option>
+                            <option value="index">By Index</option>
+                        </select>
+                        <button @onclick="SelectOption" disabled="@(string.IsNullOrEmpty(selectSelector))" class="action-button">Select</button>
+                    </div>
+                </div>
+
+                <!-- Click Element -->
+                <div class="form-tool">
+                    <h5>Click Element</h5>
+                    <div class="form-tool-inputs">
+                        <input @bind="clickSelector" placeholder="CSS Selector (e.g., #submit-btn)" class="selector-input" />
+                        <button @onclick="ClickElement" disabled="@(string.IsNullOrEmpty(clickSelector))" class="action-button">Click</button>
+                    </div>
+                </div>
+
+                <!-- Common Form Examples -->
+                <div class="form-tool">
+                    <h5>Quick Actions</h5>
+                    <div class="quick-actions">
+                        <button @onclick="@(() => FillQuick("input[name='username']", ""))" class="quick-button">Username Field</button>
+                        <button @onclick="@(() => FillQuick("input[name='password']", ""))" class="quick-button">Password Field</button>
+                        <button @onclick="@(() => FillQuick("input[name='email']", ""))" class="quick-button">Email Field</button>
+                        <button @onclick="@(() => ClickQuick("input[type='submit'], button[type='submit']"))" class="quick-button">Submit Form</button>
+                    </div>
+                </div>
+
+                <!-- Auto-Detection -->
+                <div class="form-tool">
+                    <h5>Auto-Detection</h5>
+                    <div class="auto-detect-actions">
+                        <button @onclick="DetectAndMapFormElements" class="action-button auto-detect">🔍 Auto-Detect Forms</button>
+                        <button @onclick="ToggleDebugOverlay" class="action-button debug-toggle">@(showDebugOverlay ? "🔴" : "⚪") Debug Clicks</button>
+                    </div>
+                </div>
+
+                <!-- Status Messages -->
+                @if (!string.IsNullOrEmpty(formActionStatus))
+                {
+                    <div class="form-status @(formActionSuccess ? "success" : "error")">
+                        @formActionStatus
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Browser Content - Screenshot Based -->
     <div class="browser-content">
         @if (browserInstance?.IsLoading ?? isLoading)
         {
@@ -36,13 +118,54 @@
                 <p>Loading...</p>
             </div>
         }
-        else if (!string.IsNullOrEmpty(htmlContent))
+        else if (screenshotData != null)
         {
-            <div class="iframe-container">
-                <iframe srcdoc="@htmlContent" 
-                        class="browser-iframe"
-                        @onload="OnIframeLoad"
-                        @ref="iframeRef"></iframe>
+            <div class="screenshot-container" 
+                 @onclick="HandleScreenshotClick"
+                 @onkeydown="HandleKeyDown"
+                 tabindex="0"
+                 style="position: relative; overflow: auto; width: 100%; height: 100%;">
+                <img src="data:image/png;base64,@screenshotData" 
+                     alt="Browser Screenshot"
+                     class="browser-screenshot"
+                     style="max-width: 100%; height: auto; display: block; cursor: crosshair;"
+                     @ref="screenshotRef" />
+                
+                @* Debug overlay to show click positions *@
+                @if (showDebugOverlay && lastClickPosition != null)
+                {
+                    <div class="debug-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                        @* Original click position (red) *@
+                        <div class="click-marker original" 
+                             style="position: absolute; 
+                                    left: @(lastClickPosition.OriginalX)px; 
+                                    top: @(lastClickPosition.OriginalY)px;
+                                    width: 10px; height: 10px; 
+                                    background: red; 
+                                    border-radius: 50%; 
+                                    transform: translate(-50%, -50%);
+                                    z-index: 1000;"></div>
+                        
+                        @* Adjusted click position (green) *@
+                        <div class="click-marker adjusted" 
+                             style="position: absolute; 
+                                    left: @(lastClickPosition.AdjustedX / lastClickPosition.ScaleX)px; 
+                                    top: @(lastClickPosition.AdjustedY / lastClickPosition.ScaleY)px;
+                                    width: 12px; height: 12px; 
+                                    background: lime; 
+                                    border: 2px solid darkgreen;
+                                    border-radius: 50%; 
+                                    transform: translate(-50%, -50%);
+                                    z-index: 1001;"></div>
+                        
+                        @* Debug info *@
+                        <div class="debug-info" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; z-index: 1002;">
+                            <div>Original: (@lastClickPosition.OriginalX, @lastClickPosition.OriginalY)</div>
+                            <div>Adjusted: (@lastClickPosition.AdjustedX.ToString("F0"), @lastClickPosition.AdjustedY.ToString("F0"))</div>
+                            <div>Scale: (@lastClickPosition.ScaleX.ToString("F2"), @lastClickPosition.ScaleY.ToString("F2"))</div>
+                        </div>
+                    </div>
+                }
             </div>
         }
         else
@@ -65,7 +188,7 @@
                 <div>Page Title: @pageTitle</div>
                 <div>Can Go Back: @(browserInstance?.CanGoBack ?? false)</div>
                 <div>Can Go Forward: @(browserInstance?.CanGoForward ?? false)</div>
-                <div>HTML Content Length: @(htmlContent?.Length ?? 0)</div>
+                <div>Screenshot Available: @(screenshotData != null)</div>
                 <div>Is Loading: @(browserInstance?.IsLoading ?? isLoading)</div>
                 <div>Browser Connected: @(browserInstance != null)</div>
             </div>
@@ -83,11 +206,33 @@
     private string navigationUrl = "";
     private string currentUrl = "";
     private string pageTitle = "";
-    private string htmlContent = "";
-    private ElementReference iframeRef;
+    private string? screenshotData; // Base64 encoded screenshot
+    private ElementReference screenshotRef;
     
     // Local loading state for fallback when browserInstance.IsLoading is not available
     private bool isLoading = false;
+
+    // Screenshot debounce mechanism
+    private DateTime lastScreenshotUpdate = DateTime.MinValue;
+    private readonly TimeSpan screenshotDebounceDelay = TimeSpan.FromMilliseconds(500);
+    private bool isRefreshingScreenshot = false;
+
+    // Form filling state
+    private bool showFormPanel = false;
+    private string fillSelector = "";
+    private string fillValue = "";
+    private string selectSelector = "";
+    private string selectValue = "";
+    private string selectMethod = "value";
+    private string clickSelector = "";
+    private string formActionStatus = "";
+    private bool formActionSuccess = false;
+
+    // Debug overlay state
+    private bool showDebugOverlay = false;
+    private DebugClickInfo? lastClickPosition = null;
+
+    public record DebugClickInfo(double OriginalX, double OriginalY, double AdjustedX, double AdjustedY, double ScaleX, double ScaleY);
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,7 +256,7 @@
                 currentUrl = browserInstance.CurrentUrl;
                 navigationUrl = currentUrl;
                 pageTitle = await browserInstance.GetTitleAsync();
-                await RefreshHtmlContent();
+                await RefreshScreenshot();
             }
             
             if (!string.IsNullOrEmpty(InitialUrl))
@@ -127,14 +272,14 @@
         }
     }
 
-    // Typed event handlers
+    // Event handlers for browser instance events
     private async Task OnNavigationCompleted(string url, string title)
     {
         Logger.LogDebug("Navigation completed: {Url} - {Title}", url, title);
         currentUrl = url;
         navigationUrl = url;
         pageTitle = title;
-        await RefreshHtmlContent(); // Refresh content after navigation
+        await RefreshScreenshot();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -154,13 +299,12 @@
     private async Task OnTitleChanged(string newTitle)
     {
         Logger.LogDebug("Title changed: {Title}", newTitle);
-        pageTitle = newTitle;
         
-        // Safely invoke the callback and UI update
         await InvokeAsync(async () =>
         {
-            await OnPageTitleChanged.InvokeAsync(newTitle);
+            pageTitle = newTitle;
             StateHasChanged();
+            await OnPageTitleChanged.InvokeAsync(newTitle);
         });
     }
 
@@ -168,534 +312,700 @@
     {
         Logger.LogDebug("Loading state changed: {IsLoading}", loading);
         
-        await InvokeAsync(() =>
+        await InvokeAsync(async () =>
         {
-            isLoading = loading; // Keep local fallback for UI
+            isLoading = loading;
             StateHasChanged();
-            return Task.CompletedTask;
+            
+            // When loading completes, refresh the screenshot
+            if (!loading)
+            {
+                await Task.Delay(500); // Brief delay to ensure page is fully rendered
+                await RefreshScreenshot();
+            }
         });
     }
 
     private Task OnPageError(string message, string source)
     {
-        Logger.LogError("Page error: {Message} from {Source}", message, source);
+        Logger.LogWarning("Page error: {Message} from {Source}", message, source);
         return Task.CompletedTask;
     }
 
     private async Task OnDisconnected()
     {
         Logger.LogWarning("Browser instance disconnected");
-        
-        // Clear content and update UI
-        htmlContent = "";
-        currentUrl = "";
-        pageTitle = "Disconnected";
-        isLoading = false;
-        
-        await InvokeAsync(StateHasChanged);
-        
-        // Optionally try to reconnect
-        try
+        await InvokeAsync(() =>
         {
-            browserInstance = BrowserProvider.GetBrowserInstance();
-            if (browserInstance != null)
-            {
-                // Re-subscribe to events
-                browserInstance.NavigationCompleted += OnNavigationCompleted;
-                browserInstance.UrlChanged += OnUrlChanged;
-                browserInstance.TitleChanged += OnTitleChanged;
-                browserInstance.LoadingStateChanged += OnLoadingStateChanged;
-                browserInstance.PageError += OnPageError;
-                browserInstance.Disconnected += OnDisconnected;
-                
-                Logger.LogInformation("Browser instance reconnected");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to reconnect browser instance: {Message}", ex.Message);
-        }
+            screenshotData = null;
+            StateHasChanged();
+        });
     }
 
-    private async Task NavigateToUrl()
+    // Screenshot management - following BrowserTool pattern with debouncing
+    private async Task RefreshScreenshot()
     {
-        if (string.IsNullOrWhiteSpace(navigationUrl) || browserInstance == null)
+        if (browserInstance == null)
         {
-            Logger.LogWarning("Cannot navigate: URL is empty or browser instance is null");
+            Logger.LogWarning("Browser instance is null, cannot take screenshot");
             return;
         }
 
-        try
+        // Debounce mechanism to prevent excessive refreshes
+        var now = DateTime.UtcNow;
+        if (now - lastScreenshotUpdate < screenshotDebounceDelay && isRefreshingScreenshot)
         {
-            Logger.LogDebug("Starting navigation to: {Url}", navigationUrl);
-            
-            // Use the new IBrowserInstance NavigateAsync method
-            // Events will handle UI updates automatically
-            await browserInstance.NavigateAsync(navigationUrl);
-            
-            await OnNavigate.InvokeAsync(navigationUrl);
-            
-            Logger.LogDebug("Navigation initiated successfully");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Navigation failed to '{Url}': {Message}", navigationUrl, ex.Message);
-        }
-    }
-
-    private async Task RefreshHtmlContent()
-    {
-        if (browserInstance == null) 
-        {
-            Logger.LogWarning("Browser instance is null, cannot get HTML content");
+            Logger.LogDebug("🎯 SCREENSHOT: Skipping refresh due to debounce");
             return;
         }
 
-        try
+        if (isRefreshingScreenshot)
         {
-            Logger.LogDebug("Getting page content...");
-            
-            // Wait a moment for any dynamic content to load
-            await Task.Delay(300);
-            
-            htmlContent = await browserInstance.GetHtmlContentAsync();
-            Logger.LogDebug("HTML content retrieved, length: {Length}", htmlContent?.Length ?? 0);
-            
-            if (string.IsNullOrEmpty(htmlContent))
-            {
-                Logger.LogWarning("HTML content is empty");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting page content: {Message}", ex.Message);
-        }
-    }
-
-    private async Task RefreshHtmlContentWithDynamicWait()
-    {
-        if (browserInstance == null) 
-        {
-            Logger.LogWarning("Browser instance is null, cannot get HTML content");
+            Logger.LogDebug("🎯 SCREENSHOT: Already refreshing, skipping");
             return;
         }
 
+        isRefreshingScreenshot = true;
+        lastScreenshotUpdate = now;
+
         try
         {
-            Logger.LogDebug("Getting page content with dynamic wait...");
+            Logger.LogInformation("🎯 SCREENSHOT: Taking screenshot...");
             
-            // Wait for page to stabilize and dynamic content to load
-            await browserInstance.WaitForStablePageAsync();
+            var screenshot = await browserInstance.TakeScreenshotAsync();
+            screenshotData = Convert.ToBase64String(screenshot);
             
-            // Additional wait for popup/hover content
-            await Task.Delay(800);
+            Logger.LogInformation("🎯 SCREENSHOT: Screenshot captured, size: {Size} bytes", screenshot.Length);
             
-            htmlContent = await browserInstance.GetHtmlContentAsync();
-            Logger.LogDebug("HTML content with dynamic wait retrieved, length: {Length}", htmlContent?.Length ?? 0);
-            
-            if (string.IsNullOrEmpty(htmlContent))
-            {
-                Logger.LogWarning("HTML content is empty after dynamic wait");
-            }
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error getting page content with dynamic wait: {Message}", ex.Message);
+            Logger.LogError(ex, "Error taking screenshot: {Message}", ex.Message);
+        }
+        finally
+        {
+            isRefreshingScreenshot = false;
         }
     }
 
-    private async Task Refresh()
+    // User interaction handlers - following BrowserTool pattern
+    private async Task HandleScreenshotClick(MouseEventArgs e)
     {
         if (browserInstance == null) return;
-
+        
         try
         {
-            Logger.LogDebug("Refreshing page");
-            await browserInstance.RefreshAsync();
-            // Events will handle UI updates automatically
+            // Use OffsetX/OffsetY which are relative to the element, not the viewport
+            var adjustedCoords = await GetAdjustedCoordinates(e.OffsetX, e.OffsetY);
+            
+            // Capture debug information if debug overlay is enabled
+            if (showDebugOverlay)
+            {
+                // Get scale factors for debug display
+                var scaleX = 1.0;
+                var scaleY = 1.0;
+                
+                try
+                {
+                    if (screenshotRef.Context != null)
+                    {
+                        var resultString = await JSRuntime.InvokeAsync<string>("eval", @"
+                            (function(img) {
+                                try {
+                                    if (!img) return null;
+                                    var rect = img.getBoundingClientRect();
+                                    return JSON.stringify({
+                                        displayWidth: rect.width,
+                                        displayHeight: rect.height,
+                                        naturalWidth: img.naturalWidth || img.width,
+                                        naturalHeight: img.naturalHeight || img.height
+                                    });
+                                } catch (e) {
+                                    return null;
+                                }
+                            })
+                        ", screenshotRef);
+                        
+                        if (!string.IsNullOrEmpty(resultString))
+                        {
+                            var data = JsonSerializer.Deserialize<JsonElement>(resultString);
+                            double displayWidth = data.GetProperty("displayWidth").GetDouble();
+                            double displayHeight = data.GetProperty("displayHeight").GetDouble();
+                            double naturalWidth = data.GetProperty("naturalWidth").GetDouble();
+                            double naturalHeight = data.GetProperty("naturalHeight").GetDouble();
+                            
+                            scaleX = naturalWidth / displayWidth;
+                            scaleY = naturalHeight / displayHeight;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Failed to get scale factors for debug display");
+                }
+                
+                lastClickPosition = new DebugClickInfo(e.OffsetX, e.OffsetY, adjustedCoords.X, adjustedCoords.Y, scaleX, scaleY);
+            }
+            
+            Logger.LogInformation("🎯 CLICK: Screenshot clicked at offset: {X}, {Y} (adjusted to: {AdjX}, {AdjY})", 
+                e.OffsetX, e.OffsetY, adjustedCoords.X, adjustedCoords.Y);
+            
+            // Use smart click handling that can detect form elements
+            await HandleSmartClick(adjustedCoords.X, adjustedCoords.Y);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error refreshing page: {Message}", ex.Message);
+            Logger.LogError(ex, "Error handling screenshot click: {Message}", ex.Message);
+        }
+    }
+    
+    private async Task<(double X, double Y)> GetAdjustedCoordinates(double offsetX, double offsetY)
+    {
+        try
+        {
+            if (screenshotRef.Context != null)
+            {
+                // Get the image element's display size and natural size using a safer approach
+                var resultString = await JSRuntime.InvokeAsync<string>("eval", @"
+                    (function(img) {
+                        try {
+                            if (!img) return null;
+                            var rect = img.getBoundingClientRect();
+                            return JSON.stringify({
+                                displayWidth: rect.width,
+                                displayHeight: rect.height,
+                                naturalWidth: img.naturalWidth || img.width,
+                                naturalHeight: img.naturalHeight || img.height
+                            });
+                        } catch (e) {
+                            return null;
+                        }
+                    })
+                ", screenshotRef);
+                
+                if (!string.IsNullOrEmpty(resultString))
+                {
+                    var data = JsonSerializer.Deserialize<JsonElement>(resultString);
+                    double displayWidth = data.GetProperty("displayWidth").GetDouble();
+                    double displayHeight = data.GetProperty("displayHeight").GetDouble();
+                    double naturalWidth = data.GetProperty("naturalWidth").GetDouble();
+                    double naturalHeight = data.GetProperty("naturalHeight").GetDouble();
+                    
+                    // Calculate the scale factors (how much the image is scaled down/up)
+                    double scaleX = naturalWidth / displayWidth;
+                    double scaleY = naturalHeight / displayHeight;
+                    
+                    // Scale the offset coordinates to actual page coordinates
+                    double actualX = offsetX * scaleX;
+                    double actualY = offsetY * scaleY;
+                    
+                    Logger.LogInformation("🎯 COORDINATE TRANSFORM: Display({DispW:F0}x{DispH:F0}), Natural({NatW:F0}x{NatH:F0}), Scale({ScaleX:F2}, {ScaleY:F2}), Offset({OffX:F0}, {OffY:F0}) -> Actual({ActX:F0}, {ActY:F0})", 
+                        displayWidth, displayHeight, naturalWidth, naturalHeight,
+                        scaleX, scaleY, offsetX, offsetY, actualX, actualY);
+                    
+                    return (actualX, actualY);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to adjust coordinates, using offset values: {Message}", ex.Message);
+        }
+        
+        // Fallback to offset coordinates (which should be correct if no scaling)
+        Logger.LogInformation("🎯 COORDINATE FALLBACK: Using offset coordinates ({OffX:F0}, {OffY:F0})", offsetX, offsetY);
+        return (offsetX, offsetY);
+    }
+
+    private void ToggleDebugOverlay()
+    {
+        showDebugOverlay = !showDebugOverlay;
+        Logger.LogInformation("🎯 DEBUG OVERLAY: {Status}", showDebugOverlay ? "ENABLED" : "DISABLED");
+        StateHasChanged();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (browserInstance == null) return;
+        
+        try
+        {
+            Logger.LogInformation("🎯 KEY: Key pressed: {Key}", e.Key);
+            
+            // Forward key press to browser instance (same as BrowserTool)
+            await browserInstance.KeyPressAsync(e.Key);
+            
+            // Refresh screenshot after key interaction
+            await Task.Delay(100);
+            await RefreshScreenshot();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error handling key press: {Message}", ex.Message);
+        }
+    }
+
+    // Navigation methods - following BrowserTool pattern
+    private async Task NavigateToUrl()
+    {
+        if (browserInstance == null || string.IsNullOrWhiteSpace(navigationUrl))
+            return;
+
+        try
+        {
+            Logger.LogInformation("Navigating to URL: {Url}", navigationUrl);
+            isLoading = true;
+            StateHasChanged();
+            
+            // Use browser instance navigation (same as BrowserTool)
+            await browserInstance.NavigateAsync(navigationUrl);
+            await OnNavigate.InvokeAsync(navigationUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Navigation failed: {Message}", ex.Message);
+            isLoading = false;
+            StateHasChanged();
         }
     }
 
     private async Task GoBack()
     {
         if (browserInstance == null) return;
-
+        
         try
         {
-            Logger.LogDebug("Going back");
             await browserInstance.GoBackAsync();
-            // Events will handle UI updates automatically
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error going back: {Message}", ex.Message);
+            Logger.LogError(ex, "Go back failed: {Message}", ex.Message);
         }
     }
 
     private async Task GoForward()
     {
         if (browserInstance == null) return;
-
+        
         try
         {
-            Logger.LogDebug("Going forward");
             await browserInstance.GoForwardAsync();
-            // Events will handle UI updates automatically
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error going forward: {Message}", ex.Message);
+            Logger.LogError(ex, "Go forward failed: {Message}", ex.Message);
         }
     }
 
+    private async Task Refresh()
+    {
+        if (browserInstance == null) return;
+        
+        try
+        {
+            await browserInstance.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Refresh failed: {Message}", ex.Message);
+        }
+    }
+
+    // Helper methods
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        Logger.LogDebug("Key pressed: {Key}", e.Key);
         if (e.Key == "Enter")
         {
             await NavigateToUrl();
         }
     }
 
-    private async Task SelectUrl()
+    private async Task SelectUrl(FocusEventArgs e)
     {
-        Logger.LogDebug("Selecting URL text");
+        // Simple URL selection - can be enhanced with JS if needed
+        await Task.CompletedTask;
+    }
+
+    // Form filling methods
+    private void ToggleFormPanel()
+    {
+        showFormPanel = !showFormPanel;
+        formActionStatus = "";
+    }
+
+    private async Task FillField()
+    {
+        if (browserInstance == null || string.IsNullOrEmpty(fillSelector))
+        {
+            formActionStatus = "Please enter a valid selector";
+            formActionSuccess = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
-            if (browserUtilModule != null)
-            {
-                await browserUtilModule.InvokeVoidAsync("selectText", ".url-input");
-            }
-            else
-            {
-                // Fallback for when module isn't loaded yet
-                await JSRuntime.InvokeVoidAsync("eval", "document.querySelector('.url-input')?.select()");
-            }
+            await browserInstance.FillElementAsync(fillSelector, fillValue ?? "");
+            formActionStatus = $"Successfully filled field: {fillSelector}";
+            formActionSuccess = true;
+            await RefreshScreenshot(); // Refresh to show the filled value
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error selecting URL text: {Message}", ex.Message);
+            formActionStatus = $"Failed to fill field: {ex.Message}";
+            formActionSuccess = false;
+            Logger.LogError(ex, "Failed to fill field with selector: {Selector}", fillSelector);
         }
-    }
-
-    private IJSObjectReference? jsModule;
-    private IJSObjectReference? browserUtilModule;
-    private IJSObjectReference? appModule;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                // Load component-specific, browser utility, and app-wide modules
-                jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
-                    "./Components/Pages/Browser/BrowserViewer.razor.js");
-                browserUtilModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
-                    "./js/browser-util.js");
-                appModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", 
-                    "./js/app-utils.js");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to load JavaScript modules: {Message}", ex.Message);
-            }
-        }
-    }
-
-    private async Task OnIframeLoad()
-    {
-        Logger.LogDebug("Iframe loaded, setting up event forwarding");
         
+        StateHasChanged();
+    }
+
+    private async Task SelectOption()
+    {
+        if (browserInstance == null || string.IsNullOrEmpty(selectSelector))
+        {
+            formActionStatus = "Please enter a valid selector";
+            formActionSuccess = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
-            if (jsModule != null)
-            {
-                // Set up JavaScript event forwarding from iframe to Playwright page
-                await jsModule.InvokeVoidAsync("setupIframeEventForwarding", iframeRef, 
-                    DotNetObjectReference.Create(this));
-            }
-            else
-            {
-                Logger.LogWarning("JavaScript module not loaded, cannot setup event forwarding");
-            }
+            await browserInstance.SelectOptionAsync(selectSelector, selectValue ?? "", selectMethod);
+            formActionStatus = $"Successfully selected option: {selectValue} in {selectSelector}";
+            formActionSuccess = true;
+            await RefreshScreenshot(); // Refresh to show the selected option
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to setup iframe event forwarding: {Message}", ex.Message);
+            formActionStatus = $"Failed to select option: {ex.Message}";
+            formActionSuccess = false;
+            Logger.LogError(ex, "Failed to select option with selector: {Selector}", selectSelector);
         }
+        
+        StateHasChanged();
     }
 
-    [JSInvokable]
-    public async Task ForwardClick(double x, double y)
+    private async Task ClickElement()
     {
-        if (browserInstance != null)
+        if (browserInstance == null || string.IsNullOrEmpty(clickSelector))
         {
-            try
-            {
-                Logger.LogDebug("Forwarding click to ({X}, {Y})", x, y);
-                await browserInstance.ClickAsync(x, y);
-                
-                // Wait longer for page to update, especially for interactive elements like cookie banners
-                await Task.Delay(1000); // Reduced from 1500 since we have better waiting logic
-                await RefreshHtmlContent();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward click: {Message}", ex.Message);
-            }
+            formActionStatus = "Please enter a valid selector";
+            formActionSuccess = false;
+            StateHasChanged();
+            return;
         }
-    }
 
-    [JSInvokable]
-    public async Task ForwardCookieBannerClick(double x, double y)
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding interactive element click to ({X}, {Y})", x, y);
-                await browserInstance.ClickAsync(x, y);
-                
-                // Use enhanced refresh for interactive elements that might trigger dynamic content
-                await RefreshHtmlContentWithDynamicWait();
-                await InvokeAsync(StateHasChanged);
-                
-                Logger.LogDebug("Interactive element click processed and content refreshed");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward interactive element click: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task ForwardHover(double x, double y)
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding hover to ({X}, {Y})", x, y);
-                await browserInstance.HoverAsync(x, y);
-                
-                // Use enhanced refresh for hover to capture popup content
-                await RefreshHtmlContentWithDynamicWait();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward hover: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task ForwardMouseLeave()
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding mouse leave");
-                // Move mouse to a neutral position to trigger any hover state cleanup
-                await browserInstance.HoverAsync(0, 0);
-                
-                // Use regular refresh for mouse leave
-                await RefreshHtmlContent();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward mouse leave: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task ForwardKeyPress(string key)
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding key press: {Key}", key);
-                await browserInstance.KeyPressAsync(key);
-                
-                // Refresh content after interaction to show changes
-                await Task.Delay(100); // Small delay to allow page to update
-                await RefreshHtmlContent();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward key press: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task ForwardType(string text)
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding type: {Text}", text);
-                await browserInstance.TypeAsync(text);
-                
-                // Refresh content after interaction to show changes
-                await Task.Delay(100); // Small delay to allow page to update
-                await RefreshHtmlContent();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward type: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task ForwardNavigation(string url)
-    {
-        if (browserInstance != null)
-        {
-            try
-            {
-                Logger.LogDebug("Forwarding navigation to: {Url}", url);
-                await browserInstance.NavigateAsync(url);
-                
-                // Update the navigation URL in the UI
-                navigationUrl = url;
-                await InvokeAsync(StateHasChanged);
-                
-                // Refresh content after navigation
-                await Task.Delay(1000); // Longer delay for navigation
-                await RefreshHtmlContent();
-                await InvokeAsync(StateHasChanged);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to forward navigation: {Message}", ex.Message);
-            }
-        }
-    }
-
-    [JSInvokable]
-    public async Task RefreshContent()
-    {
         try
         {
-            Logger.LogDebug("Refreshing content via JavaScript callback");
-            await RefreshHtmlContent();
+            await browserInstance.ClickElementAsync(clickSelector);
+            formActionStatus = $"Successfully clicked element: {clickSelector}";
+            formActionSuccess = true;
+            await RefreshScreenshot(); // Refresh to show any changes
+        }
+        catch (Exception ex)
+        {
+            formActionStatus = $"Failed to click element: {ex.Message}";
+            formActionSuccess = false;
+            Logger.LogError(ex, "Failed to click element with selector: {Selector}", clickSelector);
+        }
+        
+        StateHasChanged();
+    }
+
+    // Enhanced click handling that can detect form elements
+    // Enhanced click handling that forwards to browser instance
+    private async Task HandleSmartClick(double x, double y)
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            Logger.LogInformation("🎯 SMART CLICK: Attempting intelligent interaction at: {X}, {Y}", x, y);
+            
+            // Option 1: Try to find and click actual elements at coordinates
+            var elementClicked = await TryElementBasedClick(x, y);
+            
+            if (!elementClicked)
+            {
+                // Option 2: Fallback to coordinate click with enhanced options
+                await EnhancedCoordinateClick(x, y);
+            }
+            
+            // Refresh screenshot with debouncing to show changes
+            if (!isRefreshingScreenshot)
+            {
+                await RefreshScreenshot();
+            }
+
+            // Ensure UI is updated on the correct thread
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to refresh content: {Message}", ex.Message);
+            Logger.LogError(ex, "Smart click failed at position ({X}, {Y})", x, y);
+            throw;
         }
     }
 
-    // Helper methods to call JavaScript functions from C#
-    public async Task ShowToastAsync(string message, string type = "info", int duration = 3000)
+    private async Task<bool> TryElementBasedClick(double x, double y)
     {
-        if (appModule != null)
+        try
         {
-            try
-            {
-                await appModule.InvokeVoidAsync("showToast", message, type, duration);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to show toast: {Message}", ex.Message);
-            }
-        }
-    }
+            // Find the actual element at these coordinates and click it directly
+            var script = $@"
+                (function() {{
+                    const element = document.elementFromPoint({x}, {y});
+                    if (!element) return null;
+                    
+                    // Find the most appropriate clickable element
+                    let clickTarget = element;
+                    
+                    // Traverse up to find clickable elements
+                    while (clickTarget && clickTarget !== document.body) {{
+                        if (clickTarget.tagName === 'A' || 
+                            clickTarget.tagName === 'BUTTON' || 
+                            clickTarget.onclick || 
+                            clickTarget.getAttribute('onclick') ||
+                            clickTarget.getAttribute('href') ||
+                            clickTarget.hasAttribute('data-click') ||
+                            clickTarget.classList.contains('clickable') ||
+                            clickTarget.classList.contains('btn') ||
+                            clickTarget.classList.contains('button') ||
+                            clickTarget.getAttribute('role') === 'button' ||
+                            clickTarget.getAttribute('tabindex') ||
+                            window.getComputedStyle(clickTarget).cursor === 'pointer') {{
+                            break;
+                        }}
+                        clickTarget = clickTarget.parentElement;
+                    }}
+                    
+                    if (clickTarget && clickTarget !== document.body) {{
+                        // Generate selector for the element
+                        let selector = '';
+                        if (clickTarget.id) {{
+                            selector = '#' + clickTarget.id;
+                        }} else if (clickTarget.getAttribute('href')) {{
+                            selector = 'a[href=""' + clickTarget.getAttribute('href') + '""]';
+                        }} else if (clickTarget.className) {{
+                            const classes = clickTarget.className.split(' ').filter(c => c.length > 0);
+                            if (classes.length > 0) {{
+                                selector = clickTarget.tagName.toLowerCase() + '.' + classes[0];
+                            }}
+                        }} else {{
+                            // Create nth-child selector
+                            const siblings = Array.from(clickTarget.parentElement.children);
+                            const index = siblings.indexOf(clickTarget) + 1;
+                            selector = clickTarget.tagName.toLowerCase() + ':nth-child(' + index + ')';
+                        }}
+                        
+                        return {{
+                            selector: selector,
+                            tagName: clickTarget.tagName,
+                            href: clickTarget.getAttribute('href'),
+                            text: clickTarget.textContent?.trim().substring(0, 50),
+                            onclick: !!clickTarget.onclick || !!clickTarget.getAttribute('onclick')
+                        }};
+                    }}
+                    
+                    return null;
+                }})();
+            ";
 
-    public async Task<bool> CopyToClipboardAsync(string text)
-    {
-        if (appModule != null)
-        {
-            try
+            var result = await browserInstance.ExecuteScriptAsync(script);
+            
+            if (result != null)
             {
-                await appModule.InvokeVoidAsync("copyToClipboard", text);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to copy to clipboard: {Message}", ex.Message);
-                return false;
+                var resultString = result.ToString();
+                if (!string.IsNullOrEmpty(resultString) && resultString != "null")
+                {
+                    var elementInfo = JsonSerializer.Deserialize<JsonElement>(resultString);
+                    var selector = elementInfo.GetProperty("selector").GetString();
+                    var tagName = elementInfo.GetProperty("tagName").GetString();
+                    var href = elementInfo.TryGetProperty("href", out var hrefProp) ? hrefProp.GetString() : null;
+                    var text = elementInfo.TryGetProperty("text", out var textProp) ? textProp.GetString() : "";
+                    
+                    if (!string.IsNullOrEmpty(selector))
+                    {
+                        Logger.LogInformation("🎯 ELEMENT DETECTED: {TagName} - {Selector} - Text: '{Text}' - Href: {Href}", 
+                            tagName, selector, text, href ?? "none");
+                        
+                        // Use element-based clicking for better reliability
+                        await browserInstance.ClickElementAsync(selector, 5000);
+                        
+                        Logger.LogInformation("🎯 ELEMENT CLICK SUCCESS: Clicked element {Selector}", selector);
+                        return true;
+                    }
+                }
             }
         }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Element-based click failed, falling back to coordinate click");
+        }
+        
         return false;
     }
 
-    public async Task<int> HighlightElementAsync(string selector, int duration = 2000)
+    private async Task EnhancedCoordinateClick(double x, double y)
     {
-        if (browserUtilModule != null)
+        Logger.LogInformation("🎯 COORDINATE CLICK: Enhanced click at: {X}, {Y}", x, y);
+        
+        if (browserInstance == null) return;
+        
+        // Try multiple click strategies for better compatibility
+        try
         {
-            try
+            // Strategy 1: Wait for page to be stable
+            await browserInstance.WaitForStablePageAsync();
+            
+            // Strategy 2: Scroll element into view if needed
+            var scrollScript = $@"
+                (function() {{
+                    const element = document.elementFromPoint({x}, {y});
+                    if (element) {{
+                        element.scrollIntoView({{ behavior: 'instant', block: 'center' }});
+                        return true;
+                    }}
+                    return false;
+                }})();
+            ";
+            await browserInstance.ExecuteScriptAsync(scrollScript);
+            
+            // Strategy 3: Multiple click types
+            await browserInstance.ClickAsync(x, y);
+            
+            // Strategy 4: Simulate actual user interaction
+            await Task.Delay(100);
+            await browserInstance.HoverAsync(x, y);
+            await Task.Delay(50);
+            
+            Logger.LogInformation("🎯 ENHANCED CLICK: Completed enhanced click sequence");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Enhanced coordinate click failed");
+            throw;
+        }
+    }
+
+    private async Task DetectAndMapFormElements()
+    {
+        if (browserInstance == null) return;
+
+        try
+        {
+            // Automatically detect all form elements on the page
+            var script = @"
+                (function() {
+                    const elements = [];
+                    
+                    // Find all input elements
+                    document.querySelectorAll('input[type=""text""], input[type=""email""], input[type=""password""], input[type=""search""], input[type=""tel""], input[type=""url""], textarea').forEach((el, index) => {
+                        const selector = el.id ? '#' + el.id : 
+                                        el.name ? '[name=""' + el.name + '""]' : 
+                                        el.className ? '.' + el.className.split(' ')[0] :
+                                        el.tagName.toLowerCase() + ':nth-of-type(' + (index + 1) + ')';
+                        
+                        elements.push({
+                            type: 'input',
+                            selector: selector,
+                            placeholder: el.placeholder || '',
+                            value: el.value || '',
+                            label: el.labels && el.labels[0] ? el.labels[0].textContent.trim() : 
+                                   el.getAttribute('aria-label') || 
+                                   el.getAttribute('title') || 
+                                   selector
+                        });
+                    });
+                    
+                    // Find all select elements
+                    document.querySelectorAll('select').forEach((el, index) => {
+                        const selector = el.id ? '#' + el.id : 
+                                        el.name ? '[name=""' + el.name + '""]' : 
+                                        el.className ? '.' + el.className.split(' ')[0] :
+                                        'select:nth-of-type(' + (index + 1) + ')';
+                        
+                        const options = Array.from(el.options).map(opt => opt.value || opt.text);
+                        
+                        elements.push({
+                            type: 'select',
+                            selector: selector,
+                            options: options,
+                            value: el.value || '',
+                            label: el.labels && el.labels[0] ? el.labels[0].textContent.trim() : 
+                                   el.getAttribute('aria-label') || 
+                                   el.getAttribute('title') || 
+                                   selector
+                        });
+                    });
+                    
+                    // Find all clickable elements
+                    document.querySelectorAll('button, input[type=""submit""], input[type=""button""], a[href]').forEach((el, index) => {
+                        const selector = el.id ? '#' + el.id : 
+                                        el.name ? '[name=""' + el.name + '""]' : 
+                                        el.className ? '.' + el.className.split(' ')[0] :
+                                        el.tagName.toLowerCase() + ':nth-of-type(' + (index + 1) + ')';
+                        
+                        elements.push({
+                            type: 'button',
+                            selector: selector,
+                            text: el.textContent.trim() || el.value || el.getAttribute('title') || selector,
+                            href: el.getAttribute('href') || ''
+                        });
+                    });
+                    
+                    return elements;
+                })();
+            ";
+
+            var result = await browserInstance.ExecuteScriptAsync(script);
+            
+            if (result != null)
             {
-                return await browserUtilModule.InvokeAsync<int>("highlightElement", selector, duration);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to highlight element: {Message}", ex.Message);
-                return 0;
+                var resultString = result.ToString();
+                if (!string.IsNullOrEmpty(resultString))
+                {
+                    var elements = JsonSerializer.Deserialize<JsonElement[]>(resultString);
+                    if (elements != null)
+                    {
+                        Logger.LogInformation("🎯 AUTO-DETECTED {Count} form elements", elements.Length);
+                        
+                        // Show form panel if we found elements
+                        if (elements.Length > 0)
+                        {
+                            showFormPanel = true;
+                            formActionStatus = $"Auto-detected {elements.Length} interactive elements on the page";
+                            formActionSuccess = true;
+                        }
+                    }
+                }
             }
         }
-        return 0;
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to auto-detect form elements");
+        }
+    }
+
+    // Quick action methods for common form operations
+    private async Task FillQuick(string selector, string value)
+    {
+        fillSelector = selector;
+        fillValue = value;
+        await FillField();
+    }
+
+    private async Task ClickQuick(string selector)
+    {
+        clickSelector = selector;
+        await ClickElement();
     }
 
     public async ValueTask DisposeAsync()
     {
-        Logger.LogDebug("BrowserViewer disposing");
-        
-        // Dispose JavaScript modules
-        if (jsModule != null)
-        {
-            try
-            {
-                await jsModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Error disposing BrowserViewer JavaScript module: {Message}", ex.Message);
-            }
-        }
-        
-        if (browserUtilModule != null)
-        {
-            try
-            {
-                await browserUtilModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Error disposing BrowserUtil JavaScript module: {Message}", ex.Message);
-            }
-        }
-        
-        if (appModule != null)
-        {
-            try
-            {
-                await appModule.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Error disposing App JavaScript module: {Message}", ex.Message);
-            }
-        }
-        
-        // Unsubscribe from events to prevent memory leaks
         if (browserInstance != null)
         {
             browserInstance.NavigationCompleted -= OnNavigationCompleted;
@@ -705,8 +1015,5 @@
             browserInstance.PageError -= OnPageError;
             browserInstance.Disconnected -= OnDisconnected;
         }
-        
-        // Browser instance is managed by the InstanceStore, don't dispose it here
-        await Task.CompletedTask;
     }
 }

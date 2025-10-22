@@ -16,6 +16,7 @@ using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Extensions;
 using RsMcpServer.Identity.Extensions;
 using Serilog;
+using RSChatApp.Web.Hubs;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +66,29 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Strict;
 });
+builder.Services.AddCors(setup =>
+{
+    setup.AddDefaultPolicy(policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            // In development, be permissive for testing
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            var allowedOrigins = builder.Configuration.GetSection("AllowedCorsOrigins").Get<string[]>()
+                               ?? Array.Empty<string>();
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+    });
+});
+
 builder.Services.AddHttpClient("RsMcpServer", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
@@ -93,7 +117,6 @@ var toolsRs = await mcpClientRS.ListToolsAsync();
 builder.Services.AddSingleton((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
-// Creating McpClient with SSE transport
     
     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
@@ -115,8 +138,6 @@ builder.Services.AddSingleton((serviceProvider) =>
     //         tools.Select(aiFunction => aiFunction.AsKernelFunction()));
     // #pragma warning restore SKEXP0001
     // }
-
-
     
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
@@ -184,6 +205,7 @@ var app = builder.Build();
 
 // Add session middleware before browser middleware
 app.UseRouting();
+app.UseCors(); // Enable CORS middleware
 app.UseAuthentication();
 app.UseStaticFiles();
 app.UseAntiforgery();
@@ -204,13 +226,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 
-
 app.MapHealthChecks("/health");
 
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-
+app.MapHub<BrowserStreamHub>("/browserstreamhub");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

@@ -246,6 +246,27 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         await Task.CompletedTask; // Make method async
     }
 
+    public async Task NavigateFromBlazorAsync(string url)
+    {
+        _logger.LogInformation("🎯 BLAZOR: Navigation requested from Blazor UI to: {Url}", url);
+        
+        // Handle relative URLs by resolving them against the current page
+        string targetUrl = url;
+        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+        {
+            if (_page != null && !string.IsNullOrEmpty(CurrentUrl))
+            {
+                if (Uri.TryCreate(new Uri(CurrentUrl), url, out var resolvedUri))
+                {
+                    targetUrl = resolvedUri.ToString();
+                    _logger.LogInformation("🎯 BLAZOR: Resolved relative URL {RelativeUrl} to {AbsoluteUrl}", url, targetUrl);
+                }
+            }
+        }
+        
+        await NavigateAsync(targetUrl);
+    }
+
     private async Task PerformNavigationAsync(string normalizedUrl)
     {
         if (_page == null) return;
@@ -420,7 +441,8 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         if (_page == null)
             return string.Empty;
 
-        _logger.LogDebug("Content refresh requested (debounce: {DebounceMs}ms)", ContentRefreshDebounceMs);
+        _logger.LogInformation("🚀 TRACE: GetHtmlContentAsync called");
+        _logger.LogInformation("Content refresh requested (debounce: {DebounceMs}ms)", ContentRefreshDebounceMs);
 
         return await DebouncedContentRefreshAsync();
     }
@@ -436,8 +458,10 @@ public class PlayWrightBrowserInstance : IBrowserInstance
             {
                 if (_page != null)
                 {
-                    _logger.LogDebug("Performing content refresh");
+                    _logger.LogInformation("🔧 TRACE: Performing content refresh");
                     var content = await _page.ContentAsync();
+                    _logger.LogInformation("🔧 TRACE: Retrieved page content, length: {Length}", content.Length);
+                    
                     tcs.SetResult(content);
                 }
                 else
@@ -480,12 +504,36 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         if (_page == null)
             throw new InvalidOperationException("Browser page not initialized. Call NewContextAsync first.");
 
-        _logger.LogDebug("Click requested at ({X}, {Y}) (debounce: {DebounceMs}ms)", x, y, UserInteractionDebounceMs);
+        _logger.LogInformation("🎯 PLAYWRIGHT CLICK: Executing click at ({X}, {Y}) (debounce: {DebounceMs}ms)", x, y, UserInteractionDebounceMs);
 
         await DebouncedUserInteractionAsync(async () =>
         {
-            await _page.Mouse.ClickAsync((float)x, (float)y);
-            _logger.LogDebug("Clicked at coordinates ({X}, {Y})", x, y);
+            try
+            {
+                // First try to wait for the page to be ready
+                await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded, new PageWaitForLoadStateOptions { Timeout = 1000 });
+                
+                // Try to click with a more robust approach
+                await _page.Mouse.ClickAsync((float)x, (float)y, new MouseClickOptions
+                {
+                    Button = MouseButton.Left,
+                    ClickCount = 1,
+                    Delay = 50 // Small delay between mousedown and mouseup
+                });
+                
+                _logger.LogInformation("🎯 PLAYWRIGHT CLICK COMPLETED: Successfully clicked at coordinates ({X}, {Y})", x, y);
+                
+                // Wait a bit for any navigation or changes to start
+                await Task.Delay(100);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("🎯 PLAYWRIGHT CLICK WARNING: Click at ({X}, {Y}) completed with warning: {Message}", x, y, ex.Message);
+                
+                // Fallback to basic click if enhanced click fails
+                await _page.Mouse.ClickAsync((float)x, (float)y);
+                _logger.LogInformation("🎯 PLAYWRIGHT CLICK FALLBACK: Used basic click at coordinates ({X}, {Y})", x, y);
+            }
         });
     }
 
@@ -534,6 +582,34 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         {
             await _page.Keyboard.PressAsync(key);
             _logger.LogDebug("Pressed key: {Key}", key);
+        });
+    }
+
+    public async Task KeyDownAsync(string key)
+    {
+        if (_page == null)
+            throw new InvalidOperationException("Browser page not initialized. Call NewContextAsync first.");
+
+        _logger.LogDebug("Key down requested: {Key}", key);
+
+        await DebouncedUserInteractionAsync(async () =>
+        {
+            await _page.Keyboard.DownAsync(key);
+            _logger.LogDebug("Key down: {Key}", key);
+        });
+    }
+
+    public async Task KeyUpAsync(string key)
+    {
+        if (_page == null)
+            throw new InvalidOperationException("Browser page not initialized. Call NewContextAsync first.");
+
+        _logger.LogDebug("Key up requested: {Key}", key);
+
+        await DebouncedUserInteractionAsync(async () =>
+        {
+            await _page.Keyboard.UpAsync(key);
+            _logger.LogDebug("Key up: {Key}", key);
         });
     }
 

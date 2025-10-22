@@ -26,6 +26,7 @@ public interface IBrowserInstance : IAsyncDisposable
     
     // Navigation Methods
     Task NavigateAsync(string url);
+   
     Task RefreshAsync();
     Task GoBackAsync();
     Task GoForwardAsync();
@@ -46,6 +47,8 @@ public interface IBrowserInstance : IAsyncDisposable
     Task HoverAsync(double x, double y);
     Task TypeAsync(string text);
     Task KeyPressAsync(string key);
+    Task KeyDownAsync(string key);
+    Task KeyUpAsync(string key);
     
     // Element-based interactions for BrowserTool
     Task ClickElementAsync(string selector, int timeoutMs = 30000);

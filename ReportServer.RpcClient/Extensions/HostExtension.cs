@@ -23,11 +23,14 @@ public static class HostExtension
                 client.BaseAddress = new Uri(baseUrl.TrimEnd('/'));
                 // client.DefaultRequestHeaders.Add("Content-Type", "text/x-gwt-rpc; charset=UTF-8");
                 client.DefaultRequestHeaders.Add("X-GWT-Module-Base", $"{baseUrl.TrimEnd('/')}/reportserver/");
-                client.DefaultRequestHeaders.Add("X-GWT-Permutation", "strongName");
+                // GWT Permutation Hash - extracted from actual ReportServer traffic
+                // This hash identifies the specific compiled JavaScript permutation
+                client.DefaultRequestHeaders.Add("X-GWT-Permutation", "0960CCE3B17B0C25D12B6D12FA467931");
             })
             .ConfigurePrimaryHttpMessageHandler(provider =>
             {
                 var cookieProvider = provider.GetRequiredService<CookieContainerProvider>();
+                cookieProvider.EnsureCookiesLoaded();
                 return new HttpClientHandler
                 {
                     CookieContainer = cookieProvider.CookieContainer,
