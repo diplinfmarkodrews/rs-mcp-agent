@@ -84,7 +84,7 @@ public class AuthenticationService : IAuthenticationService
                 new(ClaimTypes.Email, rsAuth.User.Email ?? string.Empty),
                 new(ClaimTypes.GivenName, rsAuth.User.Firstname ?? string.Empty),
                 new(ClaimTypes.Surname, rsAuth.User.Lastname ?? string.Empty),
-                new("session_id", rsAuth.SessionId ?? string.Empty),
+                new("JSESSIONID", rsAuth.SessionId ?? string.Empty),
                 new("auth_provider", "Legacy")
             };
 
@@ -100,7 +100,7 @@ public class AuthenticationService : IAuthenticationService
             // Add super user claim
             if (rsAuth.User.SuperUser)
             {
-                claims.Add(new Claim("super_user", "true"));
+                claims.Add(new Claim("super_user", rsAuth.User.SuperUser.ToString()));
             }
 
             var identity = new ClaimsIdentity(claims, "Legacy");
@@ -223,7 +223,7 @@ public class AuthenticationService : IAuthenticationService
 
     private static bool IsValidTokenFormat(string token)
     {
-        // Legacy tokens are GUIDs
-        return Guid.TryParse(token, out _);
+        //TODO: add validation
+        return true; 
     }
 }

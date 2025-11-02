@@ -72,12 +72,13 @@ public class SessionBridgeService : ISessionBridgeService
 
             // Try Legacy authentication first
             var legacyToken = ExtractLegacyTokenFromRequest(context);
+            _logger.LogDebug("Extracted Legacy Token: {legacyToken}", legacyToken);
             if (!string.IsNullOrEmpty(legacyToken))
             {
                 var session = await _authenticationService.ValidateTokenAsync(legacyToken);
                 if (session != null)
                 {
-                    var reportServerSessionId = session.User.FindFirst("session_id")?.Value ?? string.Empty;
+                    var reportServerSessionId = session.User.FindFirst("jsessionid")?.Value ?? string.Empty;
                     _logger.LogDebug("Legacy authentication context created for user {Username}", 
                         session.User.Identity?.Name);
                     
@@ -153,34 +154,37 @@ public class SessionBridgeService : ISessionBridgeService
         return null;
     }
 
-    private static string? ExtractLegacyTokenFromRequest(HttpContext context)
+    private string? ExtractLegacyTokenFromRequest(HttpContext context)
     {
         // Check Authorization header for Legacy tokens (GUIDs)
-        var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-        if (!string.IsNullOrEmpty(authHeader))
-        {
-            string token;
-            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            {
-                token = authHeader[7..]; // Remove "Bearer " prefix
-            }
-            else
-            {
-                token = authHeader; // Support simple token without Bearer prefix
-            }
-
-            // Only return if it's a GUID (Legacy token format)
-            if (Guid.TryParse(token, out _))
-            {
-                return token;
-            }
-        }
+        // var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+        // if (string.IsNullOrEmpty(authHeader) == false)
+        // {
+        //     string token;
+        //     if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         token = authHeader[7..]; // Remove "Bearer " prefix
+        //     }
+        //     else
+        //     {
+        //         token = authHeader; // Support simple token without Bearer prefix
+        //     }
+        //
+        //     // Only return if it's a GUID (Legacy token format)
+        //     if (string.IsNullOrEmpty(token) == false)
+        //     {
+        //         return token;
+        //     }
+        // }
 
         // Check query parameter for Legacy tokens (for websockets or other scenarios)
-        var tokenQuery = context.Request.Query["token"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(tokenQuery) && Guid.TryParse(tokenQuery, out _))
+        context.Request.Cookies.TryGetValue("JSESSIONID", out var jSessionId);
+        var sessionId = context.User.Claims.FirstOrDefault(c => c.Type == "JSESSIONID")?.Value;            
+        _logger.LogDebug("Extracted JSESSIONID from claims: {SessionId}", sessionId);
+        _logger.LogDebug("Extracted JSESSIONID from cookies: {SessionId}", jSessionId);
+        if (!string.IsNullOrEmpty(jSessionId))
         {
-            return tokenQuery;
+            return jSessionId;
         }
 
         return null;

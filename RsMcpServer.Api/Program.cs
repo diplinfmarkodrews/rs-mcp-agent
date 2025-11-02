@@ -7,6 +7,7 @@ using RSChatApp.Mcp.ReportServer.Tools;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 
+
 // Make the Program accessible to the test project
 [assembly: InternalsVisibleTo("TestRsMcpServer")]
 
@@ -65,8 +66,8 @@ app.MapHealthChecks("/health");
 
 // This includes session, authentication, and authorization
 app.UseKeycloakAuthentication()
-    .UseAuthenticatedSession()
-    ;
+   .UseAuthenticatedSession();
+    
 app.MapAuthenticationEndpoints();
 // Map MCP endpoints
 app.MapMcp()

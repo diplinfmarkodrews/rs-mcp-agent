@@ -18,6 +18,7 @@ public sealed class ReportServerAuthenticationTests
     private IServiceProvider _serviceProvider = null!;
     private readonly string _testUsername = "root"; // Replace with a valid test user in your ReportServer instance
     private readonly string _testPassword = "root"; // Replace with the correct password
+    private readonly string _reportServerUrl = "http://localhost:8080/reportserver"; // Replace with your ReportServer URL
     private readonly List<string> _logMessages = new();
 
     [TestInitialize]
@@ -30,7 +31,7 @@ public sealed class ReportServerAuthenticationTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                {"ReportServer:Url", "http://localhost:8090"}
+                {"ReportServer:Url", _reportServerUrl }
             })
             .Build();
         
@@ -44,7 +45,7 @@ public sealed class ReportServerAuthenticationTests
         });
         
         // Register the real ReportServerClient implementation
-        services.AddReportServerRpcClient("http://localhost:8090");
+        services.AddReportServerRpcClient(_reportServerUrl);
         
         // Build service provider
         _serviceProvider = services.BuildServiceProvider();
@@ -228,7 +229,7 @@ public sealed class ReportServerAuthenticationTests
             using var httpClient = new HttpClient();
             
             // Try to reach ReportServer's base URL
-            var response = await httpClient.GetAsync("http://localhost:8090");
+            var response = await httpClient.GetAsync(_reportServerUrl);
             
             if (response.IsSuccessStatusCode)
             {

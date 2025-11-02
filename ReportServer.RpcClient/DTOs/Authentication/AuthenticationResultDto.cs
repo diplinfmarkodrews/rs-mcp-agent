@@ -7,6 +7,9 @@ public class AuthenticationResultDto
     [JsonProperty("success")]
     public bool Success { get; set; }
 
+    [JsonProperty("isAuthenticated")]
+    public bool IsAuthenticated { get; set; }
+
     [JsonProperty("user")]
     public UserDto User { get; set; }
 

@@ -20,7 +20,8 @@ public static class HostExtension
         // services.AddSingleton<CookieAccessibleHttpClientHandler>();
         services.AddHttpClient("ReportServerGwtRpcClient", client => 
             {
-                client.BaseAddress = new Uri(baseUrl.TrimEnd('/'));
+                // BaseAddress MUST end with a slash for proper relative URL resolution
+                client.BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/");
                 // client.DefaultRequestHeaders.Add("Content-Type", "text/x-gwt-rpc; charset=UTF-8");
                 client.DefaultRequestHeaders.Add("X-GWT-Module-Base", $"{baseUrl.TrimEnd('/')}/reportserver/");
                 // GWT Permutation Hash - extracted from actual ReportServer traffic
@@ -30,7 +31,6 @@ public static class HostExtension
             .ConfigurePrimaryHttpMessageHandler(provider =>
             {
                 var cookieProvider = provider.GetRequiredService<CookieContainerProvider>();
-                cookieProvider.EnsureCookiesLoaded();
                 return new HttpClientHandler
                 {
                     CookieContainer = cookieProvider.CookieContainer,
@@ -38,7 +38,8 @@ public static class HostExtension
                 };
             })
             .AddTransientHttpErrorPolicy(config => 
-                config.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+                config.WaitAndRetryAsync(3, 
+                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
         
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddScoped<IReportServerClient, ReportServerGwtRpcClient>();

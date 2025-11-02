@@ -43,10 +43,9 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         // var encodedPassword = ComputeHmacHash(password, passphraseResponse.Result
         //     ?? throw new InvalidOperationException("HMAC passphrase is null"));
 
-        // Build payload exactly matching trace #4 format - DO NOT modify the structure
-        // 7|0|8|http://localhost:8090/reportserver/|B633CD4560E853C60204B997089803C5|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|root2|root|1|2|3|4|1|5|5|2|6|7|8|0|
-        // 7|0|7|http://localhost:8090/reportserver/|DFEDD0FBBBBBE222F217D04F50A95F56|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|root2|root|1|2|3|4|1|5|5|2|6|7|8|0|
-        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{password}|{username}|1|2|3|4|1|5|5|2|6|7|8|0|";
+        // Build payload exactly matching the actual working trace
+        //$"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|1|2|3|4|1|5|5|1|6|7|7|"
+        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{password}|{username}|1|2|3|4|1|5|5|1|6|7|8|";
         
         var response = await PostGwtRpcAsync("login", payload);
         var parsedResult = ParseAuthenticationResponse(response);
@@ -148,6 +147,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             return new AuthenticationResultDto
             {
                 Success = true,
+                IsAuthenticated = true,
                 SessionId = sessionId ?? string.Empty,
                 User = userData
             };
@@ -179,6 +179,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             return new AuthenticationResultDto
             {
                 Success = true,
+                IsAuthenticated = true,
                 SessionId = sessionId ?? string.Empty,
                 User = userData
             };
@@ -224,7 +225,11 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     {
         // Parse authentication response (trace #4) which contains AuthenticateResultDto
         // String table: ["net.datenwerke.security.client.login.AuthenticateResultDto/1984250979","java.util.ArrayList/4159755760","net.datenwerke.security.client.usermanager.dto.decorator.UserDtoDec/3663459877","if.techdev@infofabrik.de","root",...]
-        return ParseUserDataFromStringTable(gwtResponse, 4) ?? new UserDto { Username = "unknown", Active = true, Properties = new Dictionary<string, string>(), Groups = new List<GroupDto>() }; // Username at index 4 for auth response
+        Console.WriteLine($"[DEBUG] GWT Response length: {gwtResponse.Length}");
+        Console.WriteLine($"[DEBUG] Last 500 chars: {gwtResponse.Substring(Math.Max(0, gwtResponse.Length - 500))}");
+        var result = ParseUserDataFromStringTable(gwtResponse, 4) ?? new UserDto { Username = "unknown", Active = true, Properties = new Dictionary<string, string>(), Groups = new List<GroupDto>() }; // Username at index 4 for auth response
+        Console.WriteLine($"[DEBUG] Parsed username: {result.Username}");
+        return result;
     }
 
     private UserDto ParseUserDataFromSessionCheck(string gwtResponse)
@@ -238,16 +243,34 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     {
         try
         {
-            var arrayMatch = Regex.Match(gwtResponse, @"\[([^\]]+)\]$");
-            if (!arrayMatch.Success) return null;
-
-            var stringTable = arrayMatch.Groups[1].Value;
-            var parts = Regex.Split(stringTable, @",(?=(?:[^""]*""[^""]*"")*[^""]*$)");
-
-            if (parts.Length > usernameIndex)
+            // The GWT response has the string table as a JSON array at the very end before metadata
+            // Format: ...,["string1","string2",...],0,7]
+            // We need to find the last opening bracket that starts a quoted-string array
+            var startIdx = gwtResponse.LastIndexOf(",[\"");
+            if (startIdx == -1) return null;
+            
+            // Find the matching closing bracket
+            var endIdx = gwtResponse.IndexOf("]", startIdx + 1);
+            if (endIdx == -1) return null;
+            
+            // Extract just the array content without the brackets
+            var stringTableWithBrackets = gwtResponse.Substring(startIdx + 1, endIdx - startIdx);
+            var stringTable = stringTableWithBrackets.Substring(1, stringTableWithBrackets.Length - 2); // Remove [ and ]
+            
+            // Split by "," pattern (comma followed by quote)
+            var parts = Regex.Split(stringTable, "\",\"");
+            
+            // Remove leading/trailing quotes from first and last elements
+            if (parts.Length > 0)
             {
-                var username = parts[usernameIndex].Trim().Trim('"');
-                var email = parts.Length > usernameIndex - 1 ? parts[usernameIndex - 1].Trim().Trim('"') : null;
+                parts[0] = parts[0].TrimStart('"');
+                parts[parts.Length - 1] = parts[parts.Length - 1].TrimEnd('"');
+            }
+            
+            if (parts.Length > usernameIndex && parts.Length > usernameIndex - 1)
+            {
+                var username = parts[usernameIndex];
+                var email = parts[usernameIndex - 1];                
 
                 return new UserDto
                 {
@@ -259,9 +282,9 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
                 };
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fallback parsing if regex fails
+            
         }
 
         return new UserDto

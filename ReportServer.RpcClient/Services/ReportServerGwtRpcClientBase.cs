@@ -62,33 +62,23 @@ public class ReportServerGwtRpcClientBase : IDisposable
 
     protected async Task<string> PostGwtRpcAsync(string servicePath, string payload, CancellationToken cancellationToken = default)
     {
-        // Ensure we have a proper URL with scheme
-        Uri uri;
-        if (Uri.TryCreate(_moduleBaseUrl, UriKind.Absolute, out uri))
+        // GWT RPC services are served under /reportserver/<servicePath>
+        // BaseAddress is http://localhost:8080/reportserver/
+        // So we need to prepend "reportserver/" to get /reportserver/reportserver/<servicePath>
+        var fullPath = $"reportserver/{servicePath}";
+        var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
+        var response = await _httpClient.PostAsync(fullPath, content, cancellationToken);
+        
+        // Read response body first before checking status - GWT RPC may return application errors with HTTP 200
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        
+        // If HTTP status indicates failure and we don't have a GWT response, throw
+        if (!response.IsSuccessStatusCode && !responseBody.StartsWith("//"))
         {
-            // We have a complete URL with scheme
-            var url = $"{_moduleBaseUrl}{servicePath}";
-            var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
-
-            var response = await _httpClient.PostAsync(url, content, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadAsStringAsync(cancellationToken);
+            response.EnsureSuccessStatusCode(); // This will throw with the HTTP error
         }
-        else
-        {
-            // The URL doesn't have a scheme, use the HttpClient.BaseAddress instead
-            var baseUrl = _httpClient.BaseAddress?.ToString().TrimEnd('/') ?? 
-                         throw new InvalidOperationException("No valid base URL available");
-            
-            var url = $"{baseUrl}/reportserver/{servicePath}";
-            var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
-
-            var response = await _httpClient.PostAsync(url, content, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadAsStringAsync(cancellationToken);
-        }
+        
+        return responseBody;
     }
     protected GwtRpcResponse ParseGwtResponse(string gwtResponse)
     {
@@ -108,7 +98,6 @@ public class ReportServerGwtRpcClientBase : IDisposable
 
         if (gwtResponse.StartsWith("//OK"))
         {
-            // var data = ExtractDataFromGwtResponse(gwtResponse);
             return GwtRpcResponse.Successful(gwtResponse);
         }
 

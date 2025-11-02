@@ -35,7 +35,7 @@ public class BrowserSessionMiddleware
         var session = context.Session;
         if (!session.TryGetValue(SessionSentinelKey, out _))
         {
-            session.SetString(SessionSentinelKey, "Mkay");
+            session.SetString(SessionSentinelKey, "RsChatAppSession");
             _logger.LogDebug("Session initialized ID: {SessionId}", session.Id);
            
         }

@@ -1,11 +1,11 @@
-﻿@page "/chat"
+﻿@page "/"
 @* @attribute [Authorize] *@
 @attribute [AllowAnonymous]
 @inject IChatClient ChatClient
 @inject Kernel Kernel
 @inject NavigationManager Nav
 @inject SemanticSearch Search
-@inject IAuthenticationService AuthenticationService
+@inject IAuthService AuthService
 @inject ILoginModalService LoginModalService
 @inject ILogger<Chat> Logger
 @inject IOptions<OpenAISettings> OpenAISettings
@@ -271,10 +271,10 @@
     private async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
         [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
-        [Description("The maximum number of results to return. Default is 15.")] int maxResults = 100)
+        [Description("The maximum number of results to return. Default is 17.")] int maxResults = 17)
     {
         await InvokeAsync(StateHasChanged);
-        var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults: 15);
+        var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults);
         return results.Select(result =>
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
     }
@@ -282,8 +282,9 @@
     [Description("Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not")]
     private async Task<string> IsAuthenticatedAsync()
     {
+        await InvokeAsync(StateHasChanged);
         // Check User authentication status and build a response
-        var authResult = await AuthenticationService.GetAuthenticationInfoAsync();
+        var authResult = await AuthService.GetAuthenticationInfoAsync();
         return authResult.IsAuthenticated 
             ? new StringBuilder("User: ")
                 .Append(authResult.UserName)
@@ -296,6 +297,7 @@
     [Description("Requests the user to login when they need to access ReportServer MCP tools but are not authenticated")]
     private async Task<string> LoginUserRequestedAsync()
     {
+        await InvokeAsync(StateHasChanged);
         // Request login through the service and wait for the result
         try
         {

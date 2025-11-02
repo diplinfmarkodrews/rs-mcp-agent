@@ -43,6 +43,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
                 return new Result<AuthenticationResult>(
                     new AuthenticationResult
                     {
+                        IsAuthenticated = rsResponse.Result.IsAuthenticated,
                         SessionId = rsResponse.Result.SessionId,
                         User = _mapper.Map<User>(rsResponse.Result.User)
                     });

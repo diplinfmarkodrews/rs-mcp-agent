@@ -17,6 +17,7 @@ public static class AuthenticationServiceExtensions
         services.AddSingleton<ISessionStore, InMemorySessionStore>();
         
         // Main authentication service (contains all logic now)
+        // requires IReportServerClient 
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         
         return services;

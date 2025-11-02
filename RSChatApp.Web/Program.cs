@@ -5,6 +5,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.SemanticKernel.Extensions;
+using ReportServer.RpcClient.Extensions;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Middleware;
@@ -54,9 +55,12 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
     .Bind(mcpClientSettings);
 
 builder.Services.AddHealthChecks();
+
 // Add Keycloak authentication
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 // Add custom authentication service
+builder.Services.AddReportServerRpcClient(reportServerUrl);
+builder.Services.AddLegacyAuthentication();
 builder.Services.AddCustomAuthenticationService();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -94,6 +98,7 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                  ?? throw new InvalidConfigurationException("RsMcpServer:Url"));
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
+    
 }).AddStandardResilienceHandler(); // Only used without aspire 
 
 builder.Services.AddBrowserInstance(reportServerUrl);
@@ -184,7 +189,6 @@ else
 }
 // Create EmbeddingClient with Ollama
 builder.AddOllamaApiClient("embeddings")
-    
     .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
 
 builder.AddQdrantClient("vectordb");
@@ -293,7 +297,8 @@ if (app.Environment.IsDevelopment())
     // });
 }
 
-
+    //TODO: Refactor into Service, make it available at runtime to user
+    //
     // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
     // other sources by implementing IIngestionSource.
     // Important: ensure that any content you ingest is trusted, as it may be reflected back

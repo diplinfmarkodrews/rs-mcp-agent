@@ -8,7 +8,7 @@ namespace RSChatApp.Web.Services.Authentication;
 /// <summary>
 /// Service for managing authentication state and user information
 /// </summary>
-public interface IAuthenticationService
+public interface IAuthService
 {
     /// <summary>
     /// Gets the current authentication state
@@ -32,18 +32,18 @@ public interface IAuthenticationService
 /// <summary>
 /// Implementation of authentication service that wraps ASP.NET Core authentication
 /// </summary>
-public class BlazorAuthenticationService : IAuthenticationService, IDisposable
+public class BlazorAuthService : IAuthService, IDisposable
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IJSRuntime _jsRuntime;
-    private readonly ILogger<BlazorAuthenticationService> _logger;
+    private readonly ILogger<BlazorAuthService> _logger;
     
     public event EventHandler<AuthenticationInfo>? AuthenticationStateChanged;
 
-    public BlazorAuthenticationService(
+    public BlazorAuthService(
         AuthenticationStateProvider authenticationStateProvider,
         IJSRuntime jsRuntime,
-        ILogger<BlazorAuthenticationService> logger)
+        ILogger<BlazorAuthService> logger)
     {
         _authenticationStateProvider = authenticationStateProvider;
         _jsRuntime = jsRuntime;
