@@ -114,14 +114,14 @@ public static class KeycloakAuthenticationExtensions
         })
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
         {
-            options.Cookie.Name = "RSAuth";
+            options.Cookie.Name = "RsMcpServer.AuthCookie";
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = environment.IsDevelopment() 
                 ? CookieSecurePolicy.SameAsRequest 
                 : CookieSecurePolicy.Always;
             options.Cookie.SameSite = SameSiteMode.Lax;
-            options.LoginPath = "/auth/login";
-            options.LogoutPath = "/auth/logout";
+            options.LoginPath = "/auth/v1/login";
+            options.LogoutPath = "/auth/v1/logout";
             options.AccessDeniedPath = "/auth/access-denied";
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;

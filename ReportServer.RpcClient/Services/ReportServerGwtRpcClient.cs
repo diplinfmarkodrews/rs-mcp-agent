@@ -102,10 +102,11 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
+        _logger.LogDebug("terminal response message {Message}",  response.Message);
         if (string.IsNullOrEmpty(response?.Result.SessionId) == false)
         {
-            return new Result<TerminalSessionInfo>(
-                _mapper.Map<TerminalSessionInfo>(response));
+            var sessionInfo = _mapper.Map<TerminalSessionInfo>(response.Result);
+            return new Result<TerminalSessionInfo>(sessionInfo);
         }
         return new Result<TerminalSessionInfo>("Failed to initialize terminal session") { IsSuccess = false };
     }
@@ -113,7 +114,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)
     {
         var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken);
-        if (response is not null)
+        if (response.Result is not null)
         {
             return new Result<CommandResult>(
                 _mapper.Map<CommandResult>(response.Result));
@@ -128,7 +129,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
 
     public Task<Result<string>> LogoutAsync()
     {
-        throw new NotImplementedException();
+        return _authenticationClient.LogoutAsync();
     }
     #endregion
 }

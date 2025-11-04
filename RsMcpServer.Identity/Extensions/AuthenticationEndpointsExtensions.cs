@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
-using RsMcpServer.Identity.Services;
 using RsMcpServer.Identity.Models.Requests;
 using RsMcpServer.Identity.Models.Responses;
 using System.Security.Claims;
+using RsMcpServer.Identity.Services;
+
 
 namespace RsMcpServer.Identity.Extensions;
 
@@ -56,12 +57,13 @@ public static class AuthenticationEndpointsExtensions
 
     private static async Task<IResult> LoginV1Async(
         [FromBody] LoginRequest request,
-        [FromServices] IAuthenticationService authService)
+        [FromServices] IAuthenticationService authService, HttpContext context)
     {
         var result = await authService.AuthenticateAsync(
+            context,
             request.Username, 
             request.Password);
-
+        
         if (result.Success)
         {
             var userInfo = CreateUserInfo(result.User!);

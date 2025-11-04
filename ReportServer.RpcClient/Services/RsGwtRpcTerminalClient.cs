@@ -1,4 +1,5 @@
 using System.Text;
+using ReportServer.Abstraction.Exceptions;
 using ReportServer.RpcClient.DTOs;
 using ReportServer.RpcClient.DTOs.Terminal;
 using ReportServer.RpcClient.Infrastructure;
@@ -7,7 +8,7 @@ namespace ReportServer.RpcClient.Services;
 
 public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 {
-    private const string TerminalServiceHash = "C363EE187A6E3AED00BD381336F9868C";
+    private const string TerminalServiceHash = "BF140EBA9A84651D0CC50CCD75BC2C4F";
 
     public RsGwtRpcTerminalClient(HttpClient httpClient, CookieContainerProvider cookieProvider) 
         : base(httpClient, cookieProvider)
@@ -73,10 +74,10 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
         try
         {
             if (string.IsNullOrEmpty(sessionId))
-                return GwtRpcResponse<CommandResultDto>.Fail("Session ID cannot be null or empty");
+                return GwtRpcResponse<CommandResultDto>.Fail("Session ID cannot be null or empty", new InvalidDataException("Session ID is required"));
             
             if (string.IsNullOrEmpty(command))
-                return GwtRpcResponse<CommandResultDto>.Fail("Command cannot be null or empty");
+                return GwtRpcResponse<CommandResultDto>.Fail("Command cannot be null or empty", new InvalidDataException("Command is required"));
 
             // Based on trace #1: 7|0|7|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|58bf8974-255d-444c-b74e-02999d4983ba|ls|1|2|3|4|2|5|5|6|7|
             var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|{sessionId}|{command}|1|2|3|4|2|5|5|6|7|";
@@ -85,18 +86,37 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 
             if (string.IsNullOrEmpty(response))
             {
-                return GwtRpcResponse<CommandResultDto>.Fail("Empty response from terminal execute");
+                return GwtRpcResponse<CommandResultDto>.Fail("Empty response from terminal execute", new ServerCallFailedException("No response received from server"));
             }
 
             // Parse GWT response - trace shows: //OK[0,0,0,0,0,0,0,0,-15,0,0,0,0,0,0,0,16,0,0,3,0,0,0,0,0,0,0,0,0,4,15,0,14,5,13,5,12,5,11,5,10,5,9,5,8,5,7,5,6,5,9,3,0,0,4,1,3,0,0,2,1,["net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultDtoDec/753283137","net.datenwerke.rs.terminal.client.terminal.dto.DisplayModeDto/1297612766","java.util.ArrayList/4159755760","net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultListDtoDec/3360806391","java.lang.String/2004016611","datasinks","datasources","reportmanager","dashboardlib","fileserver","remoteservers","transports","tsreport","usermanager","net.datenwerke.gxtdto.client.dtomanager.DtoView/2494148245","java.util.HashSet/3273092938"],0,7]
-            if (response.StartsWith("//OK"))
+            
+            // Check for GWT exception response
+            // Format: //EX[2,0,1,["net.datenwerke.gxtdto.client.servercommunication.exceptions.ViolatedSecurityExceptionDto/668224195","Insufficient rights for: Violated security. Execution of method execute in class net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl(target: net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl$$EnhancerByGuice$$79050f51) was prohibited.  "],0,7]
+            if (response.StartsWith("//EX"))
             {
                 var stringTable = ExtractStringTable(response);
                 
+                // The error message is typically the second string in the table (after the exception class name)
+                var errorMessage = stringTable.Count > 1 
+                    ? stringTable[1] 
+                    : "An error occurred executing the terminal command";
+                
+                var exceptionType = stringTable.Count > 0 
+                    ? stringTable[0].Split('/')[0] 
+                    : "Unknown exception";
+                
+                return GwtRpcResponse<CommandResultDto>.Fail(response, new ServerCallFailedException($"{exceptionType}: {errorMessage}"));
+            }
+            
+            if (response.StartsWith("//OK"))
+            {
+                var stringTable = ExtractStringTable(response);
+
                 // Extract directory listing from string table
-                var directoryList = stringTable.Where(s => 
-                    !s.Contains("net.datenwerke") && 
-                    !s.Contains("java.") && 
+                var directoryList = stringTable.Where(s =>
+                    !s.Contains("net.datenwerke") &&
+                    !s.Contains("java.") &&
                     !string.IsNullOrWhiteSpace(s) &&
                     s.Length > 2 &&
                     !s.Contains("/")).ToList();
@@ -111,10 +131,10 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                     SessionClosed = false
                 };
 
-                return GwtRpcResponse<CommandResultDto>.Successful("Command executed successfully", result);
+                return GwtRpcResponse<CommandResultDto>.Successful(response, result);
             }
 
-            return GwtRpcResponse<CommandResultDto>.Fail("Failed to parse terminal execute response");
+            return GwtRpcResponse<CommandResultDto>.Fail(response, new ServerCallFailedException("Failed to parse terminal execute response"));
         }
         catch (Exception ex)
         {
@@ -175,6 +195,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 
     /// <summary>
     /// Extracts string table from complex GWT serialized response
+    /// Format: //OK[...data...,["string1","string2",...],metadata]
     /// </summary>
     private List<string> ExtractStringTable(string gwtResponse)
     {
@@ -185,26 +206,39 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 
         try
         {
-            // Look for string literals in GWT response
-            var lines = gwtResponse.Split('\n');
-            foreach (var line in lines)
+            // The GWT response has the string table as a JSON array
+            // Format: //OK[5,2,4,2,0,3,2,2,1,["java.util.HashMap/1797211028","java.lang.String/2004016611","pathWay","sessionId","00280fbe-f7ad-492f-8f4a-08952e61645c"],0,7]
+            // We need to find the last array that contains quoted strings: ,["..."]
+            
+            var startIdx = gwtResponse.LastIndexOf(",[\"");
+            if (startIdx == -1) return stringTable;
+            
+            // Find the matching closing bracket for this array
+            var endIdx = gwtResponse.IndexOf("]", startIdx + 1);
+            if (endIdx == -1) return stringTable;
+            
+            // Extract just the array content: ["string1","string2",...]
+            var arrayContent = gwtResponse.Substring(startIdx + 1, endIdx - startIdx);
+            
+            // Remove the outer brackets: "string1","string2",...
+            var innerContent = arrayContent.Trim('[', ']');
+            
+            // Split by "," pattern (quote-comma-quote)
+            var parts = System.Text.RegularExpressions.Regex.Split(innerContent, "\",\"");
+            
+            // Clean up leading/trailing quotes from first and last elements
+            for (int i = 0; i < parts.Length; i++)
             {
-                if (line.Contains("\"") && !line.StartsWith("//"))
+                var cleaned = parts[i].Trim('"');
+                if (!string.IsNullOrWhiteSpace(cleaned))
                 {
-                    var matches = System.Text.RegularExpressions.Regex.Matches(line, "\"([^\"]+)\"");
-                    foreach (System.Text.RegularExpressions.Match match in matches)
-                    {
-                        if (match.Groups.Count > 1)
-                        {
-                            stringTable.Add(match.Groups[1].Value);
-                        }
-                    }
+                    stringTable.Add(cleaned);
                 }
             }
         }
         catch (Exception)
         {
-            // Fallback: try to extract any quoted strings
+            // Fallback: try simple regex extraction
             var matches = System.Text.RegularExpressions.Regex.Matches(gwtResponse, "\"([^\"]+)\"");
             foreach (System.Text.RegularExpressions.Match match in matches)
             {

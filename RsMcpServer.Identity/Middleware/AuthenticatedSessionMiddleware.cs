@@ -66,8 +66,10 @@ public class AuthenticatedSessionMiddleware
             var p when p?.StartsWith("/auth") == true => true,      // Legacy auth paths
             var p when p?.StartsWith("/health") == true => true,    // Health checks
             var p when p?.StartsWith("/swagger") == true => true,   // Swagger UI
+            var p when p?.StartsWith("/openapi") == true => true,   // Swagger UI
+            var p when p?.StartsWith("/blocklyautomation") == true => true,   // Swagger UI
             var p when p?.StartsWith("/api/health") == true => true, // API health
-            "/" => true,                                             // Root
+            "/" => false,                                             // Root
             _ => false
         };
     }

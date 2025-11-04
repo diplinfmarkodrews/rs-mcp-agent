@@ -34,14 +34,15 @@ public sealed class TerminalToolInteractionTests
     public async Task TestTerminalTool_NoSession_ReturnsAuthenticationError()
     {
         // Arrange
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
+        
         var reportServerClient = _serviceProvider.GetRequiredService<IReportServerClient>();
         var terminalLogger = _serviceProvider.GetRequiredService<ILogger<TerminalTool>>();
-
-        var terminalTool = new TerminalTool(terminalLogger, reportServerClient, sessionBridge);
-
+        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
+        var terminalTool = new TerminalTool(terminalLogger, sessionBridge, reportServerClient);
+        var terminalSession = await reportServerClient.InitSessionAsync();
         // Act
-        var result = await terminalTool.ExecuteCommandAsync("ls -la");
+        Assert.IsNotNull(terminalSession.Data?.SessionId);
+        var result = await terminalTool.ExecuteCommandAsync(terminalSession.Data?.SessionId, "ls -la");
 
         // Assert
         Assert.IsNotNull(result, "Result should not be null");
@@ -119,8 +120,9 @@ public sealed class TerminalToolInteractionTests
         var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
         var reportServerClient = _serviceProvider.GetRequiredService<IReportServerClient>();
         var terminalLogger = _serviceProvider.GetRequiredService<ILogger<TerminalTool>>();
+        
         // Fix: Correct parameter order - logger, reportServerClient, sessionBridge
-        var terminalTool = new TerminalTool(terminalLogger, reportServerClient, sessionBridge);
+        var terminalTool = new TerminalTool(terminalLogger, sessionBridge, reportServerClient);
 
         // Act & Assert - Step 1: Verify no initial session
         var initialSessionId = await sessionBridge.GetSessionIdAsync();
@@ -129,9 +131,10 @@ public sealed class TerminalToolInteractionTests
         // Step 2: Verify authentication status
         var isAuthenticated = await sessionBridge.IsAuthenticatedAsync();
         Assert.IsFalse(isAuthenticated, "Should not be initially authenticated");
-
+        var terminalSession = await reportServerClient.InitSessionAsync();
+        Assert.IsNull(terminalSession.Data?.SessionId, "Session should not be initialized");
         // Step 3: Attempt terminal command execution
-        var terminalResult = await terminalTool.ExecuteCommandAsync("echo 'test'");
+        var terminalResult = await terminalTool.ExecuteCommandAsync(terminalSession.Data?.SessionId, "echo 'test'");
         
         // Step 4: Verify authentication error
         Assert.IsTrue(terminalResult.Contains("Authentication required"), 
@@ -165,10 +168,10 @@ public sealed class TerminalToolInteractionTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 {"Keycloak:Authority", "http://localhost:8080/realms/reportserver"},
-                {"Keycloak:ClientId", "reportserver-app"},
+                {"Keycloak:ClientId", "rs-chat-app"},
                 {"Keycloak:ClientSecret", "test-secret"},
                 {"Keycloak:RequireHttpsMetadata", "false"},
-                {"ReportServer:Url", "http://localhost:8090"}
+                {"ReportServer:Url", "http://localhost:8080/reportserver"}
             })
             .Build();
         

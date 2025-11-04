@@ -18,6 +18,7 @@ using RSChatApp.Web.Extensions;
 using RsMcpServer.Identity.Extensions;
 using Serilog;
 using RSChatApp.Web.Hubs;
+using RSChatApp.Web.Services.Authentication;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,7 +50,6 @@ openAISettings.SetApiKey();
 var reportServerUrl = builder.Configuration.GetValue<string>("ReportServer:Url")
                       ?? throw new InvalidConfigurationException("ReportServer:Url is missing");
 
-
 McpClientSettings mcpClientSettings = new();
 builder.Configuration.GetSection(nameof(McpClientSettings))
     .Bind(mcpClientSettings);
@@ -57,10 +57,9 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
 builder.Services.AddHealthChecks();
 
 // Add Keycloak authentication
-builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
+// builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 // Add custom authentication service
-builder.Services.AddReportServerRpcClient(reportServerUrl);
-builder.Services.AddLegacyAuthentication();
+builder.Services.AddScoped<IAuthenticationClient, AuthenticationClient>();
 builder.Services.AddCustomAuthenticationService();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -100,8 +99,8 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
     
 }).AddStandardResilienceHandler(); // Only used without aspire 
-
 builder.Services.AddBrowserInstance(reportServerUrl);
+
 using var scopedServiceProvider = builder.Services.BuildServiceProvider();
 await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
@@ -125,24 +124,6 @@ builder.Services.AddSingleton((serviceProvider) =>
     
     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
-    
-    // foreach (var clientConfig in mcpClientSettings.Clients ?? Enumerable.Empty<McpClientConfiguration>())
-    // {
-    //     // Create an MCPClient for each configured client
-    //     await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
-    //     {
-    //         Name = clientConfig.Name,
-    //         Command = clientConfig.Command,
-    //         Arguments = clientConfig.Arguments?.ToArray() ?? Array.Empty<string>(),
-    //     }));
-    //     var tools = await mcpClient.ListToolsAsync();
-    //     startupLogger.LogInformation("Register McpClient: {clientConfigName} with toolCalls: {toolCalls}", clientConfig.Name, 
-    //         new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
-    // #pragma warning disable SKEXP0001
-    //     kernelBuilder.Plugins.AddFromFunctions(clientConfig.Name, 
-    //         tools.Select(aiFunction => aiFunction.AsKernelFunction()));
-    // #pragma warning restore SKEXP0001
-    // }
     
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);

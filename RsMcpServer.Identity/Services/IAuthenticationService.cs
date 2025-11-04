@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
 using RsMcpServer.Identity.Models.Authentication;
@@ -13,7 +15,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Authenticate user with credentials
     /// </summary>
-    Task<TokenAuthenticationResult> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default);
+    Task<TokenAuthenticationResult> AuthenticateAsync(HttpContext httpContext, string username, string password, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Validate authentication token
@@ -50,7 +52,7 @@ public class AuthenticationService : IAuthenticationService
         _logger = logger;
     }
 
-    public async Task<TokenAuthenticationResult> AuthenticateAsync(string username, string password, CancellationToken cancellationToken = default)
+    public async Task<TokenAuthenticationResult> AuthenticateAsync(HttpContext httpContext, string username, string password, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -72,9 +74,7 @@ public class AuthenticationService : IAuthenticationService
             }
 
             var rsAuth = authResult.Data;
-            
-            // Generate opaque token
-            var token = Guid.NewGuid().ToString();
+            var token = httpContext.Session.Id;
             
             // Create claims principal
             var claims = new List<Claim>
@@ -108,7 +108,7 @@ public class AuthenticationService : IAuthenticationService
 
             // Calculate expiration (default to 8 hours for ReportServer sessions)
             var expiresAt = DateTime.UtcNow.AddHours(8);
-
+            
             // Create and store session
             var session = new TokenAuthenticatedSession
             {
@@ -122,7 +122,7 @@ public class AuthenticationService : IAuthenticationService
                     ["is_super_user"] = rsAuth.User.SuperUser
                 }
             };
-
+            await httpContext.SignInAsync(principal);
             await _sessionStore.StoreSessionAsync(token, session, cancellationToken);
 
             _logger.LogInformation("Legacy authentication successful for user {Username}", username);
@@ -138,7 +138,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<TokenAuthenticatedSession?> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        if (!IsValidTokenFormat(token))
+        if (!IsValidDotNetSessionTokenFormat(token))
             return null;
 
         try
@@ -156,7 +156,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<TokenAuthenticationResult> RefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        if (!IsValidTokenFormat(token))
+        if (!IsValidDotNetSessionTokenFormat(token))
         {
             return TokenAuthenticationResult.Failed("Invalid token format");
         }
@@ -193,7 +193,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<bool> LogoutAsync(string token, CancellationToken cancellationToken = default)
     {
-        if (!IsValidTokenFormat(token))
+        if (!IsValidDotNetSessionTokenFormat(token))
             return false;
 
         try
@@ -221,9 +221,8 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    private static bool IsValidTokenFormat(string token)
+    private static bool IsValidDotNetSessionTokenFormat(string token)
     {
-        //TODO: add validation
-        return true; 
+        return Guid.TryParse(token, out _); 
     }
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Security.Authentication;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
@@ -23,8 +24,8 @@ public class TerminalTool
     
     public TerminalTool(
         ILogger<TerminalTool> logger, 
-        IReportServerClient reportServer,
-        ISessionBridgeService sessionBridge)
+        ISessionBridgeService sessionBridge,
+        IReportServerClient reportServer)
     {
         _logger = logger;
         _reportServer = reportServer;
@@ -34,35 +35,31 @@ public class TerminalTool
     /// <summary>
     /// Executes a terminal command on the report server
     /// </summary>
-    [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server")]
+    [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. " +
+                                                "Before executing commands, start a terminal session using " +
+                                                "StartTerminalSessionAsync to get a sessionId.")]
     public async Task<string> ExecuteCommandAsync(
+        [Description("session id to identify terminal session")]string sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Executing terminal command: {Command}", command);
-        
-        // Get the session information from the session bridge service
-        var sessionId = await _sessionBridge.GetSessionIdAsync();
-        
-        if (string.IsNullOrEmpty(sessionId))
-        {
-            _logger.LogWarning("No active ReportServer session available. Authentication required.");
-            return JsonSerializer.Serialize(
-                new Result<CommandResult>(new AuthenticationException("Authentication required. Please authenticate with the Report Server first.")));
-        }
-
-        // var terminalSessionInfo = await _reportServer.InitSessionAsync();
-        // if (!terminalSessionInfo.IsSuccess)
-        // {
-        //     _logger.LogError("Failed to initialize terminal session: {Error}", terminalSessionInfo.Error?.Message);
-        //     return new Result<CommandResult>(new InvalidOperationException($"Failed to initialize terminal session.{terminalSessionInfo.Error?.Message}"));
-        // }
-        
+        _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
         // Execute the command with the session ID
-        // TODO: make it long running
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
         
         return JsonSerializer.Serialize(cmdResult);
+    }
+    /// <summary>
+    /// Executes a terminal command on the report server
+    /// </summary>
+    [KernelFunction, McpServerTool, Description("Starts a terminal session on the report server. " +
+                                                "Returns the session information including session ID. Use the sessionId for subsequent commands.")]
+    public async Task<string> InitTerminalSessionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Starting terminal session");
+        var sessionInfo = await _reportServer.InitSessionAsync();
+        return JsonSerializer.Serialize(sessionInfo);
     }
 }
 

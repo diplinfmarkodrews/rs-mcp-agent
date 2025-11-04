@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
@@ -27,8 +28,8 @@ builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Enviro
 builder.Services.AddLegacyAuthentication();
 
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
 
-// builder.Services.AddSingleton<TerminalTool>();
 
 // Create kernel and register plugins
 builder.Services.AddSingleton((serviceProvider) => {
