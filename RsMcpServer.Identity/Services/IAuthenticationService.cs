@@ -8,7 +8,7 @@ using RsMcpServer.Identity.Models.Authentication;
 namespace RsMcpServer.Identity.Services;
 
 /// <summary>
-/// Main authentication service for Legacy ReportServer authentication
+/// Main authentication service for Legacy ReportServer authentication in mcp server
 /// </summary>
 public interface IAuthenticationService
 {

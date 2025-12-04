@@ -15,7 +15,9 @@ public static class ServiceCollectionExtension
         {
             config.BaseUrl = reportServerUrl;
         });
-        services.AddMemoryCache();
+        // Add LazyCache, adds InMemoryCache as well
+        // We use it to block access to browser instance from multiple threads
+        services.AddLazyCache();
         services.AddSingleton<IBrowserInstanceStore, InMemoryBrowserInstanceStore>();
         services.AddSingleton<IBrowserInstanceFactory, PlayWrightBrowserInstanceFactory>();        
         services.AddSingleton<IBrowserInstanceProvider, BrowserInstanceProvider>();

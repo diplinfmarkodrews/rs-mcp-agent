@@ -17,7 +17,6 @@ public static class HostExtension
             throw new ArgumentException("Base URL cannot be null or empty.", nameof(baseUrl));
         
         services.AddScoped<CookieContainerProvider>();
-        // services.AddSingleton<CookieAccessibleHttpClientHandler>();
         services.AddHttpClient("ReportServerGwtRpcClient", client => 
             {
                 // BaseAddress MUST end with a slash for proper relative URL resolution

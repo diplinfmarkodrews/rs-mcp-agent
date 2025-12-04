@@ -89,26 +89,25 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                 return GwtRpcResponse<CommandResultDto>.Fail("Empty response from terminal execute", new ServerCallFailedException("No response received from server"));
             }
 
-            // Parse GWT response - trace shows: //OK[0,0,0,0,0,0,0,0,-15,0,0,0,0,0,0,0,16,0,0,3,0,0,0,0,0,0,0,0,0,4,15,0,14,5,13,5,12,5,11,5,10,5,9,5,8,5,7,5,6,5,9,3,0,0,4,1,3,0,0,2,1,["net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultDtoDec/753283137","net.datenwerke.rs.terminal.client.terminal.dto.DisplayModeDto/1297612766","java.util.ArrayList/4159755760","net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultListDtoDec/3360806391","java.lang.String/2004016611","datasinks","datasources","reportmanager","dashboardlib","fileserver","remoteservers","transports","tsreport","usermanager","net.datenwerke.gxtdto.client.dtomanager.DtoView/2494148245","java.util.HashSet/3273092938"],0,7]
-            
             // Check for GWT exception response
             // Format: //EX[2,0,1,["net.datenwerke.gxtdto.client.servercommunication.exceptions.ViolatedSecurityExceptionDto/668224195","Insufficient rights for: Violated security. Execution of method execute in class net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl(target: net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl$$EnhancerByGuice$$79050f51) was prohibited.  "],0,7]
             if (response.StartsWith("//EX"))
             {
                 var stringTable = ExtractStringTable(response);
-                
+
                 // The error message is typically the second string in the table (after the exception class name)
-                var errorMessage = stringTable.Count > 1 
-                    ? stringTable[1] 
+                var errorMessage = stringTable.Count > 1
+                    ? stringTable[1]
                     : "An error occurred executing the terminal command";
-                
-                var exceptionType = stringTable.Count > 0 
-                    ? stringTable[0].Split('/')[0] 
+
+                var exceptionType = stringTable.Count > 0
+                    ? stringTable[0].Split('/')[0]
                     : "Unknown exception";
-                
+
                 return GwtRpcResponse<CommandResultDto>.Fail(response, new ServerCallFailedException($"{exceptionType}: {errorMessage}"));
             }
             
+            // Parse GWT response - trace shows: //OK[0,0,0,0,0,0,0,0,-15,0,0,0,0,0,0,0,16,0,0,3,0,0,0,0,0,0,0,0,0,4,15,0,14,5,13,5,12,5,11,5,10,5,9,5,8,5,7,5,6,5,9,3,0,0,4,1,3,0,0,2,1,["net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultDtoDec/753283137","net.datenwerke.rs.terminal.client.terminal.dto.DisplayModeDto/1297612766","java.util.ArrayList/4159755760","net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultListDtoDec/3360806391","java.lang.String/2004016611","datasinks","datasources","reportmanager","dashboardlib","fileserver","remoteservers","transports","tsreport","usermanager","net.datenwerke.gxtdto.client.dtomanager.DtoView/2494148245","java.util.HashSet/3273092938"],0,7]
             if (response.StartsWith("//OK"))
             {
                 var stringTable = ExtractStringTable(response);

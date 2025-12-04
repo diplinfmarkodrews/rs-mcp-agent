@@ -4,131 +4,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ## 🏗️ Architecture Overview
 
-
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                          RSChatApp.Web (Browser-Based Workspace)              │
-│                                   (Blazor UI)                                 │
-│                                                                               │
-│  ┌─────────────────────────────────────────┐  ┌─────────────────────────────┐ │
-│  │         LLM Provider Layer              │  │    Session Management       │ │
-│  │                                         │  │                             │ │
-│  │  ┌─────────────┐  ┌─────────────────┐   │  │  Current: In-Memory         │ │
-│  │  │   Ollama    │  │   Anthropic     │   │  │  • Browser Session          │ │
-│  │  │ (Local LLM) │  │ (Claude/Sonnet) │   │  │  • Conversation Context     │ │
-│  │  │             │  │                 │   │  │                             │ │
-│  │  │ • Mistral   │  │ • Claude-3.5    │   │  │  Future: Persistent         │ │
-│  │  │ • Llama     │  │ • Claude-3      │   │  │  • Topic-Based History      │ │
-│  │  │ • Qwen      │  │ • Claude Haiku  │   │  │  • Cross-Session Context    │ │
-│  │  └─────────────┘  └─────────────────┘   │  └─────────────────────────────┘ │
-│  │                                         │                                  │
-│  │  ┌─────────────┐  ┌─────────────────┐   │  ┌─────────────────┐             │
-│  │  │   OpenAI    │  │    Azure AI     │   │  │     Qdrant      │             │
-│  │  │  (GPT-4/o1) │  │    (OpenAI)     │   │  │   (VectorDB)    │             │
-│  │  │             │  │                 │   │  │                 │             │
-│  │  │ • GPT-4o    │  │ • GPT-4         │   │  │ • Vector Search │             │
-│  │  │ • GPT-4     │  │ • GPT-3.5       │   │  │ • Embeddings    │             │
-│  │  │ • o1-mini   │  │ • Text Embedding│   │  │ • Semantic RAG  │             │
-│  │  └─────────────┘  └─────────────────┘   │  └─────────────────┘             │
-│  │                                         │           ▲                      │
-│  │    🔄 Intelligent Provider Selection    │           │                      │
-│  │    • Cost optimization                  │ Knowledge │                      │
-│  │    • Performance-based routing          │ Base      │                      │
-│  │    • Fallback mechanisms                │ Ingestion │                      │
-│  └─────────────────────────────────────────┘           │                      │
-│                          ┌───────────────────────────────────────────┐        │
-│                          │           Ingested Content                │        │
-│                          │                                           │        │         │                          │  📚 Documentation    🔧 Groovy Scripts    │        │
-│                          │  • PDFs, Markdown    • .groovy files      │        │
-│                          │  • API Docs          • Build scripts      │        │
-│                          │  • User Manuals      • Automation scripts │        │
-│                          │                                           │        │
-│                          │  💻 Terminal Commands                     │        │
-│                          │  • CLI usage examples                     │        │
-│                          │  • Command syntax                         │        │
-│                          │  • Shell scripts                          │        │
-│                          └───────────────────────────────────────────┘        │
-│                                                                               │
-│  ┌───────────────────────────────────────────────────────────────────────┐    │
-│  │                    🌐 (Legacy)Software Integration                    │    │
-│  │                                                                       │    │
-│  │  ┌───────────────────────────────────────────────────────────────┐    │    │
-│  │  │ 🎭 Playwright Browser Tool                                    │    │    │
-│  │  │   • Visual UI automation for legacy applications              │    │    │
-│  │  │   • ReportServer frontend interaction                         │    │    │
-│  │  │   • Screenshot capture & visual analysis                      │    │    │
-│  │  │   • User workflow simulation & testing                        │    │    │
-│  │  │   • Cross-browser compatibility (Chrome, Firefox, Safari)     │    │    │
-│  │  │   • Element inspection & interaction                          │    │    │
-│  │  └───────────────────────────────────────────────────────────────┘    │    │
-│  └───────────────────────────────────────────────────────────────────────┘    │
-└───────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      │ MCP Protocol
-                                      ▼
-                    ┌─────────────────────────────────────────┐
-                    │         RsMcpServer.Web                 │
-                    │         (MCP Server)                    │
-                    │                                         │
-                    │  Backend Integration Tools:             │
-                    │  ┌─────────────────────────────────┐    │
-                    │  │ ✅ Basic Terminal Tool          │    │
-                    │  │   • Command execution           │    │
-                    │  │   • Process management          │    │
-                    │  └─────────────────────────────────┘    │
-                    │  ┌─────────────────────────────────┐    │
-                    │  │ ✅ Backend RPC Integration      │    │
-                    │  │   • Direct Java RPC calls       │    │
-                    │  │   • GWT protocol support        │    │
-                    │  │   • Session management          │    │
-                    │  │   • Authentication bridge       │    │
-                    │  └─────────────────────────────────┘    │
-                    │                                         │
-                    │  Future Extensions:                     │
-                    │  ┌─────────────────────────────────┐    │
-                    │  │ • Advanced Report Tool          │    │
-                    │  │ • File Management Tool          │    │
-                    │  │ • Database Query Tool           │    │
-                    │  │ • Workflow Automation Tool      │    │
-                    │  └─────────────────────────────────┘    │
-                    └─────────────────────────────────────────┘
-                         │                              │
-                         │ Playwright                   │ RPC/HTTP
-                         │ Browser                      │ Backend
-                         │ Automation                   │ API
-                         ▼                              ▼
-                    ┌─────────────────────────────────────────┐
-                    │           ReportServer                  │
-                    │           (Java/GWT)                    │
-                    │                                         │
-                    │  Frontend UI ◄──────────► Backend API   │
-                    │  • Web Interface           • RPC Server │
-                    │  • User Actions           • Data Layer  │
-                    │  • Visual Elements        • Business    │
-                    │  • Report Rendering         Logic       │
-                    └─────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                    Authentication Layer                         │
-│                                                                 │
-│    RSChatApp.Web ◄──────► Keycloak ◄──────► RsMcpServer.Web     │
-│                           (OIDC)                                │
-│                                                                 │
-│         │                                         │             │
-│         │ Legacy Auth                             │ Modern Auth │
-│         ▼                                         ▼             │
-│    ┌─────────────────┐              ┌─────────────────────────┐ │
-│    │ ReportServer    │              │      Keycloak           │ │
-│    │ Native Login    │              │   (OIDC Provider)       │ │
-│    │                 │              │                         │ │
-│    │ • Username/Pass │              │ • SSO Integration       │ │
-│    │ • Session Bridge│              │ • JWT Tokens            │ │
-│    │ • GWT RPC Auth  │              │ • Role Management       │ │
-│    └─────────────────┘              └─────────────────────────┘ │
-│                                                                 │
-│              ReportServer ◄─────────► Authentication            │
-│              (Dual Mode Support)     (Keycloak + Legacy)        │
-└─────────────────────────────────────────────────────────────────┘
-```
+![RSChatApp Architecture](./architecture-diagram.png)
 
 ### 📖 Architecture Description
 
@@ -271,7 +147,7 @@ This will automatically:
 - 🤖 **MCP Server API**: `http://localhost:5002`
 - 📊 **Qdrant Dashboard**: `http://localhost:6333/dashboard`
 
-**Note:** The first run may take a few minutes as Docker images are downloaded and AI models are pulled automatically. To use commercial LLM providers (Anthropic, OpenAI, Azure), configure your API keys in the appsettings.json file.
+**Note:** The first run may take a few minutes as Docker images are downloaded and AI models are pulled automatically. To use commercial LLM providers (Anthropic, OpenAI, Azure), configure your API keys as Env variables and configure its name in appsettings.json file.
 
 ## Core Components
 
@@ -397,7 +273,7 @@ Or test directly using the Aspire dashboard to monitor service health and intera
       "Enabled": true
     },
     "Anthropic": {
-      "ApiKey": "your-anthropic-api-key",
+      "ApiKey": "Env",
       "Model": "claude-3-5-sonnet-20241022",
       "MaxTokens": 4096,
       "Temperature": 0.7,

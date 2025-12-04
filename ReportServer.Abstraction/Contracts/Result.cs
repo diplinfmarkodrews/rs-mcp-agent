@@ -6,16 +6,25 @@ public class Result
 {
     public bool IsSuccess { get; set; } 
     public SerializableException? Error { get; set; } 
-    public string Message { get; set; } = string.Empty;
+    public string? Message { get; set; } = string.Empty;
 
     public static Result Fail(string message, Exception? error = null)
         => new Result
         {
             IsSuccess = false,
             Message = message,
-            Error = new SerializableException(error)
+            Error = error != null 
+                ? new SerializableException(error)
+                : new SerializableException(message)
         };
-    
+    public static Result Fail(Exception error)
+        => new Result
+        {
+            IsSuccess = false,
+            Message = error.Message,
+            Error = new SerializableException(error)
+                
+        };
     public static Result Success(string? message = null)
         => new Result
         {
@@ -44,11 +53,16 @@ public class Result<T> : Result
         IsSuccess = true;
         Data = data;
     }
-    public static new Result<T> Fail(string message, Exception? error = null)
+    public static new Result<T> Fail(Exception? error = null)
         => new Result<T>(error)
         {
             IsSuccess = false,
-            Message = message,            
+        };
+    
+    public static new Result Success<T>(T? data)
+        => new Result<T>(data)
+        {
+            IsSuccess = false,
         };
 }
 

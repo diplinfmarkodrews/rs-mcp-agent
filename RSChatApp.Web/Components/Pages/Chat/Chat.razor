@@ -77,7 +77,6 @@
     [Experimental("SKEXP0001")]
     protected override void OnInitialized()
     {
-        // kernel.InvokeAsync<BrowserTool>("")
         // For now, guaranty ollama compatibilty
         IsOllama = string.IsNullOrEmpty(OpenAISettings.Value.Model) == false;
         

@@ -4,22 +4,17 @@ using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.SemanticKernel.Extensions;
-using ReportServer.RpcClient.Extensions;
 using RSChatApp.Mcp.Browser.Extensions;
-using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
 using RSChatApp.Web.Components;
+using RSChatApp.Web.Extensions;
+using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Models.Ingestion;
+using RSChatApp.Web.Services.Authentication;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
-using RSChatApp.Web.Extensions;
-using RsMcpServer.Identity.Extensions;
 using Serilog;
-using RSChatApp.Web.Hubs;
-using RSChatApp.Web.Services.Authentication;
-
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Configuration.AddJsonFile("prompts.json", optional: true, reloadOnChange: true);
