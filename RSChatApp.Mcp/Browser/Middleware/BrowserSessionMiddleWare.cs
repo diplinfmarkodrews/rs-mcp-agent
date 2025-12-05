@@ -46,7 +46,6 @@ public class BrowserSessionMiddleware
     }
     private static bool ShouldSkipBrowserInstance(HttpContext context)
     {
-        
         var path = context.Request.Path.Value?.ToLowerInvariant();
         if (string.IsNullOrEmpty(path)) return false;
         if (path == "/") return false; // Main page
