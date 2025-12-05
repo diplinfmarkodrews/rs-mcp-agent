@@ -79,18 +79,17 @@ public sealed class ReportServerAuthenticationTests
         Console.WriteLine($"Authentication result: {(authResult.IsSuccess ? "Success" : "Failed")}");
         Console.WriteLine($"Message: {authResult.Message}");
         
-        if (authResult.IsSuccess)
-        {
-            Assert.IsNotNull(authResult.Data, "Authentication result data should not be null");
-            Assert.IsTrue(authResult.Data.IsAuthenticated, "User should be authenticated");
-            Assert.IsNotNull(authResult.Data.User, "User information should be included");
-            Assert.AreEqual(_testUsername, authResult.Data.User.Username, "Username should match");
-            Assert.IsFalse(string.IsNullOrEmpty(authResult.Data.SessionId), "Session ID should be provided");
-            
-            Console.WriteLine($"✓ Successfully authenticated as {authResult.Data.User.Username}");
-            Console.WriteLine($"✓ Session ID: {authResult.Data.SessionId}");
-            Console.WriteLine($"✓ User details: {authResult.Data.User.Firstname} {authResult.Data.User.Lastname} ({authResult.Data.User.Email})");
-        }
+        Assert.IsTrue(authResult.IsSuccess);       
+        Assert.IsNotNull(authResult.Data, "Authentication result data should not be null");
+        Assert.IsTrue(authResult.Data.IsAuthenticated, "User should be authenticated");
+        Assert.IsNotNull(authResult.Data.User, "User information should be included");
+        Assert.AreEqual(_testUsername, authResult.Data.User.Username, "Username should match");
+        Assert.IsFalse(string.IsNullOrEmpty(authResult.Data.SessionId), "Session ID should be provided");
+        
+        Console.WriteLine($"✓ Successfully authenticated as {authResult.Data.User.Username}");
+        Console.WriteLine($"✓ Session ID: {authResult.Data.SessionId}");
+        Console.WriteLine($"✓ User details: {authResult.Data.User.Firstname} {authResult.Data.User.Lastname} ({authResult.Data.User.Email})");
+
     }
 
     [TestMethod]
@@ -151,7 +150,7 @@ public sealed class ReportServerAuthenticationTests
         Assert.IsNotNull(hmacResult, "HMAC passphrase result should not be null");
         
         Console.WriteLine($"HMAC passphrase result: {(hmacResult.Success ? "Success" : "Failed")}");
-        Console.WriteLine($"Message: {hmacResult.Message}");
+        Console.WriteLine($"Message: {hmacResult.Result}");
         
         if (hmacResult.Success)
         {

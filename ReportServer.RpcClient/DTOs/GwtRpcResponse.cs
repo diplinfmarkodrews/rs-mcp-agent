@@ -12,24 +12,21 @@ public class GwtRpcResponse
     
     [JsonIgnore]
     public Exception? Exception { get; set; }
-    [JsonIgnore]
-    public string? Message { get; set; }
+ 
     
-    public static GwtRpcResponse Fail(string message, Exception? error = null)
+    public static GwtRpcResponse Fail(Exception? error = null)
         => new GwtRpcResponse
         {
             Success = false,
-            Message = message,
             Error = error?.Message,
             Exception = error
         };
     
 
-    public static GwtRpcResponse Successful(string? message = null)
+    public static GwtRpcResponse Successful()
         => new GwtRpcResponse
         {
             Success = true,
-            Message = message
         };
 }
 public class GwtRpcResponse<T> : GwtRpcResponse
@@ -37,19 +34,17 @@ public class GwtRpcResponse<T> : GwtRpcResponse
     [JsonProperty("result")]
     public T? Result { get; set; }
     
-    public static GwtRpcResponse<T> Successful(string? message = null, T? result = default)
+    public static GwtRpcResponse<T> Successful(T? result = default)
         => new GwtRpcResponse<T>
         {
             Success = true,
-            Message = message,
             Result = result
         };
         
-    public static new GwtRpcResponse<T> Fail(string message, Exception? error = null)
+    public static new GwtRpcResponse<T> Fail(Exception? error = null)
         => new GwtRpcResponse<T>
         {
             Success = false,
-            Message = message,
             Error = error?.Message,
             Exception = error,
             Result = default(T)

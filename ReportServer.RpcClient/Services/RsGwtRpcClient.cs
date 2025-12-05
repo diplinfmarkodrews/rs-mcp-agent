@@ -102,7 +102,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
-        _logger.LogDebug("terminal response message {Message}",  response.Message);
+        _logger.LogDebug("terminal response message {Message}",  response.Result);
         if (response?.Success == false)
         {
             return new Result<TerminalSessionInfo>(

@@ -30,7 +30,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 
             if (string.IsNullOrEmpty(response))
             {
-                return GwtRpcResponse<TerminalSessionInfoDto>.Fail("Empty response from terminal init");
+                return GwtRpcResponse<TerminalSessionInfoDto>.Fail(new ServerCallFailedException("Empty response from terminal init"));
             }
 
             // Parse GWT response - trace shows: //OK[5,2,4,2,0,3,2,2,1,["java.util.HashMap/1797211028","java.lang.String/2004016611","pathWay","sessionId","58bf8974-255d-444c-b74e-02999d4983ba"],0,7]
@@ -52,16 +52,16 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                             Environment = new Dictionary<string, string>()
                         };
 
-                        return GwtRpcResponse<TerminalSessionInfoDto>.Successful("Terminal session initialized successfully", sessionInfo);
+                        return GwtRpcResponse<TerminalSessionInfoDto>.Successful(sessionInfo);
                     }
                 }
             }
 
-            return GwtRpcResponse<TerminalSessionInfoDto>.Fail("Failed to parse terminal session init response");
+            return GwtRpcResponse<TerminalSessionInfoDto>.Fail(new ServerCallFailedException("Failed to parse terminal session init response"));
         }
         catch (Exception ex)
         {
-            return GwtRpcResponse<TerminalSessionInfoDto>.Fail($"Failed to initialize terminal session: {ex.Message}", ex);
+            return GwtRpcResponse<TerminalSessionInfoDto>.Fail(ex);
         }
     }
 
@@ -74,19 +74,19 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
         try
         {
             if (string.IsNullOrEmpty(sessionId))
-                return GwtRpcResponse<CommandResultDto>.Fail("Session ID cannot be null or empty", new InvalidDataException("Session ID is required"));
+                return GwtRpcResponse<CommandResultDto>.Fail(new InvalidDataException("Session ID is required"));
             
             if (string.IsNullOrEmpty(command))
-                return GwtRpcResponse<CommandResultDto>.Fail("Command cannot be null or empty", new InvalidDataException("Command is required"));
+                return GwtRpcResponse<CommandResultDto>.Fail(new InvalidDataException("Command is required"));
 
             // Based on trace #1: 7|0|7|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|58bf8974-255d-444c-b74e-02999d4983ba|ls|1|2|3|4|2|5|5|6|7|
             var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|{sessionId}|{command}|1|2|3|4|2|5|5|6|7|";
 
-            var response = await PostGwtRpcAsync("terminal", payload, cancellationToken);
+            var response = await PostGwtRpcAsync("terminal", payload, false, cancellationToken);
 
             if (string.IsNullOrEmpty(response))
             {
-                return GwtRpcResponse<CommandResultDto>.Fail("Empty response from terminal execute", new ServerCallFailedException("No response received from server"));
+                return GwtRpcResponse<CommandResultDto>.Fail(new ServerCallFailedException("No response received from server"));
             }
 
             // Check for GWT exception response
@@ -104,7 +104,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                     ? stringTable[0].Split('/')[0]
                     : "Unknown exception";
 
-                return GwtRpcResponse<CommandResultDto>.Fail(response, new ServerCallFailedException($"{exceptionType}: {errorMessage}"));
+                return GwtRpcResponse<CommandResultDto>.Fail(new ServerCallFailedException($"{exceptionType}: {errorMessage}"));
             }
             
             // Parse GWT response - trace shows: //OK[0,0,0,0,0,0,0,0,-15,0,0,0,0,0,0,0,16,0,0,3,0,0,0,0,0,0,0,0,0,4,15,0,14,5,13,5,12,5,11,5,10,5,9,5,8,5,7,5,6,5,9,3,0,0,4,1,3,0,0,2,1,["net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultDtoDec/753283137","net.datenwerke.rs.terminal.client.terminal.dto.DisplayModeDto/1297612766","java.util.ArrayList/4159755760","net.datenwerke.rs.terminal.client.terminal.dto.decorator.CommandResultListDtoDec/3360806391","java.lang.String/2004016611","datasinks","datasources","reportmanager","dashboardlib","fileserver","remoteservers","transports","tsreport","usermanager","net.datenwerke.gxtdto.client.dtomanager.DtoView/2494148245","java.util.HashSet/3273092938"],0,7]
@@ -130,14 +130,14 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                     SessionClosed = false
                 };
 
-                return GwtRpcResponse<CommandResultDto>.Successful(response, result);
+                return GwtRpcResponse<CommandResultDto>.Successful(result);
             }
 
-            return GwtRpcResponse<CommandResultDto>.Fail(response, new ServerCallFailedException("Failed to parse terminal execute response"));
+            return GwtRpcResponse<CommandResultDto>.Fail(new ServerCallFailedException("Failed to parse terminal execute response"));
         }
         catch (Exception ex)
         {
-            return GwtRpcResponse<CommandResultDto>.Fail($"Failed to execute terminal command: {ex.Message}", ex);
+            return GwtRpcResponse<CommandResultDto>.Fail(ex);
         }
     }
 
@@ -150,7 +150,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
         try
         {
             if (string.IsNullOrEmpty(sessionId))
-                return GwtRpcResponse<bool>.Fail("Session ID cannot be null or empty");
+                return GwtRpcResponse<bool>.Fail(new InvalidOperationException("Session ID cannot be null or empty"));
 
             var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|closeSession|java.lang.String|{sessionId}|1|2|3|4|1|5|6|7|";
 
@@ -158,24 +158,24 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 
             if (string.IsNullOrEmpty(response))
             {
-                return GwtRpcResponse<bool>.Fail("Empty response from terminal close session");
+                return GwtRpcResponse<bool>.Fail(new ServerCallFailedException("Empty response from terminal close session"));
             }
 
             // Parse response - expect success indicator
             if (response.StartsWith("//OK"))
             {
-                return GwtRpcResponse<bool>.Successful("Terminal session closed successfully", true);
+                return GwtRpcResponse<bool>.Successful(true);
             }
             else if (response.Contains("true") || response.Contains("1"))
             {
-                return GwtRpcResponse<bool>.Successful("Terminal session closed successfully", true);
+                return GwtRpcResponse<bool>.Successful(true);
             }
 
-            return GwtRpcResponse<bool>.Fail("Failed to close terminal session");
+            return GwtRpcResponse<bool>.Fail(new ServerCallFailedException("Failed to close terminal session"));
         }
         catch (Exception ex)
         {
-            return GwtRpcResponse<bool>.Fail($"Failed to close terminal session: {ex.Message}", ex);
+            return GwtRpcResponse<bool>.Fail(ex);
         }
     }
 

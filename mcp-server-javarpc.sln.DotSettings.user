@@ -30,7 +30,7 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/markomoto/.nuget/packages/modelcontextprotocol/0.2.0-preview.2/lib/net9.0/ModelContextProtocol.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a4d85d5f_002Dbbaf_002D4dc5_002D9e78_002Db8001d25c0a5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Test_RSChatApp_IsRunning" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a4d85d5f_002Dbbaf_002D4dc5_002D9e78_002Db8001d25c0a5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Test_RSChatApp_IsRunning" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Or&gt;
     &lt;ProjectFile&gt;2FC0E6D5-AC93-44EC-85C2-40254A4CC429/f:LiveApplicationIntegrationTests.cs&lt;/ProjectFile&gt;
     &lt;TestAncestor&gt;
@@ -39,7 +39,7 @@
     &lt;/TestAncestor&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=debe0f1b_002D3324_002D4fb3_002Da5da_002Db5e7cd95b03c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestAuthentication" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=debe0f1b_002D3324_002D4fb3_002Da5da_002Db5e7cd95b03c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestAuthentication" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;MSTest::2FC0E6D5-AC93-44EC-85C2-40254A4CC429::net9.0::TestRsMcpServer.ReportServerAuthenticationTests.ReportServerClient_DirectAuthentication_Success&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
