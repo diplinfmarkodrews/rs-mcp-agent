@@ -123,7 +123,7 @@
   <!-- MCP Server -->
   <rect x="300" y="850" width="800" height="380" rx="8" fill="#fff" stroke="#16a085" stroke-width="3" filter="url(#shadow)"/>
   <rect x="300" y="850" width="800" height="50" rx="8" fill="#16a085"/>
-  <text x="700" y="883" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">RsMcpServer.Web (MCP Server)</text>
+  <text x="700" y="883" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">RsMcpServer.Api (MCP Server)</text>
   
   <text x="320" y="930" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Backend Integration Tools:</text>
   
@@ -174,7 +174,7 @@
   <text x="340" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#8e44ad">◄──────►</text>
   <text x="440" y="1530" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">Keycloak (OIDC)</text>
   <text x="640" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#8e44ad">◄──────►</text>
-  <text x="750" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50">RsMcpServer.Web</text>
+  <text x="750" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50">RsMcpServer.Api</text>
   
   <!-- Legacy Auth -->
   <rect x="120" y="1545" width="220" height="25" rx="3" fill="#e8daef" stroke="#8e44ad" stroke-width="1"/>
