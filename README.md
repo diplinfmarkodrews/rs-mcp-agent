@@ -4,7 +4,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ## 🏗️ Architecture Overview
 
-![RSChatApp Architecture](./architecture-diagram.png)
+![RSChatApp Architecture](./architecture-diagram.svg)
 
 ### 📖 Architecture Description
 
