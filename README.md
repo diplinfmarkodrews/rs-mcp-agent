@@ -8,7 +8,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ### 📖 Architecture Description
 
-The RSChatApp operates as a **browser-based workspace** that provides an intelligent chat interface powered by AI and enhanced with semantic search capabilities:
+The RSChatApp operates as a **browser-based workspace** that provides an intelligent chat interface powered by AI and enhanced with semantic search capabilities and :
 
 **🌐 Browser-Based Workspace (RSChatApp.Web)**
 - **Session Management**: Currently maintains conversation context in browser memory for immediate responsiveness
