@@ -1,3 +1,4 @@
+using LazyCache;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using RSChatApp.Mcp.Browser.Extensions;
@@ -8,10 +9,11 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     
-    private readonly IMemoryCache _memoryCache;
+    private readonly IAppCache _memoryCache;
+    private readonly IBrowserInstanceStore _browserStore;
 
     public BrowserInstanceProvider(IHttpContextAccessor httpContextAccessor, 
-        IMemoryCache memoryCache)
+        IAppCache memoryCache)
     {
         _httpContextAccessor = httpContextAccessor;
         _memoryCache = memoryCache;
@@ -24,12 +26,12 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
             throw new InvalidOperationException("SessionId is null, HttpContext already disposed?!");
         
         var browserCacheKey = sessionId.CreatBrowserInstanceCacheKey();
-        if (_memoryCache.TryGetValue(browserCacheKey, out var memoryCacheEntry)==false
-            || memoryCacheEntry == null)
+        
+        if (_memoryCache.CacheProvider.TryGetValue(browserCacheKey, out AsyncLazy<IBrowserInstance> memoryCacheEntry) == false)
             throw new InvalidOperationException("SessionId not found in MemoryCache, BrowserInstance not created yet?");
         
-        if (memoryCacheEntry is IBrowserInstance browserInstance)
-            return browserInstance;
+        if (memoryCacheEntry is AsyncLazy<IBrowserInstance> browserInstance)
+            return browserInstance.GetAwaiter().GetResult();
         
         throw new InvalidDataException($"BrowserCacheEntry is not IBrowserInstance, type: {memoryCacheEntry.GetType().FullName}");
     }

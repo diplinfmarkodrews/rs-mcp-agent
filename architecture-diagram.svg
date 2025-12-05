@@ -1,0 +1,209 @@
+<svg viewBox="0 0 1400 1600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="providerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f7fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8ecf1;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- Main Container -->
+  <rect x="20" y="20" width="1360" height="750" rx="8" fill="#fff" stroke="#2c3e50" stroke-width="3" filter="url(#shadow)"/>
+  
+  <!-- Header -->
+  <rect x="20" y="20" width="1360" height="60" rx="8" fill="url(#headerGrad)"/>
+  <text x="700" y="55" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle">RSChatApp.Web (Browser-Based Workspace)</text>
+  <text x="700" y="75" font-family="Arial, sans-serif" font-size="16" fill="#fff" text-anchor="middle">(Blazor UI)</text>
+  
+  <!-- LLM Provider Layer -->
+  <rect x="40" y="110" width="840" height="380" rx="6" fill="url(#providerGrad)" stroke="#3498db" stroke-width="2"/>
+  <text x="460" y="135" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2c3e50">LLM Provider Layer</text>
+  
+  <!-- Ollama -->
+  <rect x="60" y="150" width="180" height="140" rx="4" fill="#fff" stroke="#7f8c8d" stroke-width="2"/>
+  <text x="150" y="175" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">Ollama</text>
+  <text x="150" y="195" font-family="Arial, sans-serif" font-size="13" fill="#7f8c8d" text-anchor="middle">(Local LLM)</text>
+  <text x="150" y="220" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Mistral</text>
+  <text x="150" y="240" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Llama</text>
+  <text x="150" y="260" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Qwen</text>
+  
+  <!-- Anthropic -->
+  <rect x="260" y="150" width="180" height="140" rx="4" fill="#fff" stroke="#7f8c8d" stroke-width="2"/>
+  <text x="350" y="175" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">Anthropic</text>
+  <text x="350" y="195" font-family="Arial, sans-serif" font-size="13" fill="#7f8c8d" text-anchor="middle">(Claude/Sonnet)</text>
+  <text x="350" y="220" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Claude-3.5</text>
+  <text x="350" y="240" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Claude-3</text>
+  <text x="350" y="260" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Claude Haiku</text>
+  
+  <!-- OpenAI -->
+  <rect x="60" y="310" width="180" height="140" rx="4" fill="#fff" stroke="#7f8c8d" stroke-width="2"/>
+  <text x="150" y="335" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">OpenAI</text>
+  <text x="150" y="355" font-family="Arial, sans-serif" font-size="13" fill="#7f8c8d" text-anchor="middle">(GPT-4/o1)</text>
+  <text x="150" y="380" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• GPT-4o</text>
+  <text x="150" y="400" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• GPT-4</text>
+  <text x="150" y="420" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• o1-mini</text>
+  
+  <!-- Azure AI -->
+  <rect x="260" y="310" width="180" height="140" rx="4" fill="#fff" stroke="#7f8c8d" stroke-width="2"/>
+  <text x="350" y="335" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">Azure AI</text>
+  <text x="350" y="355" font-family="Arial, sans-serif" font-size="13" fill="#7f8c8d" text-anchor="middle">(OpenAI)</text>
+  <text x="350" y="380" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• GPT-4</text>
+  <text x="350" y="400" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• GPT-3.5</text>
+  <text x="350" y="420" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Text Embedding</text>
+  
+  <!-- Provider Selection Box -->
+  <rect x="60" y="460" width="380" height="20" rx="3" fill="#3498db" opacity="0.2"/>
+  <text x="250" y="475" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#2c3e50" text-anchor="middle">🔄 Intelligent Provider Selection</text>
+  <text x="70" y="497" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Cost optimization</text>
+  <text x="70" y="512" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Performance-based routing</text>
+  <text x="70" y="527" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Fallback mechanisms</text>
+  
+  <!-- Session Management -->
+  <rect x="900" y="110" width="460" height="200" rx="6" fill="#fff" stroke="#9b59b6" stroke-width="2"/>
+  <text x="1130" y="135" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2c3e50" text-anchor="middle">Session Management</text>
+  
+  <text x="920" y="165" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#8e44ad">Current: In-Memory</text>
+  <text x="920" y="185" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Browser Session</text>
+  <text x="920" y="205" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Conversation Context</text>
+  
+  <text x="920" y="235" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#8e44ad">Future: Persistent</text>
+  <text x="920" y="255" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Topic-Based History</text>
+  <text x="920" y="275" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Cross-Session Context</text>
+  
+  <!-- Qdrant -->
+  <rect x="480" y="150" width="180" height="140" rx="4" fill="#fff" stroke="#e74c3c" stroke-width="2"/>
+  <text x="570" y="175" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">Qdrant</text>
+  <text x="570" y="195" font-family="Arial, sans-serif" font-size="13" fill="#7f8c8d" text-anchor="middle">(VectorDB)</text>
+  <text x="570" y="220" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Vector Search</text>
+  <text x="570" y="240" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Embeddings</text>
+  <text x="570" y="260" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">• Semantic RAG</text>
+  
+  <!-- Arrow from Qdrant to Ingested Content -->
+  <path d="M 570 290 L 570 340" stroke="#e74c3c" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="590" y="320" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">Knowledge</text>
+  <text x="590" y="335" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">Base Ingestion</text>
+  
+  <!-- Ingested Content -->
+  <rect x="480" y="340" width="400" height="150" rx="6" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+  <text x="680" y="365" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50" text-anchor="middle">Ingested Content</text>
+  
+  <text x="500" y="390" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#34495e">📚 Documentation</text>
+  <text x="500" y="408" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• PDFs, Markdown</text>
+  <text x="500" y="423" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• API Docs</text>
+  <text x="500" y="438" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• User Manuals</text>
+  
+  <text x="700" y="390" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#34495e">🔧 Groovy Scripts</text>
+  <text x="700" y="408" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• .groovy files</text>
+  <text x="700" y="423" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Build scripts</text>
+  <text x="700" y="438" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Automation scripts</text>
+  
+  <text x="500" y="463" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#34495e">💻 Terminal Commands</text>
+  <text x="500" y="478" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• CLI usage • Command syntax • Shell scripts</text>
+  
+  <!-- Software Integration -->
+  <rect x="40" y="560" width="840" height="190" rx="6" fill="#fff3cd" stroke="#ffc107" stroke-width="2"/>
+  <text x="460" y="585" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2c3e50" text-anchor="middle">🌐 (Legacy) Software Integration</text>
+  
+  <!-- Playwright Box -->
+  <rect x="60" y="600" width="800" height="130" rx="4" fill="#fff" stroke="#ff6b6b" stroke-width="2"/>
+  <text x="460" y="625" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#2c3e50" text-anchor="middle">🎭 Playwright Browser Tool</text>
+  <text x="80" y="650" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Visual UI automation for legacy applications</text>
+  <text x="80" y="667" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• ReportServer frontend interaction</text>
+  <text x="80" y="684" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Screenshot capture & visual analysis</text>
+  <text x="80" y="701" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• User workflow simulation & testing</text>
+  <text x="480" y="650" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Cross-browser compatibility (Chrome, Firefox, Safari)</text>
+  <text x="480" y="667" font-family="Arial, sans-serif" font-size="11" fill="#34495e">• Element inspection & interaction</text>
+  
+  <!-- MCP Server -->
+  <rect x="300" y="850" width="800" height="380" rx="8" fill="#fff" stroke="#16a085" stroke-width="3" filter="url(#shadow)"/>
+  <rect x="300" y="850" width="800" height="50" rx="8" fill="#16a085"/>
+  <text x="700" y="883" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">RsMcpServer.Web (MCP Server)</text>
+  
+  <text x="320" y="930" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Backend Integration Tools:</text>
+  
+  <!-- Basic Terminal Tool -->
+  <rect x="320" y="945" width="730" height="80" rx="4" fill="#d5f4e6" stroke="#27ae60" stroke-width="2"/>
+  <text x="335" y="967" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#27ae60">✅ Basic Terminal Tool</text>
+  <text x="335" y="987" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Command execution</text>
+  <text x="335" y="1005" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Process management</text>
+  
+  <!-- Backend RPC Integration -->
+  <rect x="320" y="1040" width="730" height="100" rx="4" fill="#d5f4e6" stroke="#27ae60" stroke-width="2"/>
+  <text x="335" y="1062" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#27ae60">✅ Backend RPC Integration</text>
+  <text x="335" y="1082" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Direct Java RPC calls</text>
+  <text x="335" y="1100" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• GWT protocol support</text>
+  <text x="550" y="1082" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Session management</text>
+  <text x="550" y="1100" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Authentication bridge</text>
+  
+  <!-- Future Extensions -->
+  <text x="320" y="1170" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">Future Extensions:</text>
+  <rect x="320" y="1180" width="730" height="35" rx="4" fill="#e8f4f8" stroke="#3498db" stroke-width="1"/>
+  <text x="335" y="1203" font-family="Arial, sans-serif" font-size="12" fill="#34495e">• Advanced Report Tool  • File Management Tool  • Database Query Tool  • Workflow Automation Tool</text>
+  
+  <!-- ReportServer -->
+  <rect x="300" y="1300" width="800" height="130" rx="8" fill="#fff" stroke="#c0392b" stroke-width="3" filter="url(#shadow)"/>
+  <rect x="300" y="1300" width="800" height="45" rx="8" fill="#c0392b"/>
+  <text x="700" y="1330" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">ReportServer (Java/GWT)</text>
+  
+  <rect x="330" y="1360" width="320" height="50" rx="4" fill="#fde2e4" stroke="#e74c3c" stroke-width="1"/>
+  <text x="490" y="1378" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#c0392b" text-anchor="middle">Frontend UI</text>
+  <text x="340" y="1395" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Web Interface</text>
+  <text x="490" y="1395" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• User Actions</text>
+  <text x="340" y="1407" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Visual Elements</text>
+  <text x="490" y="1407" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Report Rendering</text>
+  
+  <text x="670" y="1393" font-family="Arial, sans-serif" font-size="20" fill="#c0392b">◄──────────►</text>
+  
+  <rect x="750" y="1360" width="320" height="50" rx="4" fill="#fde2e4" stroke="#e74c3c" stroke-width="1"/>
+  <text x="910" y="1378" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#c0392b" text-anchor="middle">Backend API</text>
+  <text x="760" y="1395" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• RPC Server</text>
+  <text x="910" y="1395" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Data Layer</text>
+  <text x="760" y="1407" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">• Business Logic</text>
+  
+  <!-- Authentication Layer -->
+  <rect x="20" y="1470" width="1360" height="110" rx="8" fill="#fff" stroke="#8e44ad" stroke-width="3" filter="url(#shadow)"/>
+  <text x="700" y="1500" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#8e44ad" text-anchor="middle">Authentication Layer</text>
+  
+  <text x="200" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50">RSChatApp.Web</text>
+  <text x="340" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#8e44ad">◄──────►</text>
+  <text x="440" y="1530" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2c3e50">Keycloak (OIDC)</text>
+  <text x="640" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#8e44ad">◄──────►</text>
+  <text x="750" y="1530" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50">RsMcpServer.Web</text>
+  
+  <!-- Legacy Auth -->
+  <rect x="120" y="1545" width="220" height="25" rx="3" fill="#e8daef" stroke="#8e44ad" stroke-width="1"/>
+  <text x="230" y="1562" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">ReportServer Native Login</text>
+  <text x="140" y="1580" font-family="Arial, sans-serif" font-size="10" fill="#7f8c8d">• Username/Pass • Session Bridge • GWT RPC Auth</text>
+  
+  <!-- Modern Auth -->
+  <rect x="940" y="1545" width="220" height="25" rx="3" fill="#e8daef" stroke="#8e44ad" stroke-width="1"/>
+  <text x="1050" y="1562" font-family="Arial, sans-serif" font-size="12" fill="#34495e" text-anchor="middle">Keycloak (OIDC Provider)</text>
+  <text x="960" y="1580" font-family="Arial, sans-serif" font-size="10" fill="#7f8c8d">• SSO Integration • JWT Tokens • Role Management</text>
+  
+  <!-- Connection Arrows -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2c3e50" />
+    </marker>
+  </defs>
+  
+  <!-- MCP Protocol Arrow -->
+  <path d="M 700 770 L 700 850" stroke="#16a085" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="720" y="815" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#16a085">MCP Protocol</text>
+  
+  <!-- Playwright Arrow -->
+  <path d="M 200 1230 L 400 1300" stroke="#ff6b6b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="250" y="1260" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">Playwright</text>
+  <text x="250" y="1275" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">Automation</text>
+  
+  <!-- RPC Arrow -->
+  <path d="M 1000 1230 L 900 1300" stroke="#16a085" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="950" y="1260" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">RPC/HTTP</text>
+  <text x="950" y="1275" font-family="Arial, sans-serif" font-size="11" fill="#7f8c8d">Backend API</text>
+</svg>

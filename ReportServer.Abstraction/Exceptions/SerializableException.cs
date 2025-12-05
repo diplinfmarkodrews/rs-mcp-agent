@@ -30,7 +30,10 @@ public class SerializableException : Exception
             }
         }
     }
-    
+    public SerializableException(string message) : base(message) 
+    { 
+        ExceptionMessage = message;
+    }
     // Hide problematic properties from serialization using JsonIgnore
     [JsonIgnore] 
     public new System.Reflection.MethodBase TargetSite => base.TargetSite;

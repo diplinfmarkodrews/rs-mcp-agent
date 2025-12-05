@@ -10,6 +10,7 @@ namespace ReportServer.RpcClient.Services;
 
 public class ReportServerGwtRpcClientBase : IDisposable
 {
+    protected const string CookieSessionId = "JSESSIONID";
     protected readonly HttpClient _httpClient;
     protected readonly string _moduleBaseUrl;
     protected readonly CookieContainer _cookieContainer;
@@ -60,7 +61,7 @@ public class ReportServerGwtRpcClientBase : IDisposable
         return JsonConvert.SerializeObject(param);
     }
 
-    protected async Task<string> PostGwtRpcAsync(string servicePath, string payload, CancellationToken cancellationToken = default)
+    protected async Task<string> PostGwtRpcAsync(string servicePath, string payload, bool extractSessionCookie = false, CancellationToken cancellationToken = default)
     {
         // GWT RPC services are served under /reportserver/<servicePath>
         // BaseAddress is http://localhost:8080/reportserver/
@@ -78,6 +79,26 @@ public class ReportServerGwtRpcClientBase : IDisposable
             response.EnsureSuccessStatusCode(); // This will throw with the HTTP error
         }
         
+        if (extractSessionCookie) 
+        {
+            // Extract JSESSIONID cookie from response and store it in the cookie container
+            if (response.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders))
+            {
+                var headers = setCookieHeaders.FirstOrDefault();
+                var headersSplit = headers?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                foreach (var header in headersSplit)
+                {
+                    if (header.StartsWith(CookieSessionId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var jsessionId = header.Substring(CookieSessionId.Length + 1);
+                        var uri = _httpClient.BaseAddress ?? throw new InvalidOperationException("BaseAddress not set in HTTP client.");
+                        _cookieContainer.Add(uri, new Cookie(CookieSessionId, jsessionId));
+                        break;
+                    }
+                }
+            }
+        }
+        
         return responseBody;
     }
     protected GwtRpcResponse ParseGwtResponse(string gwtResponse)
@@ -93,16 +114,16 @@ public class ReportServerGwtRpcClientBase : IDisposable
         if (gwtResponse.StartsWith("//EX"))
         {
             var errorMessage = ExtractErrorMessage(gwtResponse);
-            return GwtRpcResponse.Fail(gwtResponse, new ServerCallFailedException(errorMessage));
+            return GwtRpcResponse.Fail(new ServerCallFailedException(errorMessage));
         }
 
         if (gwtResponse.StartsWith("//OK"))
         {
-            return GwtRpcResponse.Successful(gwtResponse);
+            return GwtRpcResponse.Successful();
         }
 
         return 
-            GwtRpcResponse.Fail(gwtResponse, new InvalidOperationException("Invalid GWT response format"));
+            GwtRpcResponse.Fail(new InvalidOperationException("Invalid GWT response format"));
         
     }
     protected GwtRpcResponse<T> ParseGwtResponse<T>(string gwtResponse)
@@ -115,7 +136,6 @@ public class ReportServerGwtRpcClientBase : IDisposable
             {
                 Success = false,
                 Error = error,
-                Message = gwtResponse,
                 Exception = new ServerCallFailedException(error)
             };
         }
@@ -131,7 +151,6 @@ public class ReportServerGwtRpcClientBase : IDisposable
                 {
                     Success = true,
                     Result = JsonConvert.DeserializeObject<T>(jsonData),
-                    Message = gwtResponse
                 };
             }
         }
@@ -140,7 +159,6 @@ public class ReportServerGwtRpcClientBase : IDisposable
         {
             Success = false,
             Error = "Invalid GWT response format",
-            Message = gwtResponse,
             Exception = new InvalidOperationException("Invalid GWT response format")
         };
     }

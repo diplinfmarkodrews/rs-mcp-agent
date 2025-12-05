@@ -102,13 +102,13 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
-        _logger.LogDebug("terminal response message {Message}",  response.Message);
-        if (string.IsNullOrEmpty(response?.Result.SessionId) == false)
+        _logger.LogDebug("terminal response message {Message}",  response.Result);
+        if (response?.Success == false)
         {
-            var sessionInfo = _mapper.Map<TerminalSessionInfo>(response.Result);
-            return new Result<TerminalSessionInfo>(sessionInfo);
+            return new Result<TerminalSessionInfo>(
+                _mapper.Map<TerminalSessionInfo>(response.Result));
         }
-        return new Result<TerminalSessionInfo>("Failed to initialize terminal session") { IsSuccess = false };
+        return Result<TerminalSessionInfo>.Fail(response.Exception);
     }
 
     public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RSChatApp.Web.Controllers.Auth;
-
+//Only for keycloak challenge redirection, should go into mcp server
 [Route("auth")]
 public class AuthController : Controller
 {

@@ -27,39 +27,30 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     /// </summary>
     public async Task<GwtRpcResponse<AuthenticationResultDto>> AuthenticateAsync(string username, string password)
     {
-        // First get the HMAC passphrase (trace #3)
-        // var passphraseResponse = await GetHmacPassphraseAsync();
-        // if (passphraseResponse.Success == false || passphraseResponse.Result is null)
-        // {
-        //     return new GwtRpcResponse<AuthenticationResultDto>
-        //     {
-        //         Success = false,
-        //         Error = "Failed to get HMAC passphrase",
-        //         Exception = new ServerCallFailedException("Failed to get HMAC passphrase")
-        //     };
-        // }
-        
-        // // Encode password with HMAC using the passphrase
-        // var encodedPassword = ComputeHmacHash(password, passphraseResponse.Result
-        //     ?? throw new InvalidOperationException("HMAC passphrase is null"));
-
-        // Build payload exactly matching the actual working trace
-        //$"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|1|2|3|4|1|5|5|1|6|7|7|"
-        var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{password}|{username}|1|2|3|4|1|5|5|1|6|7|8|";
-        
-        var response = await PostGwtRpcAsync("login", payload);
-        var parsedResult = ParseAuthenticationResponse(response);
-        
-        if (parsedResult.Success)
+        try
         {
-            return GwtRpcResponse<AuthenticationResultDto>.Successful(response, parsedResult);
+            // Build payload exactly matching the actual working trace
+            //$"7|0|7|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{username}|1|2|3|4|1|5|5|1|6|7|7|"
+            var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{password}|{username}|1|2|3|4|1|5|5|1|6|7|8|";
+            
+            var response = await PostGwtRpcAsync("login", payload, true);
+            var parsedResult = ParseAuthenticationResponse(response);
+            
+            if (parsedResult.Success)
+            {
+                return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
+            }
+            return new GwtRpcResponse<AuthenticationResultDto>
+            {
+                Success = false,
+                Error = parsedResult.ErrorMessage,
+                Exception = new Exception(parsedResult.ErrorMessage)
+            };
         }
-        return new GwtRpcResponse<AuthenticationResultDto>
+        catch(Exception ex)
         {
-            Success = false,
-            Error = parsedResult.ErrorMessage,
-            Exception = new Exception(parsedResult.ErrorMessage)
-        };
+            return GwtRpcResponse<AuthenticationResultDto>.Fail(ex);
+        }
     }
 
     /// <summary>
@@ -76,14 +67,9 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         
         if (parsedResult.Success)
         {
-            return GwtRpcResponse<AuthenticationResultDto>.Successful(response, parsedResult);
+            return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
         }
-        return new GwtRpcResponse<AuthenticationResultDto>
-        {
-            Success = false,
-            Error = parsedResult.ErrorMessage,
-            Exception = new Exception(parsedResult.ErrorMessage)
-        };
+        return GwtRpcResponse<AuthenticationResultDto>.Fail(new ServerCallFailedException(parsedResult.ErrorMessage));
     }
 
     /// <summary>
@@ -100,14 +86,9 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         
         if (!string.IsNullOrEmpty(passphrase))
         {
-            return GwtRpcResponse<string>.Successful(response, passphrase);
+            return GwtRpcResponse<string>.Successful(passphrase);
         }
-        return new GwtRpcResponse<string>
-        {
-            Success = false,
-            Error = "Failed to get HMAC passphrase",
-            Exception = new Exception("Failed to get HMAC passphrase")
-        };
+        return GwtRpcResponse<string>.Fail(new ServerCallFailedException("Failed to get HMAC passphrase"));
     }
 
     /// <summary>
@@ -122,7 +103,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         var response = await PostGwtRpcAsync("security_security", payload);
         var rights = ParseSecurityRightsResponse(response);
         
-        return GwtRpcResponse<Dictionary<string, object>>.Successful(response, rights);
+        return GwtRpcResponse<Dictionary<string, object>>.Successful(rights);
     }
 
     #region Response Parsing Methods
@@ -224,18 +205,15 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
     private UserDto ParseUserDataFromAuthResponse(string gwtResponse)
     {
         // Parse authentication response (trace #4) which contains AuthenticateResultDto
-        // String table: ["net.datenwerke.security.client.login.AuthenticateResultDto/1984250979","java.util.ArrayList/4159755760","net.datenwerke.security.client.usermanager.dto.decorator.UserDtoDec/3663459877","if.techdev@infofabrik.de","root",...]
-        Console.WriteLine($"[DEBUG] GWT Response length: {gwtResponse.Length}");
-        Console.WriteLine($"[DEBUG] Last 500 chars: {gwtResponse.Substring(Math.Max(0, gwtResponse.Length - 500))}");
+        // String table: ["net.datenwerke.security.client.login.AuthenticateResultDto/1984250979","java.util.ArrayList/4159755760","net.datenwerke.security.client.usermanager.dto.decorator.UserDtoDec/3663459877","nobody@datenwerke.net","root",...]
         var result = ParseUserDataFromStringTable(gwtResponse, 4) ?? new UserDto { Username = "unknown", Active = true, Properties = new Dictionary<string, string>(), Groups = new List<GroupDto>() }; // Username at index 4 for auth response
-        Console.WriteLine($"[DEBUG] Parsed username: {result.Username}");
         return result;
     }
 
     private UserDto ParseUserDataFromSessionCheck(string gwtResponse)
     {
         // Parse session check response (trace #1) which contains UserDtoDec directly
-        // String table: ["net.datenwerke.security.client.usermanager.dto.decorator.UserDtoDec/3663459877","if.techdev@infofabrik.de","root",...]
+        // String table: ["net.datenwerke.security.client.usermanager.dto.decorator.UserDtoDec/3663459877","nobody@datenwerke.net","root",...]
         return ParseUserDataFromStringTable(gwtResponse, 2) ?? new UserDto { Username = "unknown", Active = true, Properties = new Dictionary<string, string>(), Groups = new List<GroupDto>() }; // Username at index 2 for session check
     }
 
@@ -301,7 +279,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         if (_httpClient.BaseAddress == null) return null;
         
         var cookies = _cookieContainer.GetCookies(_httpClient.BaseAddress);
-        var sessionCookie = cookies["JSESSIONID"];
+        var sessionCookie = cookies[CookieSessionId];
         return sessionCookie?.Value;
     }
 

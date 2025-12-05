@@ -4,6 +4,7 @@ using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
 using System.Collections.Concurrent;
+using LazyCache;
 
 namespace RSChatApp.Mcp.Browser.Infrastructure;
 
@@ -11,11 +12,11 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
 {
     private readonly ILogger<InMemoryBrowserInstanceStore> _logger;
     private readonly IBrowserInstanceFactory _browserInstanceFactory;
-    private readonly IMemoryCache _memoryCache;
+    private readonly IAppCache _memoryCache;
     private readonly ConcurrentDictionary<string, DisconnectedEventHandler> _eventHandlers = new();
 
     public InMemoryBrowserInstanceStore(ILogger<InMemoryBrowserInstanceStore> logger, 
-        IMemoryCache memoryCache,
+        IAppCache memoryCache,
         IBrowserInstanceFactory browserInstanceFactory)
     {
         _logger = logger;
@@ -25,8 +26,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
     
     public async Task<IBrowserInstance> GetOrCreateBrowserInstanceAsync(string sessionId, BrowserInstanceConfiguration? config = null)
     {
-#pragma warning disable CS8603 // Possible null reference return.
-        return await _memoryCache.GetOrCreateAsync(
+        return await _memoryCache.GetOrAddAsync(
             sessionId.CreatBrowserInstanceCacheKey(), 
             async (entry) =>
                 {
@@ -49,14 +49,13 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
                     instance.Disconnected += eventHandler;
                     return instance;
                 });
-#pragma warning restore CS8603 // Possible null reference return.
     }
     
 
     public async Task DisposeInstanceAsync(string sessionId)
     {
         var sessionKey = sessionId.CreatBrowserInstanceCacheKey();
-        _memoryCache.TryGetValue(sessionKey, out var instance );
+        _memoryCache.TryGetValue<IBrowserInstance>(sessionKey, out var instance );
         if (instance != null && instance is IBrowserInstance browserInstance)
         {
             _memoryCache.Remove(sessionKey);
