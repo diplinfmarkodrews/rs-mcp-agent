@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RsMcpServer.Identity.Models.Authentication;
 
 namespace RsMcpServer.Identity.Services;
@@ -78,7 +79,6 @@ public class InMemorySessionStore : ISessionStore
 
         // Store new session
         _sessions[token] = session;
-        
         // Track user sessions
         _userSessions.AddOrUpdate(username, 
             new HashSet<string> { token },

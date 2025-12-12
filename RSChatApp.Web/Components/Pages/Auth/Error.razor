@@ -11,7 +11,9 @@
     <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; border-left: 4px solid #dc3545;">
         <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠</div>
         <h3>Authentication Error</h3>
-        <p>@errorMessage</p>
+        <div style="max-height: 200px; overflow-y: auto; margin: 20px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px; text-align: left;">
+            <p style="margin: 0; word-break: break-word;">@errorMessage</p>
+        </div>
         <p><small>Please try again or contact your administrator if the problem persists.</small></p>
         <button class="btn-default" style="margin-right: 10px;" @onclick="RetryAuthentication">Try Again</button>
     </div>

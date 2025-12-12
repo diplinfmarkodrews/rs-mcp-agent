@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
@@ -40,7 +41,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             var rsResponse = await _authenticationClient.AuthenticateAsync(username, password);
             if (rsResponse.Success)
             {
-                return new Result<AuthenticationResult>(
+                return Result<AuthenticationResult>.Success(
                     new AuthenticationResult
                     {
                         IsAuthenticated = rsResponse.Result.IsAuthenticated,
@@ -49,11 +50,11 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
                     });
             }
 
-            return new Result<AuthenticationResult>(rsResponse.Exception);
+            return Result<AuthenticationResult>.Fail(rsResponse.Exception);
         }
         catch(Exception exception)
         {
-            return new Result<AuthenticationResult>(exception);
+            return Result<AuthenticationResult>.Fail(exception);
         }
     }
     #endregion
@@ -102,11 +103,10 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
-        _logger.LogDebug("terminal response message {Message}",  response.Result);
-        if (response?.Success == false)
+        _logger.LogDebug("terminal response message {Message}",  JsonSerializer.Serialize(response.Result));
+        if (response?.Success == true)
         {
-            return new Result<TerminalSessionInfo>(
-                _mapper.Map<TerminalSessionInfo>(response.Result));
+            return Result<TerminalSessionInfo>.Success(_mapper.Map<TerminalSessionInfo>(response.Result));
         }
         return Result<TerminalSessionInfo>.Fail(response.Exception);
     }

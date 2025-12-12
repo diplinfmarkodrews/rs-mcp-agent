@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace RSChatApp.Web.Models.Authentication;
+namespace RSChatApp.Infrastructure.Models.Authentication;
 
 /// <summary>
 /// Information about the current authentication state
@@ -13,4 +13,5 @@ public class AuthenticationInfo
     public string Email { get; set; } = "";
     public IEnumerable<string> Roles { get; set; } = Enumerable.Empty<string>();
     public ClaimsPrincipal? User { get; set; }
+    public string Error { get; set; }
 }

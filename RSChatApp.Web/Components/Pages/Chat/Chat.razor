@@ -5,7 +5,7 @@
 @inject Kernel Kernel
 @inject NavigationManager Nav
 @inject SemanticSearch Search
-@inject IAuthService AuthService
+@inject IAuthenticationInfoService AuthenticationInfoService
 @inject ILoginModalService LoginModalService
 @inject ILogger<Chat> Logger
 @inject IOptions<OpenAISettings> OpenAISettings
@@ -283,7 +283,7 @@
     {
         await InvokeAsync(StateHasChanged);
         // Check User authentication status and build a response
-        var authResult = await AuthService.GetAuthenticationInfoAsync();
+        var authResult = await AuthenticationInfoService.GetAuthenticationInfoAsync();
         return authResult.IsAuthenticated 
             ? new StringBuilder("User: ")
                 .Append(authResult.UserName)

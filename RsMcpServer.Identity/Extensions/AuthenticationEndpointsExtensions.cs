@@ -128,7 +128,7 @@ public static class AuthenticationEndpointsExtensions
             .Select(c => c.Value)
             .ToArray();
 
-        var properties = new Dictionary<string, object>();
+        var properties = new Dictionary<string, string>();
         
         // Add custom claims as properties
         foreach (var claim in user.Claims.Where(c => 

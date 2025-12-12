@@ -1,6 +1,6 @@
-@using RSChatApp.Web.Models.Authentication
+@using RSChatApp.Infrastructure.Models.Authentication
 @using RSChatApp.Web.Services.Authentication
-@inject IAuthService AuthService
+@inject IAuthenticationInfoService AuthenticationInfoService
 @implements IDisposable
 
 @if (authInfo.IsAuthenticated)
@@ -53,15 +53,15 @@ else
         await UpdateAuthenticationState();
 
         // Subscribe to authentication state changes
-        AuthService.AuthenticationStateChanged += OnAuthStateChanged;
+        AuthenticationInfoService.AuthenticationStateChanged += OnAuthenticationInfoInfoChanged;
     }
 
     public void Dispose()
     {
-        AuthService.AuthenticationStateChanged -= OnAuthStateChanged;
+        AuthenticationInfoService.AuthenticationStateChanged -= OnAuthenticationInfoInfoChanged;
     }
 
-    private async void OnAuthStateChanged(object? sender, AuthenticationInfo newAuthInfo)
+    private async void OnAuthenticationInfoInfoChanged(object? sender, AuthenticationInfo newAuthInfo)
     {
         authInfo = newAuthInfo;
         await InvokeAsync(StateHasChanged);
@@ -69,9 +69,8 @@ else
 
     private async Task UpdateAuthenticationState()
     {
-        authInfo = await AuthService.GetAuthenticationInfoAsync();
+        authInfo = await AuthenticationInfoService.GetAuthenticationInfoAsync();
     }
-
     private string GetUserInitials()
     {
         if (string.IsNullOrEmpty(authInfo.DisplayName))

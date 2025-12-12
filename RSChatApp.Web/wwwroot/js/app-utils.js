@@ -1,7 +1,81 @@
 // App-wide JavaScript utilities
 
+// Submit logout request to controller endpoint
+window.postLogoutRequest = async function() {
+    try {
+        const response = await fetch('/auth/logout/', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Logout error:', errorText);
+            showToast(errorText, 'error', 5000);   
+        }
+        return;
+    } catch(err) {
+        console.error('Logout error:', err);
+        showToast(err.message, 'error', 5000);
+    }
+};
+
+console.log('postLogoutRequest defined:', typeof window.postLogoutRequest);
+
+window.postLoginRequest = async function(loginRequest) {
+    console.log('postLoginRequest called');
+    try {
+        const response = await fetch('/auth/legacy-login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(loginRequest),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return {
+                success: false,
+                errorMessage: `Login failed: ${response.status} ${errorText}`
+            };
+        }
+
+        const data = await response.json();
+
+        // Transform the response to match LoginResult format
+        return {
+            success: data.success || false,
+            errorMessage: data.errorMessage || (data.success ? null : 'Login failed')
+        };
+    } catch(err) {
+        console.error('Login error:', err);
+        return {
+            success: false,
+            errorMessage: err.message || 'Network error during login'
+        };
+    }
+};
+window.reconnectBlazorCircuit = async function() {
+    // Get the Blazor circuit
+    const circuit = window['Blazor'];
+
+    if (circuit && circuit._internal) {
+        // Force disconnect
+        circuit._internal.forceCloseConnection?.();
+
+        // Wait a bit then reload
+        await new Promise(resolve => setTimeout(resolve, 100));
+        window.location.reload();
+    } else {
+        // Fallback - just reload
+        window.location.reload();
+    }
+};
 // Show temporary toast message
-export function showToast(message, type = 'info', duration = 3000) {
+window.showToast = function(message, type = 'info', duration = 3000) {
     try {
         // Remove existing toast
         const existingToast = document.querySelector('.app-toast');
