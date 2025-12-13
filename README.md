@@ -1,4 +1,4 @@
-# Enterprise MCP Server for ReportServer Integration
+# Enterprise MCP Server and AI Chat application for ReportServer
 
 A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration via front and backend with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development.
 
@@ -8,10 +8,13 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ### 📖 Architecture Description
 
-The RSChatApp operates as a **browser-based workspace** that provides an intelligent chat interface powered by AI and enhanced with semantic search capabilities and :
+The RSChatApp operates as a **browser-based workspace** that provides an intelligent chat interface powered by AI and enhanced with semantic search capabilities and Mcp server for front and backend functionalities of the Reportserver:
 
 **🌐 Browser-Based Workspace (RSChatApp.Web)**
-- **Session Management**: Currently maintains conversation context in browser memory for immediate responsiveness
+
+![RSChatApp example](./RSAIChat.Web.png)
+
+- **Session Management**: Currently maintains conversation context in browser memory & cache for immediate responsiveness
 - **Interactive Chat Interface**: Real-time Blazor UI for seamless user interaction with AI models
 - **Future Evolution**: Plans for persistent sessions with topic-based conversation history and cross-session context retention
 
@@ -57,9 +60,9 @@ The MCP server provides **backend integration capabilities** for ReportServer:
 **🔐 Dual Authentication Support**
 The system supports both modern and legacy authentication methods:
 
-- **🆕 Modern Keycloak OIDC**: Enterprise-grade authentication with SSO, JWT tokens, and role management
+- **🆕 Modern Keycloak OIDC**: Enterprise-grade authentication with SSO, JWT tokens, and role management - (not working yet)
 - **🔧 Legacy ReportServer Authentication**: Direct username/password authentication with GWT RPC session bridging
-- **🔄 Flexible Authentication Mode**: AI agents can authenticate using the most appropriate method based on deployment configuration
+- **🔄 Flexible Authentication Mode**: User can authenticate using the most appropriate method based on deployment configuration
 
 ## 🚀 Key Features
 
@@ -143,7 +146,7 @@ This will automatically:
 
 **Access Points:**
 - 📱 **Chat Application**: `http://localhost:5123` (or as shown in Aspire dashboard)
-- 🔧 **Aspire Dashboard**: `http://localhost:15986`
+- 🔧 **Aspire Dashboard**: `http://localhost:15986` (or as shown on console)
 - 🤖 **MCP Server API**: `http://localhost:5002`
 - 📊 **Qdrant Dashboard**: `http://localhost:6333/dashboard`
 
@@ -151,7 +154,7 @@ This will automatically:
 
 ## Core Components
 
-### 🚀 MCP Server with ReportServer Integration
+### 🚀 AI ChatApp & MCP Server with ReportServer Integration
 
 - **RsMcpServerSDK.Web/**: Modern MCP server using Microsoft Extensions AI framework
 - **RSChatApp.Web/**: Interactive Blazor web client with chat UI
@@ -192,10 +195,11 @@ This will automatically:
 
 ## Prerequisites
 
+- ReportServer
 - .NET 9.0 SDK or later
 - Docker Desktop (for all containerized services)
-- Java JDK 17 or later (for ReportServer - if running locally)
-- Keycloak 22+ (for authentication - can be run via Docker)
+- Playwright (install with provided scripts)
+- (Optional) Keycloak 22+ (for authentication - can be run via Docker) 
 
 **Note:** Ollama, Qdrant, and AI models are automatically managed by the .NET Aspire AppHost via Docker containers - no manual installation required!
 
@@ -227,19 +231,35 @@ This will start all required services in the correct order:
 
 5. Access the chat web interface at the URL shown in the dashboard (typically http://localhost:5123)
 
-### Testing the MCP Server
-
-You can test the MCP server functionality using the provided test script:
-
-```bash
-chmod +x test-mcp-server.sh
-./test-mcp-server.sh
-```
-
-Or test directly using the Aspire dashboard to monitor service health and interactions.
 
 ## ⚙️ Configuration
+Its important to set Reportserver url in AI Chatapp and RsMcpServer.
+The LLM provider in RSChatApp.Web needs to be configured or if you want to use 
+a local LLM. Wheter you want to use local or a providers model, provide only the model you want to use
+#### **RSChatApp.AppHost Configuration**
+Configures infrastructure, mainly ollama
+warning: if ollama doesnt support your GPU, it will crash the apphost
+Configure the ollama hosted models here
 
+```json
+
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Ollama": {
+    "Gpu": true,    
+    "Model": "",
+    "EmbeddingModel": "snowflake-arctic-embed2:latest"
+  }
+}
+
+
+
+```
 
 #### **RSChatApp.Web Configuration**
 
@@ -249,59 +269,62 @@ Or test directly using the Aspire dashboard to monitor service health and intera
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore": "Warning",
-      "RSChatApp.ServiceDefaults.Authentication": "Information"
+      "Microsoft.Extensions.AI": "Information",        
     }
   },
-  "AllowedHosts": "*",
-
-  "ReportServer": {
-    "Address": "http://localhost:8081",
+  "DetailedErrors": true,
+  "OpenAISettings": {   // LLM connection settings, any provider can be used
+    "Model": "claude-3-7-sonnet-20250219",
+    "Url": "https://api.anthropic.com/v1/",
+    "ApiKey": "ANTHROPIC_KEY" // this is the name of env variable, which holds API key
+    // Store your providers API Key in a local Env variable and insert its name here!!
+  },
+  "OpenAIPromptExecutionSettings": { // LLM Prompt execution setting
+    "MaxTokens": 4096,
+    "Temperature": 0.7,
+    "TopP": 1.0,
+    "FrequencyPenalty": 0.0,
+    "PresencePenalty": 0.0,
+    "AllowMultipleToolCalls": true
+  },
+  "ReportServer": {   // Url for reportserver
+    "Url": "http://localhost:8080/reportserver",
     "SessionTimeout": "01:00:00",
     "CookieDomain": "localhost",
-    "EnableSessionBridge": true
+    "EnableSessionBridge": false
   },
-  "LLMProviders": {
-    "DefaultProvider": "Ollama",
-    "FallbackStrategy": "Cascade",
-    "Ollama": {
-      "Address": "http://0.0.0.0:11434",
-      "Model": "mistral-nemo:12b",
-      "EmbeddingModel": "llama3.2:1b",
-      "MaxTokens": 4096,
-      "Temperature": 0.7,
-      "Enabled": true
-    },
-    "Anthropic": {
-      "ApiKey": "Env",
-      "Model": "claude-3-5-sonnet-20241022",
-      "MaxTokens": 4096,
-      "Temperature": 0.7,
-      "Enabled": false
-    },
-    "OpenAI": {
-      "ApiKey": "your-openai-api-key",
-      "Model": "gpt-4o",
-      "MaxTokens": 4096,
-      "Temperature": 0.7,
-      "Enabled": false
-    },
-    "AzureOpenAI": {
-      "Endpoint": "https://your-resource.openai.azure.com/",
-      "ApiKey": "your-azure-openai-key",
-      "DeploymentName": "gpt-4",
-      "MaxTokens": 4096,
-      "Temperature": 0.7,
-      "Enabled": false
-    }
+  "RsMcpServer": {      // Url of RsMcpServer, will be filled by aspire
+    "Url": "http://localhost:5002"
   },
-  "Qdrant": {
-    "Address": "http://localhost:6334"
+  "McpClientSettings": { // disabled for now, can be used to integrate various Mcp Servers
+    "Clients": [
+    ]
   },
-  "RsMcpServer": {
-    "Address": "http://localhost:5002"
+  "AllowedCorsOrigins": [
+    "http://localhost:5008",
+    "https://localhost:5008",
+    "http://localhost:8090",
+    "https://reportserver.net"
+  ],
+  "Keycloak": { // can be ignored for now
+    "Authority": "http://localhost:8090/realms/reportserver",
+    "ClientId": "rs-chat-app",
+    "ClientSecret": "",
+    "Realm": "reportserver",
+    "Scopes": [
+      "openid",
+      "profile",
+      "email",
+      "roles",
+      "offline_access"
+    ],
+    "RequireHttpsMetadata": false,
+    "TokenRefreshThreshold": "00:05:00",
+    "UsePkce": true,
+    "UsePar": false
   }
 }
+
 ```
 
 #### **RsMcpServer.Web Configuration**
@@ -330,10 +353,11 @@ Or test directly using the Aspire dashboard to monitor service health and intera
     "RequireHttpsMetadata": false,
     "TokenRefreshThreshold": "00:05:00"
   },
-  "ReportServer": {
-    "Address": "http://localhost:8081/",
+   "ReportServer": {  // 
+    "Url": "http://localhost:8080/reportserver/",
     "SessionTimeout": "01:00:00",
-    "CookieDomain": "localhost"
+    "CookieDomain": "localhost",
+    "EnableSessionBridge": true
   }
 }
 ```
@@ -350,39 +374,27 @@ Or test directly using the Aspire dashboard to monitor service health and intera
 - `TokenRefreshThreshold`: Time before token expiry to refresh
 
 **ReportServer Settings:**
-- `Address`: ReportServer base URL
+- `Url`: ReportServer base URL
 - `SessionTimeout`: Session timeout duration
 - `CookieDomain`: Domain for session cookies
 - `EnableSessionBridge`: Enable session bridging between Keycloak and ReportServer
 
-**LLM Provider Settings:**
-- `DefaultProvider`: Primary LLM provider to use ("Ollama", "Anthropic", "OpenAI", "AzureOpenAI")
-- `FallbackStrategy`: How to handle provider failures ("Cascade", "RoundRobin", "None")
 
 **Ollama Settings:**
-- `Address`: Ollama server URL
+- `Url`: Ollama server URL, coan be configured, but uses its own instance
 - `Model`: Chat completion model (e.g., "mistral-nemo:12b", "llama3.2:3b")
 - `EmbeddingModel`: Text embedding model
 - `Enabled`: Whether this provider is available
 
-**Anthropic Claude Settings:**
-- `ApiKey`: Anthropic API key from console.anthropic.com
-- `Model`: Claude model variant ("claude-3-5-sonnet-20241022", "claude-3-haiku-20240307")
-- `Enabled`: Whether this provider is available
-
 **OpenAI Settings:**
-- `ApiKey`: OpenAI API key from platform.openai.com
+- `Url`: Url of LLM provider
+- `ApiKey`: Name of env variable holdings providers ApiKey
 - `Model`: GPT model variant ("gpt-4o", "gpt-4", "o1-mini")
-- `Enabled`: Whether this provider is available
 
-**Azure OpenAI Settings:**
-- `Endpoint`: Azure OpenAI resource endpoint
-- `ApiKey`: Azure OpenAI API key
-- `DeploymentName`: Deployment name in Azure (not the model name)
-- `Enabled`: Whether this provider is available
+
 
 **Qdrant Settings:**
-- `Address`: Qdrant vector database URL
+- `Url`: Qdrant vector database URL
 
 #### **Environment-Specific Configuration**
 
@@ -394,7 +406,7 @@ Or test directly using the Aspire dashboard to monitor service health and intera
     "Authority": "http://localhost:8080/realms/reportserver"
   },
   "ReportServer": {
-    "Address": "http://localhost:8081"
+    "Url": "http://localhost:8081"
   }
 }
 ```
