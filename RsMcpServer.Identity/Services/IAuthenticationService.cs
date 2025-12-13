@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -72,7 +73,7 @@ public class AuthenticationService : IAuthenticationService
                     username, authResult.Error?.Message ?? "Authentication failed");
                 return TokenAuthenticationResult.Failed(authResult.Error?.Message ?? "Authentication failed");
             }
-
+            _logger.LogDebug("Successfully authenticated for user {User}", JsonSerializer.Serialize(authResult.Data));
             var rsAuth = authResult.Data;
             var token = httpContext.Session.Id;
             
@@ -80,7 +81,7 @@ public class AuthenticationService : IAuthenticationService
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, rsAuth.User.Id.ToString()),
-                new(ClaimTypes.Name, rsAuth.User.Username),
+                new(ClaimTypes.Name, username),
                 new(ClaimTypes.Email, rsAuth.User.Email ?? string.Empty),
                 new(ClaimTypes.GivenName, rsAuth.User.Firstname ?? string.Empty),
                 new(ClaimTypes.Surname, rsAuth.User.Lastname ?? string.Empty),

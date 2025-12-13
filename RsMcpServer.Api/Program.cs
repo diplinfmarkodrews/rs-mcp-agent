@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
