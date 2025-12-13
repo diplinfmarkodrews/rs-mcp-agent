@@ -13,6 +13,7 @@ using RSChatApp.Web.Components;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Models.Ingestion;
+using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using Serilog;
@@ -189,6 +190,7 @@ builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks
 builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
+builder.Services.AddScoped<IChatHistoryService, ChatHistoryService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -202,7 +204,6 @@ app.UseAntiforgery();
 
 app.UseSession();
 app.UseMiddleware<BrowserSessionMiddleware>();
-
 
 app.MapDefaultEndpoints();
 app.MapControllers();

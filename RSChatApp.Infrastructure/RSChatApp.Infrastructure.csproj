@@ -14,4 +14,8 @@
       <Folder Include="Identity\Handler\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Polly.Core" Version="8.6.5" />
+    </ItemGroup>
+
 </Project>

@@ -22,10 +22,8 @@ window.postLogoutRequest = async function() {
     }
 };
 
-console.log('postLogoutRequest defined:', typeof window.postLogoutRequest);
-
 window.postLoginRequest = async function(loginRequest) {
-    console.log('postLoginRequest called');
+    
     try {
         const response = await fetch('/auth/legacy-login', {
             method: 'POST',

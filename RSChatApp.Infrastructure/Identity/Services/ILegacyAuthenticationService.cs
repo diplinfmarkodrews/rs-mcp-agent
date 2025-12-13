@@ -32,6 +32,7 @@ public class LegacyAuthenticationService : ILegacyAuthenticationService
     public async Task<AuthenticationInfo> AuthenticateAsync(string username, string password, CancellationToken cancellationToken)
     {
         var authResult = await _authenticationClient.AuthenticateAsync(username, password, cancellationToken);
+        
         if (authResult.Success)
         {
             _logger.LogInformation("User {Username} authenticated successfully on legacy authflow.", username);
