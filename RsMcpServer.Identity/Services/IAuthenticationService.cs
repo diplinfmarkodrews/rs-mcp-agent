@@ -85,6 +85,7 @@ public class AuthenticationService : IAuthenticationService
                 new(ClaimTypes.GivenName, rsAuth.User.Firstname ?? string.Empty),
                 new(ClaimTypes.Surname, rsAuth.User.Lastname ?? string.Empty),
                 new("JSESSIONID", rsAuth.SessionId ?? string.Empty),
+                new("Token", token),
                 new("auth_provider", "Legacy")
             };
 

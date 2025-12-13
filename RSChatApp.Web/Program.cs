@@ -1,9 +1,11 @@
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.AI;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
+using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
@@ -11,7 +13,6 @@ using RSChatApp.Web.Components;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Models.Ingestion;
-using RSChatApp.Web.Services.Authentication;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using Serilog;
@@ -52,14 +53,22 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
 builder.Services.AddHealthChecks();
 
 // Add Keycloak authentication
-// builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 // Add custom authentication service
-builder.Services.AddScoped<IAuthenticationClient, AuthenticationClient>();
+builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
+// builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "RsMcpServer.AuthCookie";
+        options.LoginPath = "/login";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Strict;
@@ -93,7 +102,9 @@ builder.Services.AddHttpClient("RsMcpServer", client =>
                                  ?? throw new InvalidConfigurationException("RsMcpServer:Url"));
     client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
     
-}).AddStandardResilienceHandler(); // Only used without aspire 
+})
+    .AddStandardResilienceHandler(); // Only used without aspire
+
 builder.Services.AddBrowserInstance(reportServerUrl);
 
 using var scopedServiceProvider = builder.Services.BuildServiceProvider();
@@ -146,7 +157,6 @@ if (string.IsNullOrEmpty(openAISettings.Model) == false)
     if (openAISettings.IsValid() == false)
         throw new InvalidConfigurationException("OpenAI API key not set properly in env.");
     
-    // builder.Services
     builder.Services.AddOpenAIChatClient(openAISettings.Model,
         new Uri(openAISettings.Url),
         openAISettings.ApiKey,
@@ -273,7 +283,7 @@ if (app.Environment.IsDevelopment())
     // });
 }
 
-    //TODO: Refactor into Service, make it available at runtime to user
+    //TODO: Refactor into Service, make ingestion available at runtime to user
     //
     // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
     // other sources by implementing IIngestionSource.

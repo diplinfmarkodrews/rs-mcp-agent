@@ -54,15 +54,9 @@ public class Result<T> : Result
         Data = data;
     }
     public static new Result<T> Fail(Exception? error = null)
-        => new Result<T>(error)
-        {
-            IsSuccess = false,
-        };
+        => new Result<T>(error);
     
-    public static new Result Success<T>(T? data)
-        => new Result<T>(data)
-        {
-            IsSuccess = false,
-        };
+    public static new Result<T> Success(T? data)
+        => new Result<T>(data);
 }
 

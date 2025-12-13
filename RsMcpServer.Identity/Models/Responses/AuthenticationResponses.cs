@@ -34,4 +34,4 @@ public record UserInfo(
     string? FirstName,
     string? LastName,
     string[] Roles,
-    Dictionary<string, object> Properties);
+    Dictionary<string, string> Properties);

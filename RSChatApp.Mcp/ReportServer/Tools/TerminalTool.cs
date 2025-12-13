@@ -1,13 +1,9 @@
 using System.ComponentModel;
-using System.Security.Authentication;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using ReportServer.Abstraction;
-using ReportServer.Abstraction.Contracts;
-using ReportServer.Abstraction.Contracts.Terminal;
 using RsMcpServer.Identity.Services;
 
 namespace RSChatApp.Mcp.ReportServer.Tools;
@@ -20,16 +16,13 @@ public class TerminalTool
 {
     private readonly ILogger<TerminalTool> _logger;
     private readonly IReportServerClient _reportServer;
-    private readonly ISessionBridgeService _sessionBridge;
     
     public TerminalTool(
         ILogger<TerminalTool> logger, 
-        ISessionBridgeService sessionBridge,
         IReportServerClient reportServer)
     {
         _logger = logger;
         _reportServer = reportServer;
-        _sessionBridge = sessionBridge;
     }
 
     /// <summary>
@@ -39,14 +32,14 @@ public class TerminalTool
                                                 "Before executing commands, start a terminal session using " +
                                                 "StartTerminalSessionAsync to get a sessionId.")]
     public async Task<string> ExecuteCommandAsync(
-        [Description("session id to identify terminal session")]string sessionId,
+        [Description("session id to identify terminal session")] string sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
         // Execute the command with the session ID
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
-        
+        _logger.LogDebug("terminal returned: {CmdResult}", JsonSerializer.Serialize(cmdResult));
         return JsonSerializer.Serialize(cmdResult);
     }
     /// <summary>
@@ -59,7 +52,9 @@ public class TerminalTool
     {
         _logger.LogInformation("Starting terminal session");
         var sessionInfo = await _reportServer.InitSessionAsync();
-        return JsonSerializer.Serialize(sessionInfo);
+        var serializedSessionInfo = JsonSerializer.Serialize(sessionInfo);
+        _logger.LogDebug("Started terminal session: {SessionInfo}", serializedSessionInfo);
+        return serializedSessionInfo;
     }
 }
 

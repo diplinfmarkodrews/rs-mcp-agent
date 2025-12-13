@@ -23,6 +23,7 @@ customElements.define('assistant-message', class extends HTMLElement {
     }
 });
 
+
 // SIG // Begin signature block
 // SIG // MIIoOQYJKoZIhvcNAQcCoIIoKjCCKCYCAQExDzANBglg
 // SIG // hkgBZQMEAgEFADB3BgorBgEEAYI3AgEEoGkwZzAyBgor

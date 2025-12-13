@@ -14,7 +14,7 @@ public static class ServiceExtensions
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddCustomAuthenticationService(this IServiceCollection services)
     {
-        services.AddScoped<IAuthService, BlazorAuthService>();
+        services.AddScoped<IAuthenticationInfoService, AuthenticationInfoService>();
         services.AddScoped<ILoginModalService, LoginModalService>();
         
         return services;

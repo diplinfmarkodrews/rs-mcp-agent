@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RSChatApp.Infrastructure\RSChatApp.Infrastructure.csproj" />
     <ProjectReference Include="..\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
     <ProjectReference Include="..\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj" />
     <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
@@ -31,6 +32,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
+    <Folder Include="Models\Authentication\" />
   </ItemGroup>
 
 </Project>

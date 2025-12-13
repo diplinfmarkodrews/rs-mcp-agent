@@ -1,14 +1,16 @@
-namespace RSChatApp.Web.Services.Authentication;
+using System.Net.Http.Json;
+
+namespace RSChatApp.Infrastructure.Identity.Clients;
 
 public interface IAuthenticationClient
 {
     Task<AuthenticationResult> AuthenticateAsync(string username, string password, CancellationToken cancellationToken);
 }
-public class AuthenticationClient : IAuthenticationClient
+public class LegacyAuthenticationClient : IAuthenticationClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public AuthenticationClient(IHttpClientFactory httpClientFactory)
+    public LegacyAuthenticationClient(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
     }
@@ -19,7 +21,8 @@ public class AuthenticationClient : IAuthenticationClient
         var response = await httpClient.PostAsJsonAsync("api/auth/v1/login", new { username, password }, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
-            var authResult = await response.Content.ReadFromJsonAsync<AuthenticationResult>();
+            var authResult = await response.Content.ReadFromJsonAsync<AuthenticationResult>(cancellationToken);
+            
             return authResult ?? new AuthenticationResult { Success = false, Error = "Invalid response from server" };
         }
         return new AuthenticationResult { Success = false, Error = $"Authentication failed: {response.ReasonPhrase}" };

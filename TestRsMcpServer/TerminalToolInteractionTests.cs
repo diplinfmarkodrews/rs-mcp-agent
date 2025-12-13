@@ -37,8 +37,7 @@ public sealed class TerminalToolInteractionTests
         
         var reportServerClient = _serviceProvider.GetRequiredService<IReportServerClient>();
         var terminalLogger = _serviceProvider.GetRequiredService<ILogger<TerminalTool>>();
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
-        var terminalTool = new TerminalTool(terminalLogger, sessionBridge, reportServerClient);
+        var terminalTool = new TerminalTool(terminalLogger, reportServerClient);
         var terminalSession = await reportServerClient.InitSessionAsync();
         // Act
         Assert.IsNotNull(terminalSession.Data?.SessionId);
@@ -111,40 +110,7 @@ public sealed class TerminalToolInteractionTests
         Assert.AreEqual("No refresh token available", refreshResult.Message);
     }
 
-    [TestMethod]
-    public async Task TestCompleteFlow_SessionCreation_And_TerminalExecution()
-    {
-        // This test simulates the complete flow from session creation to terminal execution
-        
-        // Arrange
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
-        var reportServerClient = _serviceProvider.GetRequiredService<IReportServerClient>();
-        var terminalLogger = _serviceProvider.GetRequiredService<ILogger<TerminalTool>>();
-        
-        // Fix: Correct parameter order - logger, reportServerClient, sessionBridge
-        var terminalTool = new TerminalTool(terminalLogger, sessionBridge, reportServerClient);
-
-        // Act & Assert - Step 1: Verify no initial session
-        var initialSessionId = await sessionBridge.GetSessionIdAsync();
-        Assert.IsNull(initialSessionId, "Should have no initial session");
-
-        // Step 2: Verify authentication status
-        var isAuthenticated = await sessionBridge.IsAuthenticatedAsync();
-        Assert.IsFalse(isAuthenticated, "Should not be initially authenticated");
-        var terminalSession = await reportServerClient.InitSessionAsync();
-        Assert.IsNull(terminalSession.Data?.SessionId, "Session should not be initialized");
-        // Step 3: Attempt terminal command execution
-        var terminalResult = await terminalTool.ExecuteCommandAsync(terminalSession.Data?.SessionId, "echo 'test'");
-        
-        // Step 4: Verify authentication error
-        Assert.IsTrue(terminalResult.Contains("Authentication required"), 
-            "Terminal execution should require authentication");
-
-        // Step 5: Verify appropriate logging occurred
-        var loggedMessages = string.Join("\n", _logMessages);
-        Assert.IsTrue(loggedMessages.Contains("Executing terminal command"), 
-            "Should log terminal command execution attempt");
-    }
+    
 
     [TestMethod]
     public void TestLoggedMessages_ContainExpectedInformation()

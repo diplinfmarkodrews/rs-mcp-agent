@@ -1,14 +1,14 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
-using System.Security.Claims;
-using RSChatApp.Web.Models.Authentication;
+using RSChatApp.Infrastructure.Models.Authentication;
 
 namespace RSChatApp.Web.Services.Authentication;
 
 /// <summary>
 /// Service for managing authentication state and user information
 /// </summary>
-public interface IAuthService
+public interface IAuthenticationInfoService
 {
     /// <summary>
     /// Gets the current authentication state
@@ -21,10 +21,9 @@ public interface IAuthService
     event EventHandler<AuthenticationInfo> AuthenticationStateChanged;
     
     /// <summary>
-    /// Triggers a logout request
+    /// Refreshes the authentication state from the server
     /// </summary>
-    Task LogoutAsync();
-    
+    Task RefreshAuthenticationStateAsync();
 }
 
 
@@ -32,18 +31,18 @@ public interface IAuthService
 /// <summary>
 /// Implementation of authentication service that wraps ASP.NET Core authentication
 /// </summary>
-public class BlazorAuthService : IAuthService, IDisposable
+public class AuthenticationInfoService : IAuthenticationInfoService, IDisposable
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IJSRuntime _jsRuntime;
-    private readonly ILogger<BlazorAuthService> _logger;
+    private readonly ILogger<AuthenticationInfoService> _logger;
     
     public event EventHandler<AuthenticationInfo>? AuthenticationStateChanged;
 
-    public BlazorAuthService(
+    public AuthenticationInfoService(
         AuthenticationStateProvider authenticationStateProvider,
         IJSRuntime jsRuntime,
-        ILogger<BlazorAuthService> logger)
+        ILogger<AuthenticationInfoService> logger)
     {
         _authenticationStateProvider = authenticationStateProvider;
         _jsRuntime = jsRuntime;
@@ -57,6 +56,26 @@ public class BlazorAuthService : IAuthService, IDisposable
     {
         var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         return CreateAuthenticationInfo(authState);
+    }
+    
+    public async Task RefreshAuthenticationStateAsync()
+    {
+        _logger.LogInformation("Refreshing authentication state for widget update");
+        
+        // Wait for cookie to be set in the HTTP context
+        await Task.Delay(500);
+        
+        var authInfo = await GetAuthenticationInfoAsync();
+        
+        if (authInfo.IsAuthenticated)
+        {
+            _logger.LogInformation("User authenticated - IsAuthenticated: {IsAuthenticated}, User: {UserName}", 
+                authInfo.IsAuthenticated, authInfo.UserName);
+            
+            // Notify subscribers (like AuthenticationWidget)
+            AuthenticationStateChanged?.Invoke(this, authInfo);
+            return;
+        }
     }
 
     public async Task LogoutAsync()
@@ -124,7 +143,7 @@ public class BlazorAuthService : IAuthService, IDisposable
                           .Select(c => c.Value)
                           .Distinct()
                           .ToList();
-
+        
         return new AuthenticationInfo
         {
             IsAuthenticated = true,
