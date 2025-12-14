@@ -12,10 +12,16 @@
 
     <ItemGroup>
       <Folder Include="Identity\Handler\" />
+      <Folder Include="ReportServer\Models\" />
+      <Folder Include="ReportServer\Services\" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Polly.Core" Version="8.6.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
     </ItemGroup>
 
 </Project>

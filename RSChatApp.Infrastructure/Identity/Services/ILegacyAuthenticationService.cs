@@ -82,6 +82,12 @@ public class LegacyAuthenticationService : ILegacyAuthenticationService
         if (httpContext.User.Identity?.IsAuthenticated == true)
         {
             //TODO: Invalidate session on RsMcpServer side + logout RS
+            var token = httpContext.Session.GetString(LegacySessionCacheKey);
+            if (token == null)
+                _logger.LogWarning("No legacy session token found during logout.");
+            else
+                await _authenticationClient.LogoutAsync(token, cancellationToken);
+            
             var username = httpContext.User.Identity.Name;
             await httpContext.SignOutAsync();
             httpContext.Session.Remove(LegacySessionCacheKey);

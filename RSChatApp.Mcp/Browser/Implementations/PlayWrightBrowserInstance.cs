@@ -2,9 +2,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
-using System.Threading;
 
-namespace RSChatApp.Mcp.Browser.Infrastructure;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 public class PlayWrightBrowserInstance : IBrowserInstance
 {

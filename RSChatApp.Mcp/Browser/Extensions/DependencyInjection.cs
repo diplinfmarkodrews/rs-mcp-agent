@@ -1,12 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using RSChatApp.Mcp.Browser.Configuration;
+using RSChatApp.Mcp.Browser.Implementations;
 using RSChatApp.Mcp.Browser.Interfaces;
-using RSChatApp.Mcp.Browser.Infrastructure;
-using RSChatApp.Mcp.Browser.Tools;
 
 namespace RSChatApp.Mcp.Browser.Extensions;
 
-public static class ServiceCollectionExtension
+public static class DependencyInjection
 {
     public static IServiceCollection AddBrowserInstance(this IServiceCollection services, string reportServerUrl)
     {

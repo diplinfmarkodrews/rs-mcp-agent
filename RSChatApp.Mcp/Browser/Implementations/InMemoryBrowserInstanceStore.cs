@@ -1,12 +1,12 @@
+using System.Collections.Concurrent;
+using LazyCache;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
-using System.Collections.Concurrent;
-using LazyCache;
+using RSChatApp.Mcp.Browser.Interfaces;
 
-namespace RSChatApp.Mcp.Browser.Infrastructure;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
 {

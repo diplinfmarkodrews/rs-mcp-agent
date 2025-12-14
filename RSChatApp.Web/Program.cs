@@ -6,6 +6,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
+using RSChatApp.Infrastructure.ReportServer.Terminal;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
@@ -98,7 +99,7 @@ builder.Services.AddCors(setup =>
     });
 });
 
-builder.Services.AddHttpClient("RsMcpServer", client =>
+builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                  ?? throw new InvalidConfigurationException("RsMcpServer:Url"));
@@ -114,13 +115,13 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
         new SseClientTransportOptions
         {
-            Name = "RsMcpServer",
+            Name = RsMcpServerHttpClientName.ClientName,
             Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                ?? throw new InvalidConfigurationException("RsMcpServer:Url")),
         },
         httpClient: scopedServiceProvider
             .GetRequiredService<IHttpClientFactory>()
-            .CreateClient("RsMcpServer"),
+            .CreateClient(RsMcpServerHttpClientName.ClientName),
         loggerFactory: scopedServiceProvider
             .GetRequiredService<ILoggerFactory>()
     ));
@@ -135,7 +136,7 @@ builder.Services.AddSingleton((serviceProvider) =>
     
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions("RsMcpServer", 
+    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName, 
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
     return pluginCollection;
 });

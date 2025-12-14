@@ -12,11 +12,11 @@ public static class EndpointsExtension
         var rsRest = endpoints.MapGroup("/api/rs-rest")
             .WithTags("RsRest");
 
-        // V1 endpoints (Legacy ReportServer authentication for direct access)
+        // terminal endpoint definition
         var terminal = rsRest.MapGroup("/terminal")
             .WithTags("Terminal");
 
-        terminal.MapPost("/init-session", InitTerminalSessionAsync)
+        terminal.MapGet("/init-session", InitTerminalSessionAsync)
             .WithName("InitTerminalSession")
             .WithSummary("Initialize a new terminal session to gain sessionId for subsequent terminal commands")
             .RequireAuthorization()
@@ -28,11 +28,12 @@ public static class EndpointsExtension
             .RequireAuthorization()
             .Produces<Result<CommandResult>>();
         
-        terminal.MapPost("/close-session", CloseTerminalSessionAsync)
+        terminal.MapDelete("/close-session", CloseTerminalSessionAsync)
             .WithName("CloseTerminalSession")
             .WithSummary("Close an existing terminal session identified by sessionId")
             .RequireAuthorization()
             .Produces<Result>();
+        
         return endpoints;
     }
     private static async Task<IResult> InitTerminalSessionAsync(
@@ -54,7 +55,7 @@ public static class EndpointsExtension
     }
     
     private static async Task<IResult> CloseTerminalSessionAsync(
-        [FromQuery] string sessionId,
+        [FromRoute] string sessionId,
         [FromServices] IReportServerClient rsClient, HttpContext context)
     {
         var closeResult = await rsClient.CloseSessionAsync(sessionId);

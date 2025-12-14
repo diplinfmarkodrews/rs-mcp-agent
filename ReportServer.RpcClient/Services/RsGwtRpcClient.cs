@@ -36,26 +36,36 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
     
     public async Task<Result<AuthenticationResult>> AuthenticateAsync(string username, string password)
     {
-        try
+        var rsResponse = await _authenticationClient.AuthenticateAsync(username, password);
+        if (rsResponse.Success)
         {
-            var rsResponse = await _authenticationClient.AuthenticateAsync(username, password);
-            if (rsResponse.Success)
-            {
-                return Result<AuthenticationResult>.Success(
-                    new AuthenticationResult
-                    {
-                        IsAuthenticated = rsResponse.Result.IsAuthenticated,
-                        SessionId = rsResponse.Result.SessionId,
-                        User = _mapper.Map<User>(rsResponse.Result.User)
-                    });
-            }
+            return Result<AuthenticationResult>.Success(
+                new AuthenticationResult
+                {
+                    IsAuthenticated = rsResponse.Result.IsAuthenticated,
+                    SessionId = rsResponse.Result.SessionId,
+                    User = _mapper.Map<User>(rsResponse.Result.User)
+                });
+        }
 
-            return Result<AuthenticationResult>.Fail(rsResponse.Exception);
-        }
-        catch(Exception exception)
+        return Result<AuthenticationResult>.Fail(rsResponse.Exception);
+    }
+    
+    public async Task<Result<AuthenticationResult>> IsAuthenticatedAsync()
+    {
+        var rsResponse = await _authenticationClient.IsAuthenticatedAsync();
+        if (rsResponse.Success)
         {
-            return Result<AuthenticationResult>.Fail(exception);
+            return Result<AuthenticationResult>.Success(
+                new AuthenticationResult
+                {
+                    IsAuthenticated = rsResponse.Result.IsAuthenticated,
+                    SessionId = rsResponse.Result.SessionId,
+                    User = _mapper.Map<User>(rsResponse.Result.User)
+                });
         }
+
+        return Result<AuthenticationResult>.Fail(rsResponse.Exception);
     }
     #endregion
     #region FileServer Operations

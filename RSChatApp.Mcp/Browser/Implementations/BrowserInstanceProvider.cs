@@ -1,9 +1,9 @@
 using LazyCache;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using RSChatApp.Mcp.Browser.Extensions;
+using RSChatApp.Mcp.Browser.Interfaces;
 
-namespace RSChatApp.Mcp.Browser.Interfaces;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 public class BrowserInstanceProvider : IBrowserInstanceProvider
 {

@@ -56,4 +56,5 @@
     &lt;TestId&gt;MSTest::2FC0E6D5-AC93-44EC-85C2-40254A4CC429::net9.0::TestRsMcpServer.ReportServerAuthenticationTests.ReportServerClient_DirectAuthentication_Success&lt;/TestId&gt;
     &lt;TestId&gt;MSTest::2FC0E6D5-AC93-44EC-85C2-40254A4CC429::net9.0::TestRsMcpServer.LiveApplicationIntegrationTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+&lt;/SessionState&gt;</s:String>
+	</wpf:ResourceDictionary>
