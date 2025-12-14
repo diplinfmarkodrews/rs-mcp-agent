@@ -6,6 +6,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
+using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
@@ -31,7 +32,7 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddOptions();
-
+builder.Services.Configure<BrowserInstanceConfiguration>(builder.Configuration.GetSection("BrowserInstanceConfiguration"));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
     config =>
     {
@@ -58,18 +59,18 @@ builder.Services.AddHealthChecks();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
 // builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
-
+var sessionTimeoutMinutes = builder.Configuration.GetValue<int?>("SessionCookieSettings:IdleTimeout") ?? 15;
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "RsMcpServer.AuthCookie";
         options.LoginPath = "/login";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(sessionTimeoutMinutes);
     });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(15);
+    options.IdleTimeout = TimeSpan.FromMinutes(sessionTimeoutMinutes);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Strict;

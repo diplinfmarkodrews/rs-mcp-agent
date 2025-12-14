@@ -12,6 +12,8 @@ public class BrowserInstanceConfiguration
     public int Height_Viewport { get; set; } = 800;
     public string BaseUrl { get; set; }
     
+    public int SlidingExpirationMinutes { get; set; } = 30;
+    
     // Debounce Configuration (in milliseconds)
     public int NavigationDebounceMs { get; set; } = 300;
     public int ContentRefreshDebounceMs { get; set; } = 150;
@@ -34,6 +36,7 @@ public class BrowserInstanceConfiguration
         Width_Viewport = config.Width_Viewport;
         Height_Viewport = config.Height_Viewport;
         BaseUrl = config.BaseUrl;
+        SlidingExpirationMinutes = config.SlidingExpirationMinutes;
         NavigationDebounceMs = config.NavigationDebounceMs;
         ContentRefreshDebounceMs = config.ContentRefreshDebounceMs;
         UserInteractionDebounceMs = config.UserInteractionDebounceMs;

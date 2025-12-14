@@ -6,6 +6,7 @@ using ReportServer.RpcClient.Extensions;
 using RSChatApp.Mcp.ReportServer.Tools;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
+using RsMcpServer.Web.Extensions;
 
 
 // Make the Program accessible to the test project
@@ -69,6 +70,7 @@ app.UseKeycloakAuthentication()
    .UseAuthenticatedSession();
     
 app.MapAuthenticationEndpoints();
+app.MapRsRestEndpoints();
 // Map MCP endpoints
 app.MapMcp()
     .WithHttpLogging(HttpLoggingFields.All)

@@ -38,10 +38,12 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
                                 if (value is IBrowserInstance browserInstance)
                                 {
                                     _logger.LogInformation("Evicting browser instance for session {SessionId} due to {Reason}", sessionId, reason);
+                                    
                                     await browserInstance.DisposeAsync();
                                 }
                             }
                         });
+                    entry.SlidingExpiration = TimeSpan.FromMinutes(config?.SlidingExpirationMinutes ?? 30); 
                     var instance = await _browserInstanceFactory.CreateInstanceAsync(config);
                     // Store event handler for proper unsubscription
                     DisconnectedEventHandler eventHandler = () => BrowserOnDisconnected(instance);
@@ -52,7 +54,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
     }
     
 
-    public async Task DisposeInstanceAsync(string sessionId)
+    public async Task RemoveInstanceAsync(string sessionId)
     {
         var sessionKey = sessionId.CreatBrowserInstanceCacheKey();
         _memoryCache.TryGetValue<IBrowserInstance>(sessionKey, out var instance );

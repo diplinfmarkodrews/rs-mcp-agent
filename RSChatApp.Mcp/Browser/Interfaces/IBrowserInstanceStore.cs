@@ -6,6 +6,6 @@ public interface IBrowserInstanceStore
 {
     Task<IBrowserInstance> GetOrCreateBrowserInstanceAsync(string sessionId, BrowserInstanceConfiguration config = null);
     
-    Task DisposeInstanceAsync(string sessionId);
+    Task RemoveInstanceAsync(string sessionId);
 }
 

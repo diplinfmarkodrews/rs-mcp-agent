@@ -260,7 +260,7 @@ public static class KeycloakAuthenticationExtensions
         app.UseAuthorization();
 
         // Add authentication endpoints
-        app.MapAuthenticationEndpoints();
+        // app.MapAuthenticationEndpoints();
 
         return app;
     }

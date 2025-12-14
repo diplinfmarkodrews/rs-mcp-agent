@@ -70,9 +70,13 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         if (context.Request.Headers.TryGetValue("User-Agent", out var userAgent))
         {
             config.UserAgent = userAgent.ToString();
-            config.SessionId = context.Session.Id;
             // config.BrowserType = context.
         }
+        if (context.Request.Headers.TryGetValue("Accept-Language", out var language))
+        {
+            config.Language = language.ToString();
+        }
+        config.SessionId = context.Session.Id;
         return config;
     }
   

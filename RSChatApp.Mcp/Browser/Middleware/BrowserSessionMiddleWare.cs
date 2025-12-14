@@ -12,7 +12,6 @@ public class BrowserSessionMiddleware
     private const string SessionSentinelKey = "__initial";
     private readonly RequestDelegate _next;
     private readonly ILogger<BrowserSessionMiddleware> _logger;
- 
     public BrowserSessionMiddleware(RequestDelegate next,
         ILogger<BrowserSessionMiddleware> logger)
     {
@@ -35,10 +34,11 @@ public class BrowserSessionMiddleware
         var session = context.Session;
         if (!session.TryGetValue(SessionSentinelKey, out _))
         {
-            session.SetString(SessionSentinelKey, "RsChatAppSession");
+            session.SetString(SessionSentinelKey, session.Id);
             _logger.LogDebug("Session initialized ID: {SessionId}", session.Id);
            
         }
+        
         _ = await browserInstanceStore.GetOrCreateBrowserInstanceAsync(session.Id);
         _logger.LogInformation("Browser instance ensured for session {SessionId}", session.Id);
         // Call the next middleware in the pipeline
