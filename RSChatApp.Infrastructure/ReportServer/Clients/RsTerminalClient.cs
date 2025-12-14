@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
@@ -70,7 +71,10 @@ public class RsTerminalClient : IRsTerminalClient
         try
         {
             return
-                await httpClient.DeleteFromJsonAsync<Result>("api/rs-rest/terminal/close-session/{sessionId}");
+                await httpClient.DeleteFromJsonAsync<Result>(
+                    new StringBuilder("api/rs-rest/terminal/close-session&sessionId=")
+                                .Append(sessionId)
+                                .ToString());
             
             
         }

@@ -55,7 +55,7 @@ public static class EndpointsExtension
     }
     
     private static async Task<IResult> CloseTerminalSessionAsync(
-        [FromRoute] string sessionId,
+        [FromQuery] string sessionId,
         [FromServices] IReportServerClient rsClient, HttpContext context)
     {
         var closeResult = await rsClient.CloseSessionAsync(sessionId);
