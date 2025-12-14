@@ -61,15 +61,22 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         // Build payload based on trace #1:
         // 7|0|4|http://localhost:8090/reportserver/|DFEDD0FBBBBBE222F217D04F50A95F56|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|isAuthenticated|1|2|3|4|0|
         var payload = $"7|0|4|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|isAuthenticated|1|2|3|4|0|";
-        
-        var response = await PostGwtRpcAsync("login", payload);
-        var parsedResult = ParseSessionCheckResponse(response);
-        
-        if (parsedResult.Success)
+        try
         {
-            return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
+
+            var response = await PostGwtRpcAsync("login", payload);
+            var parsedResult = ParseSessionCheckResponse(response);
+
+            if (parsedResult.Success)
+            {
+                return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
+            }
+            throw new ServerCallFailedException(parsedResult.ErrorMessage);
         }
-        return GwtRpcResponse<AuthenticationResultDto>.Fail(new ServerCallFailedException(parsedResult.ErrorMessage));
+        catch (Exception ex)
+        {
+            return GwtRpcResponse<AuthenticationResultDto>.Fail(ex);
+        }
     }
 
     /// <summary>

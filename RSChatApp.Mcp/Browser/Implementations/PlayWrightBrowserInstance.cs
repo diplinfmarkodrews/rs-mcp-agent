@@ -2,9 +2,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
-using System.Threading;
 
-namespace RSChatApp.Mcp.Browser.Infrastructure;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 public class PlayWrightBrowserInstance : IBrowserInstance
 {
@@ -215,9 +214,11 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         
         if (_context != null)
         {
+            await _context.CloseAsync();
             await _context.DisposeAsync();
         }
-        
+
+        await _browser.CloseAsync();
         await _browser.DisposeAsync();
     }
 
@@ -245,28 +246,7 @@ public class PlayWrightBrowserInstance : IBrowserInstance
 
         await Task.CompletedTask; // Make method async
     }
-
-    public async Task NavigateFromBlazorAsync(string url)
-    {
-        _logger.LogInformation("🎯 BLAZOR: Navigation requested from Blazor UI to: {Url}", url);
-        
-        // Handle relative URLs by resolving them against the current page
-        string targetUrl = url;
-        if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
-        {
-            if (_page != null && !string.IsNullOrEmpty(CurrentUrl))
-            {
-                if (Uri.TryCreate(new Uri(CurrentUrl), url, out var resolvedUri))
-                {
-                    targetUrl = resolvedUri.ToString();
-                    _logger.LogInformation("🎯 BLAZOR: Resolved relative URL {RelativeUrl} to {AbsoluteUrl}", url, targetUrl);
-                }
-            }
-        }
-        
-        await NavigateAsync(targetUrl);
-    }
-
+    
     private async Task PerformNavigationAsync(string normalizedUrl)
     {
         if (_page == null) return;

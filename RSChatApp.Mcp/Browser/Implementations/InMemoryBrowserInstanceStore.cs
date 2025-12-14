@@ -1,12 +1,12 @@
+using System.Collections.Concurrent;
+using LazyCache;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Interfaces;
 using RSChatApp.Mcp.Browser.Extensions;
-using System.Collections.Concurrent;
-using LazyCache;
+using RSChatApp.Mcp.Browser.Interfaces;
 
-namespace RSChatApp.Mcp.Browser.Infrastructure;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
 {
@@ -38,10 +38,12 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
                                 if (value is IBrowserInstance browserInstance)
                                 {
                                     _logger.LogInformation("Evicting browser instance for session {SessionId} due to {Reason}", sessionId, reason);
+                                    
                                     await browserInstance.DisposeAsync();
                                 }
                             }
                         });
+                    entry.SlidingExpiration = TimeSpan.FromMinutes(config?.SlidingExpirationMinutes ?? 30); 
                     var instance = await _browserInstanceFactory.CreateInstanceAsync(config);
                     // Store event handler for proper unsubscription
                     DisconnectedEventHandler eventHandler = () => BrowserOnDisconnected(instance);
@@ -52,7 +54,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
     }
     
 
-    public async Task DisposeInstanceAsync(string sessionId)
+    public async Task RemoveInstanceAsync(string sessionId)
     {
         var sessionKey = sessionId.CreatBrowserInstanceCacheKey();
         _memoryCache.TryGetValue<IBrowserInstance>(sessionKey, out var instance );

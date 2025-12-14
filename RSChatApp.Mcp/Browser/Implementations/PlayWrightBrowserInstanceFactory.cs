@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -6,7 +5,7 @@ using Microsoft.Playwright;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Interfaces;
 
-namespace RSChatApp.Mcp.Browser.Infrastructure;
+namespace RSChatApp.Mcp.Browser.Implementations;
 
 
 public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //BackgroundWorker,
@@ -59,7 +58,7 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
             _loggerFactory.CreateLogger<PlayWrightBrowserInstance>(),
             config,
             browser);
-        // ReportProgress(100, "Page loaded");
+
         await browserInstance.NewContextAsync();
         return browserInstance;
     }
@@ -70,9 +69,13 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         if (context.Request.Headers.TryGetValue("User-Agent", out var userAgent))
         {
             config.UserAgent = userAgent.ToString();
-            config.SessionId = context.Session.Id;
             // config.BrowserType = context.
         }
+        if (context.Request.Headers.TryGetValue("Accept-Language", out var language))
+        {
+            config.Language = language.ToString();
+        }
+        config.SessionId = context.Session.Id;
         return config;
     }
   

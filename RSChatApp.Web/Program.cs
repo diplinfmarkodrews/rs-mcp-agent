@@ -6,6 +6,8 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
+using RSChatApp.Infrastructure.ReportServer.Terminal;
+using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
@@ -31,7 +33,7 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddOptions();
-
+builder.Services.Configure<BrowserInstanceConfiguration>(builder.Configuration.GetSection("BrowserInstanceConfiguration"));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
     config =>
     {
@@ -58,18 +60,18 @@ builder.Services.AddHealthChecks();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
 // builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
-
+var sessionTimeoutMinutes = builder.Configuration.GetValue<int?>("SessionCookieSettings:IdleTimeout") ?? 15;
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "RsMcpServer.AuthCookie";
         options.LoginPath = "/login";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(sessionTimeoutMinutes);
     });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(15);
+    options.IdleTimeout = TimeSpan.FromMinutes(sessionTimeoutMinutes);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Strict;
@@ -97,7 +99,7 @@ builder.Services.AddCors(setup =>
     });
 });
 
-builder.Services.AddHttpClient("RsMcpServer", client =>
+builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                  ?? throw new InvalidConfigurationException("RsMcpServer:Url"));
@@ -113,13 +115,13 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
         new SseClientTransportOptions
         {
-            Name = "RsMcpServer",
+            Name = RsMcpServerHttpClientName.ClientName,
             Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                ?? throw new InvalidConfigurationException("RsMcpServer:Url")),
         },
         httpClient: scopedServiceProvider
             .GetRequiredService<IHttpClientFactory>()
-            .CreateClient("RsMcpServer"),
+            .CreateClient(RsMcpServerHttpClientName.ClientName),
         loggerFactory: scopedServiceProvider
             .GetRequiredService<ILoggerFactory>()
     ));
@@ -134,7 +136,7 @@ builder.Services.AddSingleton((serviceProvider) =>
     
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions("RsMcpServer", 
+    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName, 
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
     return pluginCollection;
 });

@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRsMcpServer", "TestRsMc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Identity", "RsMcpServer.Identity\RsMcpServer.Identity.csproj", "{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportServer.RestClient", "ReportServer.RestClient\ReportServer.RestClient.csproj", "{8E6F5653-633C-4998-B90A-E58780470AAA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Mcp", "RSChatApp.Mcp\RSChatApp.Mcp.csproj", "{37812D22-3A9E-4126-8BC0-63D0BAE34B37}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Infrastructure", "RSChatApp.Infrastructure\RSChatApp.Infrastructure.csproj", "{9CFA2003-F06B-4354-89E6-21A66B9BD3DB}"
@@ -62,10 +60,6 @@ Global
 		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E6F5653-633C-4998-B90A-E58780470AAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E6F5653-633C-4998-B90A-E58780470AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E6F5653-633C-4998-B90A-E58780470AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E6F5653-633C-4998-B90A-E58780470AAA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37812D22-3A9E-4126-8BC0-63D0BAE34B37}.Release|Any CPU.ActiveCfg = Release|Any CPU

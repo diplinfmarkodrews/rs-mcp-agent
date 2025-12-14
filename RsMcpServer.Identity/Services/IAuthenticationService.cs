@@ -171,7 +171,18 @@ public class AuthenticationService : IAuthenticationService
             var session = await ValidateTokenAsync(token, cancellationToken);
             if (session == null)
             {
+                _logger.LogInformation("No valid session found for legacy token {TokenPrefix}***", 
+                    token[..Math.Min(8, token.Length)]);
                 return TokenAuthenticationResult.Failed("Invalid or expired token");
+            }
+            
+            var authResult = await _reportServerClient.IsAuthenticatedAsync();
+            if (authResult?.Data?.IsAuthenticated == false)
+            {
+                _logger.LogInformation("ReportServer session is no longer valid for token {TokenPrefix}***", 
+                    token[..Math.Min(8, token.Length)]);
+                await _sessionStore.RemoveSessionAsync(token, cancellationToken);
+                return TokenAuthenticationResult.Failed("Session is no longer valid in ReportServer");
             }
 
             // Extend session by another 8 hours
@@ -180,7 +191,7 @@ public class AuthenticationService : IAuthenticationService
             
             await _sessionStore.StoreSessionAsync(token, session, cancellationToken);
 
-            _logger.LogDebug("Extended legacy session for token {TokenPrefix}***", 
+            _logger.LogInformation("Extended legacy session for token {TokenPrefix}***", 
                 token[..Math.Min(8, token.Length)]);
 
             return TokenAuthenticationResult.Successful(token, session.User, newExpiresAt);

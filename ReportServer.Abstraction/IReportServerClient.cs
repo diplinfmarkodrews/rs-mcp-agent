@@ -23,6 +23,7 @@ public interface IReportServerClient :
 public interface IRsAuthenticationClient
 {
     Task<Result<AuthenticationResult>> AuthenticateAsync(string username, string password);
+    Task<Result<AuthenticationResult>> IsAuthenticatedAsync();
     Task<Result<string>> LogoutAsync();
 }
 

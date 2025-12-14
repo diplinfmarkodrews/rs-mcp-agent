@@ -4,7 +4,7 @@ using RSChatApp.Infrastructure.Identity.Services;
 
 namespace RSChatApp.Infrastructure.Extensions;
 
-public static class ServiceExtension
+public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
