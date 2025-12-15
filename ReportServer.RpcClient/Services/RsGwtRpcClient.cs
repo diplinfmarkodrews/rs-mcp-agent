@@ -132,7 +132,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         return new Result<CommandResult>(response.Error);
     }
 
-    public async Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId)
+    public Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId)
     {
         throw new NotImplementedException();
     }

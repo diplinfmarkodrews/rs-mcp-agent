@@ -1004,7 +1004,7 @@
         await ClickElement();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         if (browserInstance != null)
         {
@@ -1015,5 +1015,6 @@
             browserInstance.PageError -= OnPageError;
             browserInstance.Disconnected -= OnDisconnected;
         }
+        return ValueTask.CompletedTask;
     }
 }
