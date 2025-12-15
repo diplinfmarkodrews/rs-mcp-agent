@@ -75,12 +75,13 @@ public class DistributedServicesFixture : IAsyncLifetime
         );
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         RsMcpServerClient?.Dispose();
         RsChatAppClient?.Dispose();
         RsMcpServerFactory?.Dispose();
         RsChatAppFactory?.Dispose();
+        return Task.CompletedTask;
     }
 
     private static async Task WaitForServiceReady(HttpClient client, string healthEndpoint, int maxAttempts = 10)

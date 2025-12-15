@@ -88,20 +88,20 @@ public record LogoutResponse(bool Success, string? Error);
 public record AuthenticationResult
 {
     public bool Success { get; init; }
-    public string Token { get; init; }
+    public string? Token { get; init; }
     
-    public UserDto User { get; init; }
-    public DateTime ExpiresAt { get; init; }
-    public string Error { get; init; }
+    public UserDto? User { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public string? Error { get; init; }
 }
 public record UserDto
 {
-    public string Id { get; init; }
-    public string Username { get; init; }
-    public string Email { get; init; }
-    public string FirstName { get; init; }
-    public string LastName { get; init; }
-    public List<string> Roles { get; init; }
-    public Dictionary<string, string> Properties { get; init; }
+    public required string Id { get; init; }
+    public required string Username { get; init; }
+    public required string Email { get; init; }
+    public required string LastName { get; init; }
+    public required List<string> Roles { get; init; } 
+    public required string FirstName { get; init; }
+    public required Dictionary<string, string> Properties { get; init; }
 }
 

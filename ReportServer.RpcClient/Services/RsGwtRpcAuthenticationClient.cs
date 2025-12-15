@@ -267,7 +267,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
                 };
             }
         }
-        catch (Exception ex)
+        catch
         {
             
         }

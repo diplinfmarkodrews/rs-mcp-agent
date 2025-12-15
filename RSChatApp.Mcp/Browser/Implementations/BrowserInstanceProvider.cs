@@ -10,7 +10,6 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
     private readonly IHttpContextAccessor _httpContextAccessor;
     
     private readonly IAppCache _memoryCache;
-    private readonly IBrowserInstanceStore _browserStore;
 
     public BrowserInstanceProvider(IHttpContextAccessor httpContextAccessor, 
         IAppCache memoryCache)

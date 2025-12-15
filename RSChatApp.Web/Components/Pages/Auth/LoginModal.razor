@@ -129,7 +129,6 @@
     // Legacy login form fields
     private string username = "";
     private string password = "";
-    private bool rememberMe = false;
 
     private async Task CloseModal()
     {
@@ -141,7 +140,7 @@
         await ShowChanged.InvokeAsync(Show);
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync()
     {
         // Reset state and auto-start authentication when modal is shown
         if (Show)
@@ -155,10 +154,12 @@
             if (!UseLegacyAuth)
             {
                 // Automatically start the Keycloak authentication process
-                await LoadKeycloakInIframe();
+                LoadKeycloakInIframe();
             }
             // For legacy auth, just show the form (no auto-start needed)
         }
+
+        return Task.CompletedTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -170,7 +171,7 @@
         }
     }
 
-    private async Task LoadKeycloakInIframe()
+    private void LoadKeycloakInIframe()
     {
         try
         {
@@ -179,7 +180,7 @@
             isLoading = true;
             StateHasChanged();
             
-            // Use the existing auth/challenge endpoint from KeycloakAuthenticationExtensions
+            // Use the existing auth/challenge endpoint
             var baseUrl = Navigation.BaseUri.TrimEnd('/');
             var returnUrl = Uri.EscapeDataString($"{baseUrl}/auth/popup-auth-success");
             authUrl = $"{baseUrl}/auth/challenge?returnUrl={returnUrl}";
@@ -196,7 +197,7 @@
         }
     }
 
-    private async Task RetryAuthentication()
+    private void RetryAuthentication()
     {
         // Clear any existing error state        
         hasError = false;
@@ -212,7 +213,7 @@
         else
         {
             // Reload Keycloak authentication
-            await LoadKeycloakInIframe();
+            LoadKeycloakInIframe();
         }
     }
 
@@ -294,7 +295,7 @@
     }
 
     [JSInvokable]
-    public async Task OnAuthenticationError(string error)
+    public void OnAuthenticationError(string error)
     {
         Logger.LogError("Authentication error: {Error}", error);
         
@@ -313,17 +314,18 @@
     }
 
     [JSInvokable]
-    public async Task OnConnectionError()
+    public Task OnConnectionError()
     {
         Logger.LogError("Connection error during authentication");
         ShowError("Unable to connect to the authentication service. Please check if Keycloak is running and accessible.");
+        return Task.CompletedTask;
     }
 
     [JSInvokable]
-    public async Task OnAuthenticationRetry()
+    public void OnAuthenticationRetry()
     {
         Logger.LogInformation("User requested authentication retry");
-        await RetryAuthentication();
+        RetryAuthentication();
     }
 
     [JSInvokable]

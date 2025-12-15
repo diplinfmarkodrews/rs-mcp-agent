@@ -53,10 +53,10 @@ public class Result<T> : Result
         IsSuccess = true;
         Data = data;
     }
-    public static new Result<T> Fail(Exception? error = null)
+    public static Result<T> Fail(Exception? error = null)
         => new Result<T>(error);
     
-    public static new Result<T> Success(T? data)
+    public static Result<T> Success(T? data)
         => new Result<T>(data);
 }
 

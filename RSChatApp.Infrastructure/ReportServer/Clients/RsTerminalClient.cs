@@ -35,7 +35,8 @@ public class RsTerminalClient : IRsTerminalClient
         using var httpClient = _httpClientFactory.CreateClient(RsMcpServerHttpClientName.ClientName);
         try
         {
-            return await httpClient.GetFromJsonAsync<Result<TerminalSessionInfo>>("api/rs-rest/terminal/init-session", cancellationToken); 
+            return await httpClient.GetFromJsonAsync<Result<TerminalSessionInfo>>("api/rs-rest/terminal/init-session", cancellationToken) 
+                ?? throw new InvalidDataException("Response was null");
         }
         catch (Exception exc)
         {
@@ -55,7 +56,8 @@ public class RsTerminalClient : IRsTerminalClient
                 new { sessionId, command }, cancellationToken);
             
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<Result<CommandResult>>(cancellationToken);
+            return await response.Content.ReadFromJsonAsync<Result<CommandResult>>(cancellationToken)
+                ?? throw new InvalidDataException("Response was null");
         }
         catch (Exception exc)
         {
@@ -70,13 +72,11 @@ public class RsTerminalClient : IRsTerminalClient
         using var httpClient = _httpClientFactory.CreateClient(RsMcpServerHttpClientName.ClientName);
         try
         {
-            return
-                await httpClient.DeleteFromJsonAsync<Result>(
+            return await httpClient.DeleteFromJsonAsync<Result>(
                     new StringBuilder("api/rs-rest/terminal/close-session&sessionId=")
                                 .Append(sessionId)
-                                .ToString());
-            
-            
+                                .ToString())
+                ?? Result.Fail("Response was null");
         }
         catch (Exception exc)
         {

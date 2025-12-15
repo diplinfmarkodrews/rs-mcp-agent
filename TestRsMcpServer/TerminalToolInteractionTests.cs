@@ -240,7 +240,7 @@ public class MockReportServerClient : IReportServerClient
             new Exception("Mock: Authentication not implemented")));
     }
 
-    public async Task<Result<AuthenticationResult>> IsAuthenticatedAsync()
+    public Task<Result<AuthenticationResult>> IsAuthenticatedAsync()
     {
         throw new NotImplementedException();
     }

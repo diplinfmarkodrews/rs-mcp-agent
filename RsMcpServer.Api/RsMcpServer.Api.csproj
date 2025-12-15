@@ -18,7 +18,6 @@
     <ItemGroup>
       <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
       <ProjectReference Include="..\ReportServer.RpcClient\ReportServer.RpcClient.csproj" />
-      <ProjectReference Include="..\ReportServer.RestClient\ReportServer.RestClient.csproj" />
       <ProjectReference Include="..\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
       <ProjectReference Include="..\RSChatApp.ServiceDefaults\RSChatApp.ServiceDefaults.csproj" />
       <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />

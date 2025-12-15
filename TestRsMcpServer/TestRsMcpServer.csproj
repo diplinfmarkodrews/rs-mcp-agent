@@ -21,7 +21,6 @@
     <ItemGroup>
       <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
       <ProjectReference Include="..\ReportServer.RpcClient\ReportServer.RpcClient.csproj" />
-      <ProjectReference Include="..\ReportServer.RestClient\ReportServer.RestClient.csproj" />
       <ProjectReference Include="..\RsMcpServer.Api\RsMcpServer.Api.csproj" />
       <ProjectReference Include="..\RSChatApp.Web\RSChatApp.Web.csproj" />
       <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
