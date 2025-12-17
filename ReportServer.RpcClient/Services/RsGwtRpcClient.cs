@@ -95,9 +95,9 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         var response = await _terminalClient.CloseSessionAsync(sessionId);
         if (response.Success)
         {
-            return Result.Success("Session closed successfully");
+            return Result.Success($"{sessionId}: Session closed successfully.");
         }
-        return Result.Fail("Error closing session");
+        return Result.Fail(response.Exception);
     }
 
     public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null, Dictionary<string, string> mapper = null)
@@ -113,7 +113,6 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             null;
         
         var response = await _terminalClient.InitSessionAsync();
-        _logger.LogDebug("terminal response message {Message}",  JsonSerializer.Serialize(response.Result));
         if (response?.Success == true)
         {
             return Result<TerminalSessionInfo>.Success(_mapper.Map<TerminalSessionInfo>(response.Result));
@@ -129,7 +128,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             return new Result<CommandResult>(
                 _mapper.Map<CommandResult>(response.Result));
         }
-        return new Result<CommandResult>(response.Error);
+        return new Result<CommandResult>(response.Exception);
     }
 
     public Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId)
