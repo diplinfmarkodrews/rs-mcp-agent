@@ -4,9 +4,7 @@ namespace ReportServer.RpcClient.DTOs.Authentication;
 
 public class AuthenticationResultDto
 {
-    [JsonProperty("success")]
-    public bool Success { get; set; }
-
+    
     [JsonProperty("isAuthenticated")]
     public bool IsAuthenticated { get; set; }
 

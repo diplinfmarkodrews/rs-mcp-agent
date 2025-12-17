@@ -35,6 +35,11 @@ public class LegacyAuthenticationService : ILegacyAuthenticationService
         
         if (authResult.Success)
         {
+            if (username != authResult.User?.Username)
+            {
+                _logger.LogWarning("Authenticated username {AuthenticatedUsername} does not match requested username {RequestedUsername}.",
+                    authResult.User?.Username, username);
+            }
             _logger.LogInformation("User {Username} authenticated successfully on legacy authflow.", username);
             // Create claims from authResult.User
             var claims = CreateClaims(authResult);

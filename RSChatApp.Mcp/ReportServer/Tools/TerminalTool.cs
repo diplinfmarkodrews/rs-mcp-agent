@@ -30,7 +30,9 @@ public class TerminalTool
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. " +
                                                 "Before executing commands, start a terminal session using " +
-                                                "StartTerminalSessionAsync to get a sessionId.")]
+                                                "StartTerminalSessionAsync to get a sessionId. " +
+                                                "When you execute a command, provide sessionId and " +
+                                                "print your command and the returned result or error.")]
     public async Task<string> ExecuteCommandAsync(
         [Description("session id to identify terminal session")] string sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
@@ -39,8 +41,9 @@ public class TerminalTool
         _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
         // Execute the command with the session ID
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
-        _logger.LogDebug("terminal returned: {CmdResult}", JsonSerializer.Serialize(cmdResult));
-        return JsonSerializer.Serialize(cmdResult);
+        var serializedCmdResult = JsonSerializer.Serialize(cmdResult);
+        _logger.LogDebug("terminal returned: {CmdResult}", serializedCmdResult);
+        return serializedCmdResult;
     }
     /// <summary>
     /// Executes a terminal command on the report server

@@ -403,7 +403,8 @@ public class BrowserTool
     /// <summary>
     /// Execute JavaScript on the page
     /// </summary>
-    [KernelFunction, Description("Execute JavaScript code on the page")]
+    [KernelFunction, Description("Execute JavaScript code on the page. " +
+                                 "Before you execute scripts, print it to the user and ask for permission to execute.")]
     public async Task<string> ExecuteJavaScriptAsync(
         [Description("JavaScript code to execute")] string script)
     {

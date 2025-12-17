@@ -25,10 +25,10 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         IMapper mapper) 
         : base(httpClientFactory.CreateClient("ReportServerGwtRpcClient"), cookieProvider)
     {
-        _authenticationClient = new RsGwtRpcAuthenticationClient(_httpClient, cookieProvider);
+        _authenticationClient = new RsGwtRpcAuthenticationClient(loggerFactory.CreateLogger<RsGwtRpcAuthenticationClient>(),_httpClient, cookieProvider);
+        _terminalClient = new RsGwtRpcTerminalClient(loggerFactory.CreateLogger<RsGwtRpcTerminalClient>(), _httpClient, cookieProvider);
         _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, cookieProvider);
         _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, cookieProvider);
-        _terminalClient = new RsGwtRpcTerminalClient(_httpClient, cookieProvider);
         _mapper = mapper;
         _logger = loggerFactory.CreateLogger<ReportServerGwtRpcClient>();
     }
@@ -42,9 +42,9 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             return Result<AuthenticationResult>.Success(
                 new AuthenticationResult
                 {
-                    IsAuthenticated = rsResponse.Result.IsAuthenticated,
-                    SessionId = rsResponse.Result.SessionId,
-                    User = _mapper.Map<User>(rsResponse.Result.User)
+                    IsAuthenticated = rsResponse.Result?.IsAuthenticated ?? false,
+                    SessionId = rsResponse.Result?.SessionId ?? string.Empty,
+                    User = _mapper.Map<User>(rsResponse.Result?.User)
                 });
         }
 
@@ -59,9 +59,9 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
             return Result<AuthenticationResult>.Success(
                 new AuthenticationResult
                 {
-                    IsAuthenticated = rsResponse.Result.IsAuthenticated,
-                    SessionId = rsResponse.Result.SessionId,
-                    User = _mapper.Map<User>(rsResponse.Result.User)
+                    IsAuthenticated = rsResponse.Result?.IsAuthenticated ?? false,
+                    SessionId = rsResponse.Result?.SessionId ?? string.Empty,
+                    User = _mapper.Map<User>(rsResponse.Result?.User)
                 });
         }
 

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Exceptions;
 using ReportServer.RpcClient.DTOs;
@@ -9,17 +10,20 @@ namespace ReportServer.RpcClient.Services;
 
 public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 {
+    private readonly ILogger<RsGwtRpcAuthenticationClient> _logger;
+
     // Service hashes from traces
     private const string LOGIN_SERVICE_HASH = "DFEDD0FBBBBBE222F217D04F50A95F56";
     private const string SECURITY_SERVICE_HASH = "1D8BB90B3362E3AB16AD5D9EC9568CE7";
     private const string CHALLENGE_SERVICE_HASH = "B6F10AD9852902823F606D81A985ACC7";
     
     // Constructor
-    public RsGwtRpcAuthenticationClient(HttpClient httpClient, CookieContainerProvider cookieProvider)
+    public RsGwtRpcAuthenticationClient(ILogger<RsGwtRpcAuthenticationClient> logger, HttpClient httpClient, CookieContainerProvider cookieProvider)
         : base(httpClient, cookieProvider)
     {
         if (_httpClient.BaseAddress is null)
             throw new InvalidOperationException("BaseAddress not set in HTTP client.");
+        _logger = logger;
     }
 
     /// <summary>
@@ -35,17 +39,17 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             
             var response = await PostGwtRpcAsync("login", payload, true);
             var parsedResult = ParseAuthenticationResponse(response);
-            
-            if (parsedResult.Success)
+            if (parsedResult != null)
             {
                 return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
             }
-            return new GwtRpcResponse<AuthenticationResultDto>
+            var responseException = TryParseException(response);
+            if (responseException != null)
             {
-                Success = false,
-                Error = parsedResult.ErrorMessage,
-                Exception = new Exception(parsedResult.ErrorMessage)
-            };
+                return GwtRpcResponse<AuthenticationResultDto>.Fail(responseException);
+            }
+            _logger.LogError("Authentication failed, response could not be read: {Response}", response);
+            return GwtRpcResponse<AuthenticationResultDto>.Fail(new ServerCallFailedException("Authentication failed, response could not be read"));
         }
         catch(Exception ex)
         {
@@ -64,14 +68,19 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         try
         {
 
-            var response = await PostGwtRpcAsync("login", payload);
+            var response = await PostGwtRpcAsync("login", payload, extractSessionCookie: true);
             var parsedResult = ParseSessionCheckResponse(response);
 
-            if (parsedResult.Success)
+            if (parsedResult != null)
             {
                 return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
             }
-            throw new ServerCallFailedException(parsedResult.ErrorMessage);
+            var responseException = TryParseException(response);
+            if (responseException != null)
+                return GwtRpcResponse<AuthenticationResultDto>.Fail(responseException);
+            
+            _logger.LogError("IsAuthenticatedAsync failed parsing response: {Response}", response);
+            return GwtRpcResponse<AuthenticationResultDto>.Fail(new ServerCallFailedException("Failed to parse isAuthenticated response"));
         }
         catch (Exception ex)
         {
@@ -95,6 +104,12 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         {
             return GwtRpcResponse<string>.Successful(passphrase);
         }
+        var responseException = TryParseException(response); 
+        if (responseException != null)
+        {
+            return GwtRpcResponse<string>.Fail(responseException);
+        }
+        _logger.LogError("GetHmacPassphraseAsync failed parsing response: {Response}", response);
         return GwtRpcResponse<string>.Fail(new ServerCallFailedException("Failed to get HMAC passphrase"));
     }
 
@@ -115,18 +130,8 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 
     #region Response Parsing Methods
 
-    private AuthenticationResultDto ParseAuthenticationResponse(string gwtResponse)
+    private AuthenticationResultDto? ParseAuthenticationResponse(string gwtResponse)
     {
-        if (gwtResponse.StartsWith("//EX"))
-        {
-            var errorMatch = Regex.Match(gwtResponse, @"\[""([^""]+)""\]$");
-            return new AuthenticationResultDto
-            {
-                Success = false,
-                ErrorMessage = errorMatch.Success ? errorMatch.Groups[1].Value : "Authentication failed"
-            };
-        }
-
         if (gwtResponse.StartsWith("//OK"))
         {
             var sessionId = ExtractSessionFromCookies();
@@ -134,31 +139,17 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 
             return new AuthenticationResultDto
             {
-                Success = true,
                 IsAuthenticated = true,
                 SessionId = sessionId ?? string.Empty,
                 User = userData
             };
         }
-
-        return new AuthenticationResultDto
-        {
-            Success = false,
-            ErrorMessage = "Invalid response format"
-        };
+        return null;
     }
 
-    private AuthenticationResultDto ParseSessionCheckResponse(string gwtResponse)
+    private AuthenticationResultDto? ParseSessionCheckResponse(string gwtResponse)
     {
-        if (gwtResponse.StartsWith("//EX") || gwtResponse.Contains("null"))
-        {
-            return new AuthenticationResultDto
-            {
-                Success = false,
-                ErrorMessage = "Session not valid"
-            };
-        }
-
+        
         if (gwtResponse.StartsWith("//OK"))
         {
             var sessionId = ExtractSessionFromCookies();
@@ -166,18 +157,13 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 
             return new AuthenticationResultDto
             {
-                Success = true,
                 IsAuthenticated = true,
                 SessionId = sessionId ?? string.Empty,
                 User = userData
             };
         }
 
-        return new AuthenticationResultDto
-        {
-            Success = false,
-            ErrorMessage = "Invalid response format"
-        };
+        return null;
     }
 
     private string? ParseChallengeResponse(string gwtResponse)
