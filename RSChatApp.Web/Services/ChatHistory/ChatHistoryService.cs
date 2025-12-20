@@ -23,18 +23,25 @@ public class ChatHistoryService : IChatHistoryService
     }
     public async Task SaveHistoryAsync(List<ChatMessage> messages) 
     {
-        await _localStorage.SetAsync("chatHistory", messages);
+        await _localStorage.SetAsync("chatHistory", ValidateMessages(messages));
     }
     
     public async Task<List<ChatMessage>> LoadHistoryAsync() 
     {
         var result = await _localStorage.GetAsync<List<ChatMessage>>("chatHistory");
-        return result.Success 
-            ? result.Value 
+        return result.Success
+            ? result.Value
             : new();
     }
     public async Task ClearHistoryAsync() 
     {
         await _localStorage.DeleteAsync("chatHistory");
+    }
+    private static List<ChatMessage> ValidateMessages(List<ChatMessage> messages)
+    {
+        // Filters empty user messages
+        return messages.Where(m => (string.IsNullOrEmpty(m.Text) 
+            && m.Role == ChatRole.User) == false).ToList();
+        
     }
 }

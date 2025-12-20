@@ -48,12 +48,12 @@ public class Result<T> : Result
         Message = message;
     }
 
-    public Result(T data)
+    public Result(T? data)
     {
         IsSuccess = true;
         Data = data;
     }
-    public static Result<T> Fail(Exception? error = null)
+    public static new Result<T> Fail(Exception? error = null)
         => new Result<T>(error);
     
     public static Result<T> Success(T? data)

@@ -21,8 +21,7 @@ public class RsTerminalClient : IRsTerminalClient
 {
     private readonly ILogger<RsTerminalClient> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
-
-
+    
     public RsTerminalClient(IHttpClientFactory httpClientFactory, ILogger<RsTerminalClient> logger)
     {
         _httpClientFactory = httpClientFactory;

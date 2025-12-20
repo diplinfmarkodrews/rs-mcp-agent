@@ -40,14 +40,11 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             var response = await PostGwtRpcAsync("login", payload, true);
             var parsedResult = ParseAuthenticationResponse(response);
             if (parsedResult != null)
-            {
                 return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
-            }
-            var responseException = TryParseException(response);
-            if (responseException != null)
-            {
+            
+            if (TryParseException(response, out var responseException))
                 return GwtRpcResponse<AuthenticationResultDto>.Fail(responseException);
-            }
+            
             _logger.LogError("Authentication failed, response could not be read: {Response}", response);
             return GwtRpcResponse<AuthenticationResultDto>.Fail(new ServerCallFailedException("Authentication failed, response could not be read"));
         }
@@ -72,11 +69,9 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             var parsedResult = ParseSessionCheckResponse(response);
 
             if (parsedResult != null)
-            {
                 return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
-            }
-            var responseException = TryParseException(response);
-            if (responseException != null)
+            
+            if (TryParseException(response, out var responseException))
                 return GwtRpcResponse<AuthenticationResultDto>.Fail(responseException);
             
             _logger.LogError("IsAuthenticatedAsync failed parsing response: {Response}", response);
@@ -101,14 +96,11 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         var passphrase = ParseChallengeResponse(response);
         
         if (!string.IsNullOrEmpty(passphrase))
-        {
             return GwtRpcResponse<string>.Successful(passphrase);
-        }
-        var responseException = TryParseException(response); 
-        if (responseException != null)
-        {
+        
+        if (TryParseException(response, out var responseException))
             return GwtRpcResponse<string>.Fail(responseException);
-        }
+        
         _logger.LogError("GetHmacPassphraseAsync failed parsing response: {Response}", response);
         return GwtRpcResponse<string>.Fail(new ServerCallFailedException("Failed to get HMAC passphrase"));
     }
@@ -121,9 +113,10 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
         // Build payload based on trace #2 (simplified version):
         // This is a complex payload with many type parameters, using simplified version
         var payload = $"7|0|31|{_moduleBaseUrl}|{SECURITY_SERVICE_HASH}|net.datenwerke.security.ext.client.security.rpc.SecurityRpcService|loadGenericRights|java.util.Collection|java.util.HashSet/3273092938|net.datenwerke.rs.core.client.genrights.AccessRsGenericTargetIdentifier/1217528734|net.datenwerke.gf.client.administration.security.AdminGenericTargetIdentifier/745751986|net.datenwerke.rs.dashboard.client.dashboard.security.DashboardViewGenericTargetIdentifier/2641288325|net.datenwerke.rs.dashboard.client.dashboard.security.DashboardAdminGenericTargetIdentifier/138113631|net.datenwerke.security.ext.client.security.ui.genericview.targets.GenericSecurityTargetAdminViewGenericTargetIdentifier/2555008146|net.datenwerke.rs.terminal.client.terminal.security.TerminalGenericTargetIdentifier/3565892166|net.datenwerke.rs.core.client.datasourcemanager.security.DatasourceManagerGenericTargetIdentifier/4279957352|net.datenwerke.rs.transport.client.transport.security.TransportGenericTargetIdentifier/484713213|net.datenwerke.rs.transport.client.transport.security.TransportManagementGenericTargetIdentifier/1443445958|net.datenwerke.rs.adminutils.client.systemconsole.security.SystemConsoleGenericTargetIdentifier/2950244943|net.datenwerke.rs.remoteserver.client.remoteservermanager.security.RemoteServerManagerGenericTargetIdentifier/196606530|net.datenwerke.rs.core.client.datasinkmanager.security.DatasinkManagerGenericTargetIdentifier/1228933433|net.datenwerke.rs.fileserver.client.fileserver.security.FileServerManagerGenericTargetIdentifier/3507781659|net.datenwerke.rs.eximport.client.eximport.security.ExportGenericTargetIdentifier/1153950009|net.datenwerke.rs.eximport.client.eximport.security.ImportGenericTargetIdentifier/4134686308|net.datenwerke.rs.globalconstants.client.globalconstants.security.GlobalConstantsGenericTargetIdentifier/1920137750|net.datenwerke.rs.license.client.security.LicenseGenericTargetIdentifier/3867290533|net.datenwerke.rs.teamspace.client.teamspace.security.TeamSpaceGenericTargetIdentifier/1646070704|net.datenwerke.rs.core.client.reportmanager.security.ReportManagerGenericTargetIdentifier/1706906031|net.datenwerke.rs.adminutils.client.suuser.security.SuGenericTargetIdentifier/4065258493|net.datenwerke.rs.remoteaccess.client.sftp.genrights.SftpGenericTargetIdentifier/814877659|net.datenwerke.security.ext.client.usermanager.security.UserManagerAdminViewGenericTargetIdentifier/3165328799|net.datenwerke.rs.uservariables.client.uservariables.genrights.UserVariableAdminViewGenericTargetIdentifier/771125979|net.datenwerke.rs.scheduler.client.scheduler.security.SchedulingAdminViewGenericTargetIdentifier/1205179919|net.datenwerke.rs.scheduler.client.scheduler.security.SchedulingBasicGenericTargetIdentifier/1162125790|1|2|3|4|1|5|6|25|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|";
-        
         var response = await PostGwtRpcAsync("security_security", payload);
         var rights = ParseSecurityRightsResponse(response);
+        if (TryParseException(response, out var responseException))
+            return GwtRpcResponse<Dictionary<string, object>>.Fail(responseException);
         
         return GwtRpcResponse<Dictionary<string, object>>.Successful(rights);
     }

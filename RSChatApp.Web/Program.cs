@@ -33,7 +33,9 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddOptions();
-builder.Services.Configure<BrowserInstanceConfiguration>(builder.Configuration.GetSection("BrowserInstanceConfiguration"));
+builder.Services.Configure<BrowserInstanceConfiguration>(builder.Configuration.GetSection(nameof(BrowserInstanceConfiguration)));
+builder.Services.Configure<OpenAIPromptExecutionSettings>(
+    builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings)));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
     config =>
     {
@@ -184,7 +186,6 @@ builder.AddQdrantClient("vectordb");
 
 builder.Services.AddSingleton<Kernel>((serviceProvider)=> {
     KernelPluginCollection pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
-    
     return new Kernel(serviceProvider, pluginCollection);
 });
 

@@ -101,11 +101,9 @@ public class ReportServerGwtRpcClientBase : IDisposable
         
         return responseBody;
     }
-    
-    protected ServerCallFailedException? TryParseException(string response)
+
+    protected bool TryParseException(string response, out ServerCallFailedException? exception)
     {
-        // Check for GWT exception response
-        // Format: //EX[2,0,1,["net.datenwerke.gxtdto.client.servercommunication.exceptions.ViolatedSecurityExceptionDto/668224195","Insufficient rights for: Violated security. Execution of method execute in class net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl(target: net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl$$EnhancerByGuice$$79050f51) was prohibited.  "],0,7]
         if (response.StartsWith("//EX"))
         {
             var stringTable = ExtractStringTable(response);
@@ -119,11 +117,35 @@ public class ReportServerGwtRpcClientBase : IDisposable
                 ? stringTable[0].Split('/')[0]
                 : "Unknown exception";
 
-            return new ServerCallFailedException(errorMessage, exceptionType);
+            exception = new ServerCallFailedException(errorMessage, exceptionType);
+            return true;
         }
-
-        return null;
+        exception = null;
+        return false;
     }
+    
+    // protected ServerCallFailedException? TryParseException(string response)
+    // {
+    //     // Check for GWT exception response
+    //     // Format: //EX[2,0,1,["net.datenwerke.gxtdto.client.servercommunication.exceptions.ViolatedSecurityExceptionDto/668224195","Insufficient rights for: Violated security. Execution of method execute in class net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl(target: net.datenwerke.rs.terminal.server.terminal.TerminalRpcServiceImpl$$EnhancerByGuice$$79050f51) was prohibited.  "],0,7]
+    //     if (response.StartsWith("//EX"))
+    //     {
+    //         var stringTable = ExtractStringTable(response);
+    //
+    //         // The error message is typically the second string in the table (after the exception class name)
+    //         var errorMessage = stringTable.Count > 1
+    //             ? stringTable[1]
+    //             : "An error occurred initializing the terminal session";
+    //
+    //         var exceptionType = stringTable.Count > 0
+    //             ? stringTable[0].Split('/')[0]
+    //             : "Unknown exception";
+    //
+    //         return new ServerCallFailedException(errorMessage, exceptionType);
+    //     }
+    //
+    //     return null;
+    // }
     
       /// <summary>
     /// Extracts string table from complex GWT serialized response

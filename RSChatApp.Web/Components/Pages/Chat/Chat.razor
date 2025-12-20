@@ -82,7 +82,8 @@
         
         // Debug logging to see what kernel plugins are available
         var kernelPlugins = Kernel.Plugins.ToList();
-        Logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}", kernelPlugins.Count);
+        Logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
+            string.Join(", ", kernelPlugins.Select(p=> p.Name)));
 
         // Create a list of all tools (local search + MCP tools)
         var allTools = new List<AITool>
@@ -102,7 +103,8 @@
                         .WithKernel(Kernel));
             }
         }
-        Logger.LogInformation("Total tools registered for chat: {allToolsCount}", allTools.Count);
+        Logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{kernelPluginsNames} ", allTools.Count, 
+            string.Join(", ", kernelPlugins.Select(p=> p.Name)));
         chatOptions.Tools = allTools;
     }
     public async Task StoreChatHistoryAsync()
@@ -254,9 +256,6 @@
             var errorMessage = new ChatMessage(ChatRole.Assistant, 
                 $"Sorry, I encountered an error while processing your request: {ex.Message}");
             messages.Add(errorMessage);
-            
-            // Force UI update to show the error message
-            await InvokeAsync(StateHasChanged);
         }
         finally
         {

@@ -7,16 +7,22 @@ using RSChatApp.Mcp.ReportServer.Tools;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 using RsMcpServer.Web.Extensions;
+using Serilog;
 
 
 // Make the Program accessible to the test project
 [assembly: InternalsVisibleTo("TestRsMcpServer")]
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddLogging(logging => 
+builder.Services.AddLogging(logging =>
 {
+    logging.ClearProviders();
     logging.AddConsole();
+    logging.AddSerilog(new LoggerConfiguration()
+        .WriteTo.File("Logs/rsmcpserver-.log", rollingInterval: RollingInterval.Day)
+        .CreateLogger());
     logging.AddDebug();
+    logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddHealthChecks();
 var reportServerUrl = builder.Configuration["ReportServer:Url"] 
