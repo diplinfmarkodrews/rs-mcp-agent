@@ -69,21 +69,26 @@ public class SessionBridgeService : ISessionBridgeService
                 _logger.LogDebug("No HTTP context available");
                 return AuthenticationContext.Unauthenticated();
             }
+            var authProvider = context.User.FindFirst("auth_provider")?.Value;
 
-            // Try Legacy authentication first
-            var legacyToken = ExtractLegacyTokenFromRequest(context);
-            _logger.LogDebug("Extracted Legacy Token: {legacyToken}", legacyToken);
-            if (!string.IsNullOrEmpty(legacyToken))
+            if (authProvider == "Legacy")
             {
-                var session = await _authenticationService.ValidateTokenAsync(legacyToken);
-                if (session != null)
+                // Try Legacy authentication first
+                var legacyToken = ExtractLegacyTokenFromRequest(context);
+                _logger.LogDebug("Extracted Legacy Token: {legacyToken}", legacyToken);
+                if (!string.IsNullOrEmpty(legacyToken))
                 {
-                    var reportServerSessionId = session.User.FindFirst("jsessionid")?.Value ?? string.Empty;
-                    _logger.LogDebug("Legacy authentication context created for user {Username}", 
-                        session.User.Identity?.Name);
-                    
-                    return AuthenticationContext.Legacy(reportServerSessionId, legacyToken, session.User);
+                    var session = await _authenticationService.ValidateTokenAsync(legacyToken);
+                    if (session != null)
+                    {
+                        var reportServerSessionId = session.User.FindFirst("jsessionid")?.Value ?? string.Empty;
+                        _logger.LogDebug("Legacy authentication context created for user {Username}",
+                            session.User.Identity?.Name);
+
+                        return AuthenticationContext.Legacy(reportServerSessionId, legacyToken, session.User);
+                    }
                 }
+                return AuthenticationContext.Unauthenticated();
             }
 
             // Check existing Keycloak authentication
@@ -176,18 +181,13 @@ public class SessionBridgeService : ISessionBridgeService
         //         return token;
         //     }
         // }
+          
+        var token = context.User.Claims.FirstOrDefault(c => c.Type == "Token")?.Value;            
+        _logger.LogDebug("Extracted Token from claims: {Token}", token);
 
-        // Check query parameter for Legacy tokens (for websockets or other scenarios)
-        context.Request.Cookies.TryGetValue("JSESSIONID", out var jSessionId);
-        var sessionId = context.User.Claims.FirstOrDefault(c => c.Type == "JSESSIONID")?.Value;            
-        _logger.LogDebug("Extracted JSESSIONID from claims: {SessionId}", sessionId);
-        _logger.LogDebug("Extracted JSESSIONID from cookies: {SessionId}", jSessionId);
-        if (!string.IsNullOrEmpty(jSessionId))
-        {
-            return jSessionId;
-        }
 
-        return null;
+        return token;
+
     }
 
     public async Task<string?> GetBearerTokenAsync()

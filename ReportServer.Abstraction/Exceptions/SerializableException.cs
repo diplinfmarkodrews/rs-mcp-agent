@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ReportServer.Abstraction.Exceptions;
 
@@ -9,10 +10,15 @@ public class SerializableException : Exception
     // Custom properties that will be serialized
     public new string StackTrace { get; set; } = string.Empty;
     public string ExceptionSource { get; set; } = string.Empty;
-    public string ExceptionMessage { get; set; } = string.Empty;
+    
     
     // Custom property for inner exception since InnerException is read-only
     public SerializableException? SerializableInnerException { get; set; }
+    
+    // Parameterless constructor required for System.Text.Json deserialization
+    public SerializableException() : base() 
+    { 
+    }
     
     public SerializableException(Exception exception) : base(exception?.Message ?? "Unknown error") 
     { 
@@ -21,7 +27,6 @@ public class SerializableException : Exception
         {
             StackTrace = exception.StackTrace ?? string.Empty;
             ExceptionSource = exception.Source ?? string.Empty;
-            ExceptionMessage = exception.Message ?? string.Empty;
             
             // Handle inner exception (but avoid circular references)
             if (exception.InnerException != null)
@@ -30,18 +35,19 @@ public class SerializableException : Exception
             }
         }
     }
+    
     public SerializableException(string message) : base(message) 
     { 
-        ExceptionMessage = message;
     }
-    // Hide problematic properties from serialization using JsonIgnore
-    [JsonIgnore] 
+    
+    // Hide problematic properties from serialization using both JsonIgnore attributes
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public new System.Reflection.MethodBase TargetSite => base.TargetSite;
     
-    [JsonIgnore]
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public new Exception InnerException => base.InnerException;
-
-    protected SerializableException() : base() { }
     
     protected SerializableException(System.Runtime.Serialization.SerializationInfo info,
         System.Runtime.Serialization.StreamingContext context) : base(info, context) { }

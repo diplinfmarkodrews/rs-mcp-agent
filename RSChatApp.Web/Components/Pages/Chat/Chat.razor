@@ -7,7 +7,8 @@
 @inject SemanticSearch Search
 @inject IAuthenticationInfoService AuthenticationInfoService
 @inject ILoginModalService LoginModalService
-@inject IChatHistoryService ChatHistoryService
+@inject ChatHistoryStorage ChatHistoryStorage
+
 @inject ILogger<Chat> Logger
 @using System.ComponentModel
 @using System.Diagnostics.CodeAnalysis
@@ -17,12 +18,13 @@
 @using RSChatApp.Web.Services.Authentication
 @using RSChatApp.Web.Services.ChatHistory
 @using RSChatApp.Web.Services.SemanticSearch
+@using RSChatApp.Web.Components.Pages.Terminal
 @using ChatMessage = Microsoft.Extensions.AI.ChatMessage
 @using TextContent = Microsoft.Extensions.AI.TextContent
 @implements IDisposable
 
-<div class="chat-page">
-    <ChatHeader OnNewChat="@ResetConversationAsync" />
+<div class="chat-page @(_terminalVisible ? "terminal-visible" : "")" style="@(_terminalVisible ? $"--terminal-height: {_terminalHeight}px" : "")">
+    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" />
     
     <div class="chat-messages-area">
         <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
@@ -44,6 +46,8 @@
             <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput"/>
         </div>
     </div>
+    
+    <TerminalManager @ref="_terminalManager" IsVisible="@_terminalVisible" Height="@_terminalHeight" OnHeightChanged="@((h) => { _terminalHeight = h; StateHasChanged(); })" />
 </div>
 
 @code {
@@ -71,6 +75,9 @@
     private ChatInput? chatInput;
     private ChatSuggestions? chatSuggestions;
     private bool IsOllama;
+    private bool _terminalVisible = false;
+    private TerminalManager? _terminalManager;
+    private int _terminalHeight = 200;
     
     [Experimental("SKEXP0001")]
     protected override async Task OnInitializedAsync()
@@ -111,7 +118,7 @@
     {
         try
         {
-            await ChatHistoryService.SaveHistoryAsync(messages);
+            await ChatHistoryStorage.SaveAsync(messages);
             Logger.LogInformation("Chat history saved with {messageCount} messages", messages.Count);
         }
         catch (Exception ex)
@@ -121,12 +128,12 @@
     }
     private async Task InitChatHistoryAsync()
     {
-        var chatHistory = await ChatHistoryService.LoadHistoryAsync();
+        var chatHistory = await ChatHistoryStorage.GetAsync();
         messages.Clear();
-        if (chatHistory.Count > 0)
+        if (chatHistory.Success)
         {
-            Logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Count);
-            messages.AddRange(chatHistory);
+            Logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Value!.Count);
+            messages.AddRange(chatHistory.Value);
             chatSuggestions?.Update(messages);
             await InvokeAsync(StateHasChanged);
             await chatInput!.FocusAsync();
@@ -287,15 +294,20 @@
     {
         CancelAnyCurrentResponse();
         messages.Clear();
-        await ChatHistoryService.ClearHistoryAsync();
+        await ChatHistoryStorage.DeleteAsync();
         chatSuggestions?.Clear();
         messages.Add(new(ChatRole.System, SystemPrompt));
         await chatInput!.FocusAsync();
     }
 
+    private void ToggleTerminal()
+    {
+        _terminalVisible = !_terminalVisible;
+    }
+
 
   
-    [Description("Searches for information using a phrase or keyword")]
+    [Description("Searches for information using a phrase or keyword. Always provide sources with documentId and pages.")]
     private async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
         [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,

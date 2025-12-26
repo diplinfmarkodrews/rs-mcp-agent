@@ -50,7 +50,7 @@ public class AuthenticatedSessionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in authentication middleware");
+            _logger.LogError(ex, "Error in authentication middleware: {Message}", ex.Message);
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("Internal server error");
         }

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace RSChatApp.Infrastructure.Models.Authentication;
+namespace RSChatApp.Infrastructure.Identity.Models;
 
 /// <summary>
 /// Information about the current authentication state

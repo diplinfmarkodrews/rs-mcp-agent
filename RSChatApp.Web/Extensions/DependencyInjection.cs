@@ -5,7 +5,7 @@ namespace RSChatApp.Web.Extensions;
 /// <summary>
 /// Extension methods for configuring authentication services
 /// </summary>
-public static class ServiceExtensions
+public static class DependencyInjection
 {
     /// <summary>
     /// Adds the custom authentication service to the service collection

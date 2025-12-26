@@ -30,7 +30,7 @@ public class BrowserInstanceProvider : IBrowserInstanceProvider
             throw new InvalidOperationException("SessionId not found in MemoryCache, BrowserInstance not created yet?");
         
         if (memoryCacheEntry is AsyncLazy<IBrowserInstance> browserInstance)
-            return browserInstance.GetAwaiter().GetResult();
+            return browserInstance.GetAwaiter().GetResult(); // refactor BrowserTool to use async method
         
         throw new InvalidDataException($"BrowserCacheEntry is not IBrowserInstance, type: {memoryCacheEntry.GetType().FullName}");
     }

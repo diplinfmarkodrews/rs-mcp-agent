@@ -125,10 +125,10 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         var response = await _terminalClient.ExecuteAsync(sessionId, command, cancellationToken);
         if (response.Result is not null)
         {
-            return new Result<CommandResult>(
+            return Result<CommandResult>.Success(
                 _mapper.Map<CommandResult>(response.Result));
         }
-        return new Result<CommandResult>(response.Exception);
+        return Result<CommandResult>.Fail(response.Exception);
     }
 
     public Task<Result<CommandResult>> CtrlCPressedAsync(string sessionId)

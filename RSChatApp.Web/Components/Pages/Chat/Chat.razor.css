@@ -3,8 +3,9 @@
     display: flex;
     flex-direction: column;
     height: 100%; /* Use full height of parent container */
-    max-height: calc(100vh - 60px); /* Fallback for standalone chat page */
+    max-height: 100vh;
     overflow: hidden;
+    padding-bottom: 0; /* Terminal is fixed, no padding needed */
 }
 
 /* Message area should take available space and scroll when overflow */
@@ -23,4 +24,27 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+/* Terminal container styling when integrated in chat */
+.chat-page ::deep .terminal-manager {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 2px solid #E5E7EB;
+    background-color: #1e1e1e;
+    overflow: hidden;
+    z-index: 1000;
+    transition: height 0.1s ease;
+}
+
+.chat-page ::deep .terminal-content {
+    height: calc(100% - 50px);
+    overflow-y: auto;
+}
+
+/* Add padding to chat page when terminal is visible */
+.chat-page.terminal-visible {
+    padding-bottom: var(--terminal-height, 200px);
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using RSChatApp.Infrastructure.Identity.Clients;
-using RSChatApp.Infrastructure.Models.Authentication;
+using RSChatApp.Infrastructure.Identity.Models;
 
 namespace RSChatApp.Infrastructure.Identity.Services;
 

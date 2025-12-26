@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.Extensions.AI;
+using RSChatApp.Web.Storage;
 
 namespace RSChatApp.Web.Services.ChatHistory;
 
@@ -9,33 +9,36 @@ public interface IChatHistoryService
     Task<List<ChatMessage>> LoadHistoryAsync();
     Task ClearHistoryAsync();
 }
+
+
+
 /// <summary>
 /// This is a temporary storage for messagehistory in ProtectedLocalStorage
 /// data is encrypted and stored in local browsercache
 /// </summary>
 public class ChatHistoryService : IChatHistoryService
 {
-    private readonly ProtectedLocalStorage _localStorage;
+    private readonly IProtectedBrowserStorage _storage;
     
-    public ChatHistoryService(ProtectedLocalStorage localStorage)
+    public ChatHistoryService(IProtectedBrowserStorage storage)
     {
-        _localStorage = localStorage;
+        _storage = storage;
     }
     public async Task SaveHistoryAsync(List<ChatMessage> messages) 
     {
-        await _localStorage.SetAsync("chatHistory", ValidateMessages(messages));
+        await _storage.SetAsync("chatHistory", ValidateMessages(messages));
     }
     
     public async Task<List<ChatMessage>> LoadHistoryAsync() 
     {
-        var result = await _localStorage.GetAsync<List<ChatMessage>>("chatHistory");
+        var result = await _storage.GetAsync<List<ChatMessage>>("chatHistory");
         return result.Success
-            ? result.Value
+            ? result.Value!
             : new();
     }
     public async Task ClearHistoryAsync() 
     {
-        await _localStorage.DeleteAsync("chatHistory");
+        await _storage.DeleteAsync("chatHistory");
     }
     private static List<ChatMessage> ValidateMessages(List<ChatMessage> messages)
     {

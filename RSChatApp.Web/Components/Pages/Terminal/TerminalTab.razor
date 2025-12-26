@@ -1,0 +1,47 @@
+@using RSChatApp.Web.Models.Terminal
+
+<div class="terminal-tab @(IsActive ? "active" : "") @(!IsValid ? "invalid" : "")" 
+     @onclick="OnClick">
+    <span class="terminal-tab-icon" style="color: @GetTypeColor()">●</span>
+    <span class="terminal-tab-name">@Terminal.Name</span>
+    @if (!IsValid)
+    {
+        <span class="terminal-tab-warning" title="Session expired">⚠</span>
+    }
+    @if (IsMinimized)
+    {
+        <span class="terminal-tab-minimize">▼</span>
+    }
+    <button class="terminal-tab-close" @onclick="OnClose" @onclick:stopPropagation="true">×</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TerminalInstance Terminal { get; set; } = default!;
+
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    [Parameter]
+    public bool IsMinimized { get; set; }
+
+    [Parameter]
+    public bool IsValid { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string GetTypeColor()
+    {
+        return Terminal.Type switch
+        {
+            TerminalType.ReportServer => "#4ec9b0",
+            TerminalType.JavaScript => "#dcdcaa",
+            _ => "#d4d4d4"
+        };
+    }
+}
+

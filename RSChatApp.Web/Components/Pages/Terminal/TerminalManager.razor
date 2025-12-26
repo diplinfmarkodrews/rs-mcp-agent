@@ -1,0 +1,219 @@
+@using RSChatApp.Web.Models.Terminal
+@using RSChatApp.Web.Components.Pages.Terminal
+@using RSChatApp.Web.Services.Terminal
+@inject ITerminalManager TerminalManagerService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div @ref="_terminalElement" class="terminal-manager" style="@GetTerminalStyle()">
+    <div class="terminal-resize-handle" @onmousedown="StartResize" @onmousedown:preventDefault="true"></div>
+    <div class="terminal-tabs-container">
+        <div class="terminal-tabs">
+            @foreach (var terminal in TerminalManagerService.Terminals)
+            {
+                <TerminalTab Terminal="terminal"
+                            IsActive="terminal.Id == TerminalManagerService.ActiveTerminalId"
+                            IsMinimized="terminal.IsMinimized"
+                            IsValid="terminal.IsValid"
+                            OnClick="() => SetActiveTerminal(terminal.Id)"
+                            OnClose="() => CloseTerminal(terminal.Id)" />
+            }
+        </div>
+        
+        <div class="terminal-actions">
+            <button class="btn-new-terminal" @onclick="ToggleNewTerminalMenu">
+                <span>+ New Terminal</span>
+                @if (_showNewTerminalMenu)
+                {
+                    <span>▼</span>
+                }
+                else
+                {
+                    <span>▶</span>
+                }
+            </button>
+            
+            @if (_showNewTerminalMenu)
+            {
+                <div class="new-terminal-menu">
+                    <button @onclick="() => CreateTerminal(TerminalType.ReportServer)">
+                        <span style="color: #4ec9b0">●</span> ReportServer Terminal
+                    </button>
+                    <button @onclick="() => CreateTerminal(TerminalType.JavaScript)">
+                        <span style="color: #dcdcaa">●</span> JavaScript Terminal
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="terminal-content">
+        @{
+            var activeTerminal = TerminalManagerService.ActiveTerminal;
+            if (activeTerminal != null && !activeTerminal.IsMinimized)
+            {
+                <TerminalViewer Terminal="activeTerminal" 
+                               OnCommandExecuted="HandleCommandExecuted" />
+            }
+            else if (activeTerminal == null && TerminalManagerService.Terminals.Any())
+            {
+                <div class="terminal-empty">
+                    <p>No active terminal. Select a terminal or create a new one.</p>
+                </div>
+            }
+            else if (!TerminalManagerService.Terminals.Any())
+            {
+                <div class="terminal-empty">
+                    <p>No terminals yet. Click "+ New Terminal" to create one.</p>
+                </div>
+            }
+        }
+    </div>
+
+    @if (TerminalManagerService.Terminals.Any(t => t.IsMinimized))
+    {
+        <div class="terminal-minimized-bar">
+            <div class="minimized-label">Minimized:</div>
+            @foreach (var terminal in TerminalManagerService.Terminals.Where(t => t.IsMinimized))
+            {
+                <button class="minimized-terminal" @onclick="() => RestoreTerminal(terminal.Id)">
+                    <span style="color: @GetTypeColor(terminal.Type)">●</span>
+                    @terminal.Name
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool _showNewTerminalMenu;
+    private IJSObjectReference? _jsModule;
+    private DotNetObjectReference<TerminalManager>? _dotNetRef;
+    private ElementReference _terminalElement;
+
+    [Parameter]
+    public bool IsVisible { get; set; } = true;
+
+    [Parameter]
+    public int Height { get; set; } = 200;
+
+    [Parameter]
+    public EventCallback<int> OnHeightChanged { get; set; }
+
+    private const int MinHeight = 100;
+    private const int MaxHeight = 600;
+
+    private string GetTerminalStyle()
+    {
+        if (!IsVisible)
+            return "display: none;";
+        
+        var height = Math.Max(MinHeight, Math.Min(MaxHeight, Height));
+        return $"display: block; height: {height}px;";
+    }
+
+    private async Task StartResize(MouseEventArgs e)
+    {
+        if (_jsModule == null) return;
+        
+        try
+        {
+            await _jsModule.InvokeVoidAsync("startResize", e, Height);
+        }
+        catch (Exception)
+        {
+            // Ignore JS errors
+        }
+    }
+
+    [JSInvokable]
+    public async Task UpdateHeight(int height)
+    {
+        var newHeight = Math.Max(MinHeight, Math.Min(MaxHeight, height));
+        if (newHeight != Height)
+        {
+            await OnHeightChanged.InvokeAsync(newHeight);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/terminal.js");
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await _jsModule.InvokeVoidAsync("initResize", _terminalElement, _dotNetRef, nameof(UpdateHeight));
+            }
+            catch (Exception)
+            {
+                // Ignore JS module load errors
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        TerminalManagerService.Changed -= HandleManagerChanged;
+        _jsModule?.DisposeAsync();
+        _dotNetRef?.Dispose();
+    }
+
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        TerminalManagerService.Changed += HandleManagerChanged;
+    }
+
+    private void HandleManagerChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CreateTerminal(TerminalType type)
+    {
+        await TerminalManagerService.CreateAsync(type);
+        _showNewTerminalMenu = false;
+    }
+
+    private Task SetActiveTerminal(Guid terminalId)
+    {
+        return TerminalManagerService.SetActiveAsync(terminalId);
+    }
+
+    private async Task CloseTerminal(Guid terminalId)
+    {
+        await TerminalManagerService.CloseAsync(terminalId);
+    }
+
+    private async Task RestoreTerminal(Guid terminalId)
+    {
+        await TerminalManagerService.SetMinimizedAsync(terminalId, minimized: false);
+    }
+
+    private void ToggleNewTerminalMenu()
+    {
+        _showNewTerminalMenu = !_showNewTerminalMenu;
+    }
+
+    private async Task HandleCommandExecuted(CommandEntry entry)
+    {
+        await TerminalManagerService.PersistAsync();
+    }
+
+    private string GetTypeColor(TerminalType type)
+    {
+        return type switch
+        {
+            TerminalType.ReportServer => "#4ec9b0",
+            TerminalType.JavaScript => "#dcdcaa",
+            _ => "#d4d4d4"
+        };
+    }
+}
+

@@ -35,7 +35,14 @@ public class Result
 
 public class Result<T> : Result
 {
+    
     public T? Data { get; set; }
+    
+    // Parameterless constructor required for System.Text.Json deserialization
+    public Result()
+    {
+    }
+    
     public Result(Exception? exception)
     {
         IsSuccess = false;

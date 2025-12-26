@@ -67,7 +67,7 @@ public class AuthenticationService : IAuthenticationService
             // Authenticate with ReportServer
             var authResult = await _reportServerClient.AuthenticateAsync(username, password);
             
-            if (!authResult.IsSuccess || authResult.Data?.IsAuthenticated != true || authResult.Data?.SessionId == null)
+            if (!authResult.IsSuccess || authResult.Data?.IsAuthenticated != true || string.IsNullOrEmpty(authResult.Data?.SessionId)) //|| string.IsNullOrEmpty(authResult.Data?.SessionId) == false
             {
                 _logger.LogWarning("Legacy authentication failed for user {Username}: {Error}", 
                     username, authResult.Error?.Message ?? "Authentication failed");
@@ -75,17 +75,18 @@ public class AuthenticationService : IAuthenticationService
             }
             _logger.LogDebug("Successfully authenticated for user {User}", JsonSerializer.Serialize(authResult.Data));
             var rsAuth = authResult.Data;
+            await httpContext.Session.LoadAsync(cancellationToken);
             var token = httpContext.Session.Id;
             
             // Create claims principal
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, rsAuth.User.Id.ToString()),
-                new(ClaimTypes.Name, rsAuth.User.Username),
-                new(ClaimTypes.Email, rsAuth.User.Email ?? string.Empty),
+                new(ClaimTypes.Name, username),
+                new(ClaimTypes.Email, rsAuth.User.Email),
                 new(ClaimTypes.GivenName, rsAuth.User.Firstname ?? string.Empty),
                 new(ClaimTypes.Surname, rsAuth.User.Lastname ?? string.Empty),
-                new("JSESSIONID", rsAuth.SessionId ?? string.Empty),
+                new("JSESSIONID", rsAuth.SessionId),
                 new("Token", token),
                 new("auth_provider", "Legacy")
             };

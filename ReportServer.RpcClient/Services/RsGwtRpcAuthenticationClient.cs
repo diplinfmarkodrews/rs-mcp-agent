@@ -38,6 +38,7 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
             var payload = $"7|0|8|{_moduleBaseUrl}|{LOGIN_SERVICE_HASH}|net.datenwerke.rs.authenticator.client.login.rpc.LoginHandler|authenticate|[Lnet.datenwerke.security.client.login.AuthToken;/1508143471|net.datenwerke.rs.authenticator.client.login.dto.UserPasswordAuthToken/1647979090|{password}|{username}|1|2|3|4|1|5|5|1|6|7|8|";
             
             var response = await PostGwtRpcAsync("login", payload, true);
+            _logger.LogDebug("auth Response: {Response}", response);
             var parsedResult = ParseAuthenticationResponse(response);
             if (parsedResult != null)
                 return GwtRpcResponse<AuthenticationResultDto>.Successful(parsedResult);
@@ -262,7 +263,8 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 
     private string? ExtractSessionFromCookies()
     {
-        if (_httpClient.BaseAddress == null) return null;
+        if (_httpClient.BaseAddress == null) 
+            return null;
         
         var cookies = _cookieContainer.GetCookies(_httpClient.BaseAddress);
         var sessionCookie = cookies[CookieSessionId];

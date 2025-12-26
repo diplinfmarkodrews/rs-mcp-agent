@@ -32,7 +32,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
-    <Folder Include="Models\Authentication\" />
+    <Folder Include="Mcp\" />
   </ItemGroup>
 
 </Project>

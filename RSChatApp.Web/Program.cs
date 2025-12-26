@@ -15,9 +15,13 @@ using RSChatApp.Web.Components;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Models.Ingestion;
+using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
+using RSChatApp.Web.Services.Terminal;
+using RSChatApp.Web.Services.Terminal.Drivers;
+using RSChatApp.Web.Storage;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -165,7 +169,7 @@ if (string.IsNullOrEmpty(openAISettings.Model) == false)
     builder.Services.AddOpenAIChatClient(openAISettings.Model,
         new Uri(openAISettings.Url),
         openAISettings.ApiKey,
-        openTelemetryConfig:(f) => f.EnableSensitiveData = false 
+        openTelemetryConfig:(f) => f.EnableSensitiveData = false
     );       
 }
 else
@@ -193,7 +197,23 @@ builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks
 builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
-builder.Services.AddScoped<IChatHistoryService, ChatHistoryService>();
+
+// Browser storage abstraction - choose LocalStorage or SessionStorage
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IProtectedBrowserStorage, ProtectedLocalStorageAdapter>();
+else // Use session storage in production, data is dropped after browser is closed or session expires
+    builder.Services.AddScoped<IProtectedBrowserStorage, ProtectedSessionStorageAdapter>();
+
+builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>();
+
+// Terminal services
+
+builder.Services.AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
+builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();
+builder.Services.AddScoped<RsTerminalDriver>();
+builder.Services.AddScoped<JsTerminalDriver>();
+builder.Services.AddScoped<TerminalDriverFactory>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -228,7 +248,9 @@ if (!app.Environment.IsDevelopment())
 app.MapHub<BrowserStreamHub>("/browserstreamhub");
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    // .AddAdditionalAssemblies()
+    ;
 
 // Add authentication debug endpoint for development
 if (app.Environment.IsDevelopment())

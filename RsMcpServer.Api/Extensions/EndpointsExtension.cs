@@ -19,19 +19,19 @@ public static class EndpointsExtension
         terminal.MapGet("/init-session", InitTerminalSessionAsync)
             .WithName("InitTerminalSession")
             .WithSummary("Initialize a new terminal session to gain sessionId for subsequent terminal commands")
-            .RequireAuthorization()
+            // .RequireAuthorization()
             .Produces<Result<TerminalSessionInfo>>();
 
         terminal.MapPost("/execute-command", ExecuteTerminalCommandAsync) 
             .WithName("ExecuteTerminalCommand")
             .WithSummary("Execute a terminal command using an existing terminal session identified by sessionId")
-            .RequireAuthorization()
+            // .RequireAuthorization()
             .Produces<Result<CommandResult>>();
         
         terminal.MapDelete("/close-session", CloseTerminalSessionAsync)
             .WithName("CloseTerminalSession")
             .WithSummary("Close an existing terminal session identified by sessionId")
-            .RequireAuthorization()
+            // .RequireAuthorization()
             .Produces<Result>();
         
         return endpoints;
@@ -39,6 +39,8 @@ public static class EndpointsExtension
     private static async Task<IResult> InitTerminalSessionAsync(
         [FromServices] IReportServerClient rsClient, HttpContext context)
     {
+        if (context.User?.Identity?.IsAuthenticated ?? false)
+            Results.Unauthorized();
         var sessionInfo = await rsClient.InitSessionAsync();
         return Results.Ok(sessionInfo);
     }
@@ -47,6 +49,8 @@ public static class EndpointsExtension
         [FromBody] TerminalCommandRequest request,
         [FromServices] IReportServerClient rsClient, HttpContext context)
     {
+        if (context.User?.Identity?.IsAuthenticated ?? false)
+            Results.Unauthorized();
         var cmdResult = await rsClient.ExecuteAsync(
             request.SessionId, 
             request.Command, 
@@ -58,6 +62,8 @@ public static class EndpointsExtension
         [FromQuery] string sessionId,
         [FromServices] IReportServerClient rsClient, HttpContext context)
     {
+        if (context.User?.Identity?.IsAuthenticated ?? false)
+            Results.Unauthorized();
         var closeResult = await rsClient.CloseSessionAsync(sessionId);
         return Results.Ok(closeResult);
     }

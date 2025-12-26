@@ -29,7 +29,7 @@ public class LegacyAuthenticationClient : IAuthenticationClient
         {
             var response = await httpClient.PostAsJsonAsync("api/auth/v1/login", new { username, password }, cancellationToken);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<AuthenticationResult>(cancellationToken)??
+            return await response.Content.ReadFromJsonAsync<AuthenticationResult>(cancellationToken) ??
                    new AuthenticationResult { Success = false, Error = "Invalid response from authentication server" };
         }
         catch (Exception ex)

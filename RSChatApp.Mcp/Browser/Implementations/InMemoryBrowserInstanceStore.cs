@@ -46,7 +46,7 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
                     entry.SlidingExpiration = TimeSpan.FromMinutes(config?.SlidingExpirationMinutes ?? 30); 
                     var instance = await _browserInstanceFactory.CreateInstanceAsync(config);
                     // Store event handler for proper unsubscription
-                    DisconnectedEventHandler eventHandler = () => BrowserOnDisconnected(instance);
+                    DisconnectedEventHandler eventHandler = async () => await RemoveInstanceAsync(instance.SessionId);
                     _eventHandlers[sessionId] = eventHandler;
                     instance.Disconnected += eventHandler;
                     return instance;
@@ -76,12 +76,5 @@ public class InMemoryBrowserInstanceStore : IBrowserInstanceStore
             _logger.LogWarning("No browser instance found for session {SessionId} to dispose", sessionId);
         }
     }
-
-    private Task BrowserOnDisconnected(IBrowserInstance browserInstance)
-    {
-        var sessionId = browserInstance.SessionId;
-        _logger.LogInformation("Browser instance disconnected for session {SessionId}. Cleaning up cache entry.", sessionId);
-        _memoryCache.Remove(sessionId.CreatBrowserInstanceCacheKey());
-        return Task.CompletedTask;
-    }
+    
 }

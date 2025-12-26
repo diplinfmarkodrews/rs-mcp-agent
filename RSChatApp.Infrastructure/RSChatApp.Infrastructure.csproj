@@ -24,4 +24,10 @@
       <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.SignalR.Client.Core">
+        <HintPath>..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.signalr.client.core\9.0.0\lib\net9.0\Microsoft.AspNetCore.SignalR.Client.Core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

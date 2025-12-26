@@ -14,7 +14,7 @@ public interface IRsTerminalClient
     Task<Result<CommandResult>> ExecuteCommandAsync(string sessionId, string command,
         CancellationToken cancellationToken);
 
-    Task<Result> CloseTerminalSession(string sessionId, CancellationToken cancellationToken);
+    Task<Result> CloseTerminalSessionAsync(string sessionId, CancellationToken cancellationToken);
 }
 
 public class RsTerminalClient : IRsTerminalClient
@@ -65,7 +65,7 @@ public class RsTerminalClient : IRsTerminalClient
         }
     }
 
-    public async Task<Result> CloseTerminalSession(string sessionId, CancellationToken cancellationToken)
+    public async Task<Result> CloseTerminalSessionAsync(string sessionId, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Closing terminal session from RsMcpServer with sessionId: {SessionId}", sessionId);
         using var httpClient = _httpClientFactory.CreateClient(RsMcpServerHttpClientName.ClientName);

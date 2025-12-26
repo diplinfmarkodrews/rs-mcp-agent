@@ -15,10 +15,8 @@ public class BrowserTool
 
     public BrowserTool(ILogger<BrowserTool> logger, IBrowserInstanceProvider browserProvider)
     {
-        _logger = logger 
-                  ?? throw new ArgumentNullException(nameof(logger));
-        _browserInstance = browserProvider?.GetBrowserInstance()
-                  ?? throw new ArgumentNullException(nameof(browserProvider));
+        _logger = logger;
+        _browserInstance = browserProvider?.GetBrowserInstance()!;
        
     }
 
@@ -30,7 +28,7 @@ public class BrowserTool
         [Description("The URL to navigate to")] string url,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
-        _logger.LogInformation("NavigateToUrlAsync called with URL: {Url}, Timeout: {TimeoutMs}ms", url, timeoutMs);
+        _logger.LogDebug("NavigateToUrlAsync called with URL: {Url}, Timeout: {TimeoutMs}ms", url, timeoutMs);
         
         try
         {

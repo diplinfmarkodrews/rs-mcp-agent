@@ -1,0 +1,57 @@
+.terminal-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #2d2d30;
+    border-right: 1px solid #1e1e1e;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.terminal-tab:hover {
+    background: #3e3e42;
+}
+
+.terminal-tab.active {
+    background: #1e1e1e;
+}
+
+.terminal-tab.invalid {
+    opacity: 0.6;
+}
+
+.terminal-tab-icon {
+    font-size: 12px;
+}
+
+.terminal-tab-name {
+    font-size: 13px;
+    color: #cccccc;
+}
+
+.terminal-tab-warning {
+    color: #f48771;
+    font-size: 14px;
+}
+
+.terminal-tab-minimize {
+    color: #858585;
+    font-size: 10px;
+}
+
+.terminal-tab-close {
+    background: none;
+    border: none;
+    color: #858585;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-left: 4px;
+}
+
+.terminal-tab-close:hover {
+    color: #cccccc;
+}

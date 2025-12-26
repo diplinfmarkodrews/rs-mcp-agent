@@ -1,11 +1,17 @@
 <div class="chat-header-container main-background-gradient">
     <div class="chat-header-controls page-width">
-        <div class="header-buttons-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div class="header-buttons-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
             <button class="btn-default" @onclick="@HandleNewChat">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="new-chat-icon">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 New chat
+            </button>
+            <button class="btn-default" @onclick="@HandleToggleTerminal" title="Toggle Terminal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="new-chat-icon">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                Terminal
             </button>
         </div>
     </div>
@@ -16,8 +22,16 @@
     [Parameter]
     public EventCallback OnNewChat { get; set; }
     
+    [Parameter]
+    public EventCallback OnToggleTerminal { get; set; }
+    
     private async Task HandleNewChat()
     {
         await OnNewChat.InvokeAsync();
+    }
+    
+    private async Task HandleToggleTerminal()
+    {
+        await OnToggleTerminal.InvokeAsync();
     }
 }

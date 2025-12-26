@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
-using RSChatApp.Infrastructure.Models.Authentication;
+using RSChatApp.Infrastructure.Identity.Models;
 
 namespace RSChatApp.Web.Services.Authentication;
 
