@@ -14,6 +14,7 @@ using RSChatApp.Mcp.Browser.Tools;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
+using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.ChatHistory;
@@ -109,8 +110,7 @@ builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["RsMcpServer:Url"] 
                                  ?? throw new InvalidConfigurationException("RsMcpServer:Url"));
-    client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");
-    
+    client.DefaultRequestHeaders.Add("Accept", "text/json, application/json");    
 })
     .AddStandardResilienceHandler(); // Only used without aspire
 
@@ -197,6 +197,8 @@ builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks
 builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
+builder.Services.AddScoped<SemanticSearchTool>();
+builder.Services.AddScoped<AuthenticationTool>();
 
 // Browser storage abstraction - choose LocalStorage or SessionStorage
 if (builder.Environment.IsDevelopment())

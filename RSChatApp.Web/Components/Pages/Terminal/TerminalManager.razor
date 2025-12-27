@@ -52,7 +52,7 @@
             var activeTerminal = TerminalManagerService.ActiveTerminal;
             if (activeTerminal != null && !activeTerminal.IsMinimized)
             {
-                <TerminalViewer Terminal="activeTerminal" 
+                <TerminalViewer @ref="_terminalViewer" Terminal="activeTerminal" 
                                OnCommandExecuted="HandleCommandExecuted" />
             }
             else if (activeTerminal == null && TerminalManagerService.Terminals.Any())
@@ -90,6 +90,8 @@
     private IJSObjectReference? _jsModule;
     private DotNetObjectReference<TerminalManager>? _dotNetRef;
     private ElementReference _terminalElement;
+    private TerminalViewer? _terminalViewer;
+    private string? _pendingCommand;
 
     [Parameter]
     public bool IsVisible { get; set; } = true;
@@ -150,6 +152,13 @@
             {
                 // Ignore JS module load errors
             }
+        }
+
+        if (_pendingCommand != null && _terminalViewer != null)
+        {
+            var command = _pendingCommand;
+            _pendingCommand = null;
+            await _terminalViewer.SetCommandAsync(command);
         }
     }
 
@@ -215,5 +224,21 @@
             _ => "#d4d4d4"
         };
     }
+
+    public async Task SetCommandAsync(string command, CancellationToken token = default)
+    {
+        if (string.IsNullOrWhiteSpace(command))
+            return;
+
+        if (_terminalViewer == null)
+        {
+            _pendingCommand = command;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        await _terminalViewer.SetCommandAsync(command, token);
+    }
+
 }
 

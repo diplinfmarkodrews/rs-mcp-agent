@@ -1,6 +1,7 @@
 using Microsoft.JSInterop;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
+using RSChatApp.Web.Models.Terminal;
 
 namespace RSChatApp.Web.Services.Terminal.Drivers;
 
@@ -76,7 +77,7 @@ public class JsTerminalDriver : ITerminalDriver
         return Task.FromResult(Result.Success());
     }
 
-    public Task<bool> ValidateSessionAsync(string sessionId, CancellationToken cancellationToken)
+    public Task<bool> ValidateSessionAsync(TerminalInstance terminal, SessionContext sessionContext, CancellationToken cancellationToken)
     {
         return Task.FromResult(true);
     }

@@ -1,3 +1,5 @@
+using System.Security.Authentication;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Storage;
@@ -31,6 +33,7 @@ public sealed class TerminalManagerService : ITerminalManager
     private const int MaxSeededHistoryEntriesPerType = 200;
     
     private readonly IStorage<List<TerminalInstance>> _terminalStorage;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly TerminalDriverFactory _driverFactory;
     private readonly ILogger<TerminalManagerService> _logger;
 
@@ -47,21 +50,21 @@ public sealed class TerminalManagerService : ITerminalManager
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private bool _initialized;
     private int _terminalCounter = 1;
-
+    private Action? _changed;
     private Guid _activeTerminalId;
 
     public TerminalManagerService(
+        IHttpContextAccessor httpContextAccessor,
         IStorage<List<TerminalInstance>> terminalStorage,
         TerminalDriverFactory driverFactory,
         ILogger<TerminalManagerService> logger)
     {
+        _httpContextAccessor = httpContextAccessor;
         _terminalStorage = terminalStorage;
         _driverFactory = driverFactory;
         _logger = logger;
     }
-
-    private Action? _changed;
-
+    
     public event Action? Changed
     {
         add
@@ -90,23 +93,23 @@ public sealed class TerminalManagerService : ITerminalManager
                 return;
 
             var loaded = await _terminalStorage.GetAsync();
-            
-            _terminals.Clear();
-            if (loaded.Success)
-                _terminals.AddRange(loaded.Value!);
+
+            if (loaded.Success && loaded.Value != null)
+            {
+                _terminals.Clear();
+                _terminals.AddRange(loaded.Value);
+            }
 
             _terminalCounter = _terminals.Count + 1;
-
             await ValidateLoadedSessionsAsync(cancellationToken);
             RebuildHistoryCacheFromInstances();
 
             if (_terminals.Any())
-            {
                 _activeTerminalId = _terminals.FirstOrDefault(t => t.IsValid)?.Id ?? _terminals.First().Id;
-            }
 
-            // Persist any session validation/prompt fixes.
-            await _terminalStorage.SaveAsync(_terminals);
+            // Only persist if we actually loaded existing state; never overwrite storage on load failure.
+            if (loaded.Success)
+                await _terminalStorage.SaveAsync(_terminals);
 
             _initialized = true;
             RaiseChanged();
@@ -129,6 +132,11 @@ public sealed class TerminalManagerService : ITerminalManager
         }
     }
 
+    private string? GetRsSessionId()
+    {
+        return _httpContextAccessor.HttpContext?.User?.Claims?.FirstOrDefault(claim => claim.Type == "JSESSIONID")?.Value;
+    }
+    
     public async Task<TerminalInstance> CreateAsync(TerminalType type, CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken);
@@ -139,6 +147,7 @@ public sealed class TerminalManagerService : ITerminalManager
         {
             Id = Guid.NewGuid(),
             Type = type,
+            RsSessionId = GetRsSessionId(),
             Name = $"{type}-{_terminalCounter++}",
             IsMinimized = false,
             IsValid = true,
@@ -149,14 +158,14 @@ public sealed class TerminalManagerService : ITerminalManager
         _activeTerminalId = terminal.Id;
 
         ResetHistoryNavigation(terminal.Id);
-
+        _logger.LogInformation("Created new terminal: {TerminalName} ({TerminalId})", terminal.Name, terminal.Id);
         // Initialize the driver session immediately for new terminals.
         // If initialization fails, we keep the terminal but mark it invalid and surface the error.
         try
         {
             var driver = _driverFactory.GetDriver(type);
             var initResult = await driver.InitSessionAsync(cancellationToken);
-
+      
             if (initResult.IsSuccess && initResult.Data != null)
             {
                 terminal.SessionId = initResult.Data.SessionId;
@@ -210,9 +219,6 @@ public sealed class TerminalManagerService : ITerminalManager
         var terminal = _terminals.FirstOrDefault(t => t.Id == terminalId);
         if (terminal == null)
             return;
-
-        // Collect history before removing
-        CollectHistoryForType(terminal.Type, terminal.CommandHistory);
 
         // Close session if active
         if (!string.IsNullOrEmpty(terminal.SessionId))
@@ -384,17 +390,18 @@ public sealed class TerminalManagerService : ITerminalManager
         await EnsureInitializedAsync(cancellationToken);
         await _terminalStorage.SaveAsync(_terminals);
     }
-
+    
     private void RaiseChanged() => _changed?.Invoke();
 
     private async Task ValidateLoadedSessionsAsync(CancellationToken cancellationToken)
     {
+        var sessionContext = new SessionContext(GetRsSessionId());
         foreach (var terminal in _terminals.Where(t => !string.IsNullOrEmpty(t.SessionId)))
         {
             try
             {
                 var driver = _driverFactory.GetDriver(terminal.Type);
-                terminal.IsValid = await driver.ValidateSessionAsync(terminal.SessionId!, cancellationToken);
+                terminal.IsValid = await driver.ValidateSessionAsync(terminal, sessionContext, cancellationToken);
             }
             catch
             {
@@ -412,6 +419,19 @@ public sealed class TerminalManagerService : ITerminalManager
         return new List<CommandEntry>(history);
     }
 
+    private static CommandEntry ToSeedEntry(CommandEntry entry)
+    {
+        // Seed entries are used for input history navigation only; do not carry outputs forward.
+        return new CommandEntry
+        {
+            Command = entry.Command,
+            Output = string.Empty,
+            IsSuccess = true,
+            Error = null,
+            IsSeeded = true
+        };
+    }
+
     private void CollectHistoryForType(TerminalType type, CommandEntry entry)
     {
         if (!_historyByType.TryGetValue(type, out var history))
@@ -420,7 +440,7 @@ public sealed class TerminalManagerService : ITerminalManager
             _historyByType[type] = history;
         }
 
-        history.Add(entry);
+        history.Add(ToSeedEntry(entry));
         TrimHistory(history);
     }
 
@@ -435,7 +455,7 @@ public sealed class TerminalManagerService : ITerminalManager
             _historyByType[type] = history;
         }
 
-        history.AddRange(entries);
+        history.AddRange(entries.Select(ToSeedEntry));
         TrimHistory(history);
     }
 

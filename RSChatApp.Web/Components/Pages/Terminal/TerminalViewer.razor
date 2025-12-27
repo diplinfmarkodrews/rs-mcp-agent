@@ -5,7 +5,7 @@
     @if (Terminal != null)
     {
         <div class="terminal-output" @ref="_outputContainer">
-            @foreach (var entry in Terminal.CommandHistory)
+            @foreach (var entry in Terminal.CommandHistory.Where(e => !e.IsSeeded))
             {
                 <div class="terminal-entry @(entry.IsSuccess ? "success" : "error")">
                     <div class="terminal-prompt">@GetPrompt() @entry.Command</div>
@@ -54,6 +54,12 @@
     private string _currentCommand = string.Empty;
     private bool _isExecuting;
 
+    public async Task SetCommandAsync(string command, CancellationToken token = default)
+    {
+        _currentCommand = command;
+        await InvokeAsync(StateHasChanged);
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && Terminal != null)

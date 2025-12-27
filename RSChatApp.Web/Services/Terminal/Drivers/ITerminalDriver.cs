@@ -1,5 +1,6 @@
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
+using RSChatApp.Web.Models.Terminal;
 
 namespace RSChatApp.Web.Services.Terminal.Drivers;
 
@@ -13,5 +14,7 @@ public interface ITerminalDriver
 
     Task<Result> CloseSessionAsync(string sessionId, CancellationToken cancellationToken);
 
-    Task<bool> ValidateSessionAsync(string sessionId, CancellationToken cancellationToken);
+    Task<bool> ValidateSessionAsync(TerminalInstance terminal, SessionContext sessionContext, CancellationToken cancellationToken);
 }
+
+public record SessionContext(string RsSessionId);

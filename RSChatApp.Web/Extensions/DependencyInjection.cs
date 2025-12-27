@@ -1,3 +1,7 @@
+using System.ClientModel;
+using Microsoft.Extensions.AI;
+using Microsoft.SemanticKernel;
+using OpenAI;
 using RSChatApp.Web.Services.Authentication;
 
 namespace RSChatApp.Web.Extensions;
@@ -16,6 +20,41 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthenticationInfoService, AuthenticationInfoService>();
         services.AddScoped<ILoginModalService, LoginModalService>();
+        
+        return services;
+    }
+
+    public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
+        OpenAISettings openAISettings, 
+        string? serviceId = null,
+        string? openTelemetrySourceName = null,
+        Action<OpenTelemetryChatClient>? openTelemetryConfig = null)
+    {
+        IChatClient Factory(IServiceProvider serviceProvider, object? _)
+        {
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
+            var builder = new OpenAIClient(
+                    credential: new ApiKeyCredential(openAISettings.ApiKey),
+                    options: new OpenAIClientOptions
+                    {
+                        Endpoint = new Uri(openAISettings.Url),
+                        
+                    })
+                .GetChatClient(openAISettings.Model)
+                .AsIChatClient()
+                .AsBuilder()
+                .UseKernelFunctionInvocation(loggerFactory)
+                .UseOpenTelemetry(loggerFactory, openTelemetrySourceName, openTelemetryConfig);
+
+            if (loggerFactory is not null)
+            {
+                builder.UseLogging(loggerFactory);
+            }
+            return builder.Build();
+        }
+
+        services.AddKeyedSingleton<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
         
         return services;
     }

@@ -72,10 +72,10 @@ public class RsTerminalClient : IRsTerminalClient
         try
         {
             return await httpClient.DeleteFromJsonAsync<Result>(
-                    new StringBuilder("api/rs-rest/terminal/close-session&sessionId=")
+                    new StringBuilder("api/rs-rest/terminal/close-session?sessionId=")
                                 .Append(sessionId)
                                 .ToString())
-                ?? Result.Fail("Response was null");
+                   ?? throw new InvalidDataException("Response was null");
         }
         catch (Exception exc)
         {

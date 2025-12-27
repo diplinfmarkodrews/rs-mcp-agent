@@ -1,18 +1,21 @@
 using System.ComponentModel;
+using Microsoft.SemanticKernel;
+using ModelContextProtocol.Server;
+using RSChatApp.Web.Services.SemanticSearch;
 
-namespace RSChatApp.Web.Services.SemanticSearch;
+namespace RSChatApp.Web.Mcp.Tools;
 
-public class SemanticSearchMcp
+public class SemanticSearchTool
 {
     private readonly SemanticSearch _semanticSearch;
 
-    public SemanticSearchMcp(SemanticSearch semanticSearch)
+    public SemanticSearchTool(SemanticSearch semanticSearch)
     {
         _semanticSearch = semanticSearch;
     }
     
-    [Description("Searches for information using a phrase or keyword. Always provide sources with documentId and pages.")]
-    private async Task<IEnumerable<string>> SearchAsync(
+    [KernelFunction, McpServerTool,  Description("Searches for information concerning the reportserver, using a phrase or keyword. Cite properly, always provide sources with file and page.")]
+    public async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
         [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
         [Description("The maximum number of results to return. Default is 17.")] int maxResults = 17)

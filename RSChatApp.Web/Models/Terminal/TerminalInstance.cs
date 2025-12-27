@@ -5,6 +5,7 @@ public class TerminalInstance
     public Guid Id { get; init; } = Guid.NewGuid();
     public required TerminalType Type { get; init; }
     public string? SessionId { get; set; }
+    public string? RsSessionId { get; set; }
     public required string Name { get; init; }
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public List<CommandEntry> CommandHistory { get; init; } = new();
@@ -21,6 +22,7 @@ public class CommandEntry
     public bool IsSuccess { get; init; }
     public DateTime ExecutedAt { get; init; } = DateTime.UtcNow;
     public string? Error { get; init; }
+    public bool IsSeeded { get; init; }
 }
 
 public enum TerminalType
