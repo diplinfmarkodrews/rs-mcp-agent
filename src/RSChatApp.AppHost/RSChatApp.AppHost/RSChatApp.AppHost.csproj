@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RSChatApp.Web\RSChatApp.Web.csproj" />
-    <ProjectReference Include="..\RsMcpServer.Api\RsMcpServer.Api.csproj" />
+    <ProjectReference Include="..\..\RSChatApp.RSChatApp\RSChatApp.Web\RSChatApp.Web.csproj" />
+    <ProjectReference Include="..\..\RSChatApp.RsMcpServer\RsMcpServer.Api\RsMcpServer.Api.csproj" />
   </ItemGroup>
 
 </Project>

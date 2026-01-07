@@ -25,10 +25,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RSChatApp.Infrastructure\RSChatApp.Infrastructure.csproj" />
-    <ProjectReference Include="..\RSChatApp.RSChatApp.Infrastructure\RSChatApp.Infrastructure.csproj" />
     <ProjectReference Include="..\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
-    <ProjectReference Include="..\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
+    <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\RSChatApp.RsMcpServer\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
   </ItemGroup>
 
   <ItemGroup>

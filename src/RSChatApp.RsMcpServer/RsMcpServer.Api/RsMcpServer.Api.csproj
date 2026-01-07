@@ -16,11 +16,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
-      <ProjectReference Include="..\ReportServer.RpcClient\ReportServer.RpcClient.csproj" />
-      <ProjectReference Include="..\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
-      <ProjectReference Include="..\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
-      <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
+            <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+            <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.RpcClient\ReportServer.RpcClient.csproj" />
+            <ProjectReference Include="..\..\RSChatApp.RSChatApp\RSChatApp.Mcp\RSChatApp.Mcp.csproj" />
+            <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
+            <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
     </ItemGroup>
 
 </Project>

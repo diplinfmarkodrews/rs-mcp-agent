@@ -16,7 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+      <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common\RSChatApp.Common.csproj" />
+      <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
     </ItemGroup>
 
     <ItemGroup>
