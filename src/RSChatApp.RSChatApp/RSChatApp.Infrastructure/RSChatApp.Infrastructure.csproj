@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>RSChatApp.Infrastructure</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Polly.Core" Version="8.6.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.SignalR.Client.Core">
+        <HintPath>..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.signalr.client.core\9.0.0\lib\net9.0\Microsoft.AspNetCore.SignalR.Client.Core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

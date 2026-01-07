@@ -4,7 +4,7 @@ A sophisticated **Model Context Protocol (MCP)** server implementation that prov
 
 ## 🏗️ Architecture Overview
 
-![RSChatApp Architecture](./architecture-diagram.png)
+![RSChatApp Architecture](./docs/img/architecture-diagram.png)
 
 ### 📖 Architecture Description
 
@@ -12,7 +12,7 @@ The RSChatApp operates as a **browser-based workspace** that provides an intelli
 
 **🌐 Browser-Based Workspace (RSChatApp.Web)**
 
-![RSChatApp example](./RSAIChat.Web.png)
+![RSChatApp example](./docs/img/RSAIChat.Web.png)
 
 - **Session Management**: Currently maintains conversation context in browser memory & cache for immediate responsiveness
 - **Interactive Chat Interface**: Real-time Blazor UI for seamless user interaction with AI models
@@ -123,7 +123,7 @@ Start the entire application stack with one command:
 
 ```bash
 # Navigate to the Aspire host directory
-cd RSChatApp.AppHost
+cd src/RSChatApp.AppHost/RSChatApp.AppHost
 
 # Start all services (Ollama with auto-downloaded models, Qdrant, MCP Server, Web App)
 dotnet run
@@ -212,7 +212,7 @@ This will automatically:
 2. Navigate to the RSChatApp.AppHost directory:
 
 ```bash
-cd RSChatApp.AppHost
+cd src/RSChatApp.AppHost/RSChatApp.AppHost
 ```
 
 3. Run the application:
@@ -412,8 +412,10 @@ Configure the ollama hosted models here
 ```
 
 **6. Start Chat Application**
+
+
 ```bash
-cd RSChatApp.Web
+cd src/RSChatApp.Web/RSChatApp.Web
 dotnet run
 ```
 
