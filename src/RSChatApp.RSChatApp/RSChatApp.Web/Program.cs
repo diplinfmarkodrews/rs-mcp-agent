@@ -1,10 +1,12 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
+using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Mcp.Browser.Configuration;
@@ -12,6 +14,7 @@ using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
 using RSChatApp.Web.Components;
+using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
@@ -22,6 +25,7 @@ using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
+using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
 using Serilog;
 
@@ -38,7 +42,8 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddOptions();
-builder.Services.Configure<BrowserInstanceConfiguration>(builder.Configuration.GetSection(nameof(BrowserInstanceConfiguration)));
+builder.Services.Configure<BrowserInstanceConfiguration>(
+    builder.Configuration.GetSection(nameof(BrowserInstanceConfiguration)));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
     builder.Configuration.GetSection(nameof(OpenAIPromptExecutionSettings)));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
@@ -136,7 +141,7 @@ var toolsRs = await mcpClientRS.ListToolsAsync();
 builder.Services.AddSingleton((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
-    
+
     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
     
@@ -156,6 +161,7 @@ builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
+    
     .AddInteractiveServerComponents();
 
 // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
@@ -177,20 +183,32 @@ else
     builder.AddOllamaApiClient("chat")
         .AddChatClient()
         .UseFunctionInvocation()
+        
         .UseKernelFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());
     
 }
-// Create EmbeddingClient with Ollama
+// Create local EmbeddingClient with Ollama
 builder.AddOllamaApiClient("embeddings")
     .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
 
 builder.AddQdrantClient("vectordb");
 
-builder.Services.AddSingleton<Kernel>((serviceProvider)=> {
+// User interaction / confirmations (scoped per Blazor circuit)
+builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>,
+    WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
+builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
+
+builder.Services.AddScoped<Kernel>((serviceProvider)=> {
     KernelPluginCollection pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
-    return new Kernel(serviceProvider, pluginCollection);
+    var kernel = new Kernel(serviceProvider, pluginCollection);
+
+    foreach (var filter in serviceProvider.GetServices<IFunctionInvocationFilter>())
+    {
+        kernel.FunctionInvocationFilters.Add(filter);
+    }
+    return kernel;
 });
 
 builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
@@ -206,11 +224,12 @@ if (builder.Environment.IsDevelopment())
 else // Use session storage in production, data is dropped after browser is closed or session expires
     builder.Services.AddScoped<IProtectedBrowserStorage, ProtectedSessionStorageAdapter>();
 
-builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>();
+// BrowserStorages
+builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>()
+    .AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
 
 // Terminal services
 
-builder.Services.AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
 builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();
 builder.Services.AddScoped<RsTerminalDriver>();
 builder.Services.AddScoped<JsTerminalDriver>();

@@ -18,7 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRsMcpServer", "tests\Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RsMcpServer.Identity", "src\RSChatApp.RsMcpServer\RsMcpServer.Identity\RsMcpServer.Identity.csproj", "{B5F0FCBA-3FA4-48DF-9878-B0E3A8250A7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Mcp", "src\RSChatApp.RSChatApp\RSChatApp.Mcp\RSChatApp.Mcp.csproj", "{37812D22-3A9E-4126-8BC0-63D0BAE34B37}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSChatApp.Infrastructure.Mcp", "src\RSChatApp.RSChatApp\RSChatApp.Infrastructure.Mcp\RSChatApp.Infrastructure.Mcp.csproj", "{37812D22-3A9E-4126-8BC0-63D0BAE34B37}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{76D8CCCD-34E8-488C-AAC4-41EDD59DBCD5}"
 EndProject

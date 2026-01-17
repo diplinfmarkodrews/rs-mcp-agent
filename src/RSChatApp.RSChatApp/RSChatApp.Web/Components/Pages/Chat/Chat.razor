@@ -8,9 +8,11 @@
 @inject SemanticSearchTool SemanticSearchTool
 @inject AuthenticationTool AuthenticationTool
 @inject ILogger<Chat> Logger
+@inject RSChatApp.Infrastructure.UserInteraction.IWaitForUserInteraction<RSChatApp.Web.Services.UserConfirmation.TerminalConfirmRequest, RSChatApp.Web.Services.UserConfirmation.UserConfirmationResult> TerminalUserInteraction
 @using System.Diagnostics.CodeAnalysis
 @using System.Text
 @using Microsoft.AspNetCore.Authorization
+@using RSChatApp.Web.Components.Pages.Editor
 @using RSChatApp.Web.Components.Pages.Terminal
 @using RSChatApp.Web.Mcp.Tools
 @using RSChatApp.Web.Storage
@@ -34,6 +36,21 @@
     </div>
 
     <div class="chat-container">
+        @if (_pendingTerminalRequest is not null)
+        {
+            <div style="margin: 0.5rem 0;">
+                <UserConfirmedToolCall
+                    IsVisible="true"
+                    Title="Confirm terminal command"
+                    ToolName="@_pendingTerminalRequest.ToolName"
+                    Subtitle="This command will run on the ReportServer terminal."
+                    CommandOrPayload="@_pendingTerminalRequest.Command"
+                    Language="@_pendingTerminalRequest.Language"
+                    OnRun="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Confirmed))"
+                    OnSkip="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Skipped))"
+                    OnCancel="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Cancelled))" />
+            </div>
+        }
         <div class="chat-suggestions">
             <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions"/>
         </div>
@@ -73,10 +90,15 @@
     private bool _terminalVisible = false;
     private TerminalManager? _terminalManager;
     private int _terminalHeight = 200;
+
+    private RSChatApp.Web.Services.UserConfirmation.TerminalConfirmRequest? _pendingTerminalRequest;
+    private TaskCompletionSource<RSChatApp.Web.Services.UserConfirmation.UserConfirmationResult>? _pendingTerminalTcs;
     
     [Experimental("SKEXP0001")]
     protected override async Task OnInitializedAsync()
     {
+        TerminalUserInteraction.UserInteractionRequested += OnTerminalUserInteractionRequested;
+
         // Since new ollama version supports stream & toolcalls, will refactor to stream api only
         // TODO: Test first with ollama version that supports both streaming and toolcalls
         _isOllama = false;
@@ -108,6 +130,34 @@
         Logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{kernelPluginsNames} ", allTools.Count, 
             string.Join(", ", kernelPlugins.Select(p=> p.Name)));
         chatOptions.Tools = allTools;
+    }
+
+    private void OnTerminalUserInteractionRequested(
+        object? sender,
+        (RSChatApp.Web.Services.UserConfirmation.TerminalConfirmRequest Request,
+            TaskCompletionSource<RSChatApp.Web.Services.UserConfirmation.UserConfirmationResult> TaskCompletionSource) args)
+    {
+        // Ensure only one pending interaction at a time.
+        _pendingTerminalTcs?.TrySetResult(
+            new RSChatApp.Web.Services.UserConfirmation.UserConfirmationResult(
+                RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Cancelled));
+
+        _pendingTerminalRequest = args.Request;
+        _pendingTerminalTcs = args.TaskCompletionSource;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum result)
+    {
+        if (_pendingTerminalTcs is null)
+        {
+            return;
+        }
+
+        _pendingTerminalTcs.TrySetResult(new RSChatApp.Web.Services.UserConfirmation.UserConfirmationResult(result));
+        _pendingTerminalTcs = null;
+        _pendingTerminalRequest = null;
+        await InvokeAsync(StateHasChanged);
     }
     
     public async Task StoreChatHistoryAsync()
@@ -308,6 +358,9 @@
     }
     
     public void Dispose()
-        => currentResponseCancellation?.Cancel();
+    {
+        TerminalUserInteraction.UserInteractionRequested -= OnTerminalUserInteractionRequested;
+        currentResponseCancellation?.Cancel();
+    }
 }
 

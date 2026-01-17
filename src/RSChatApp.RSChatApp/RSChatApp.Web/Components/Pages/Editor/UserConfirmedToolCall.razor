@@ -1,0 +1,34 @@
+@if (IsVisible)
+{
+	<div class="uctc-card" role="region" aria-label="User confirmation required">
+		<div class="uctc-header">
+			<div class="uctc-title-row">
+				<div class="uctc-title">@Title</div>
+				@if (!string.IsNullOrWhiteSpace(ToolName))
+				{
+					<div class="uctc-badge" title="Tool">@ToolName</div>
+				}
+			</div>
+			@if (!string.IsNullOrWhiteSpace(Subtitle))
+			{
+				<div class="uctc-subtitle">@Subtitle</div>
+			}
+		</div>
+
+		@if (!string.IsNullOrWhiteSpace(CommandOrPayload))
+		{
+			<div class="uctc-body">
+				<CodeSnippet Id="@EditorId" CodeValue="@CommandOrPayload" Language="@Language" IsReadOnly="true" />
+			</div>
+		}
+
+		<div class="uctc-actions">
+			<button class="btn-default" disabled="@IsBusy" @onclick="OnRunClicked">Run</button>
+			<button class="btn-subtle" disabled="@IsBusy" @onclick="OnSkipClicked">Skip</button>
+			@if (ShowCancel)
+			{
+				<button class="btn-subtle" disabled="@IsBusy" @onclick="OnCancelClicked">Cancel</button>
+			}
+		</div>
+	</div>
+}

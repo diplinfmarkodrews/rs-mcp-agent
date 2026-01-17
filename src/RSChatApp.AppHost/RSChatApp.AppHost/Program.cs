@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 bool hasGpu = builder.Configuration.GetValue<bool>("Ollama:Gpu");
@@ -13,17 +12,17 @@ var ollama = hasGpu
         .WithDataVolume();
 
 bool deployMainModel = string.IsNullOrEmpty(builder.Configuration["Ollama:Model"]) == false;
-IResourceBuilder<OllamaModelResource> chat = null;
+IResourceBuilder<OllamaModelResource>? chat = null;
 if (deployMainModel)
 {
     chat = ollama.AddModel("chat",  
-    builder.Configuration["Ollama:Model"]);
+    builder.Configuration["Ollama:Model"] ?? throw new InvalidDataException("Ollama:Model configuration is required"));
 }
 
 var embeddings = ollama.AddModel("embeddings", 
     builder.Configuration["Ollama:EmbeddingModel"] ?? "all-minilm");
 
-var vectorDB = builder.AddQdrant("vectordb")
+var vectorDb = builder.AddQdrant("vectordb")
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
     .PublishAsConnectionString();
@@ -35,24 +34,24 @@ var webApp = builder.AddProject<Projects.RSChatApp_Web>("aichatweb-app");
 if (deployMainModel)
 {
     webApp
-        .WithReference(chat)
+        .WithReference(chat!)
         .WithReference(embeddings)
         .WithReference(mcpServer)
-        .WithReference(vectorDB)        
-        .WaitFor(chat)
+        .WithReference(vectorDb)        
+        .WaitFor(chat!)
         .WaitFor(embeddings)
         .WaitFor(mcpServer)
-        .WaitFor(vectorDB);
+        .WaitFor(vectorDb);
 }
 else
 {
     webApp
         .WithReference(embeddings)
         .WithReference(mcpServer)
-        .WithReference(vectorDB)
+        .WithReference(vectorDb)
         .WaitFor(embeddings)
         .WaitFor(mcpServer)
-        .WaitFor(vectorDB);
+        .WaitFor(vectorDb);
 }
 
 builder.Build().Run();

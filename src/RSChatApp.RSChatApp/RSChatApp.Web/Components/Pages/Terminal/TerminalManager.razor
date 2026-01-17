@@ -1,8 +1,7 @@
-@using RSChatApp.Web.Models.Terminal
-@using RSChatApp.Web.Components.Pages.Terminal
-@using RSChatApp.Web.Services.Terminal
 @inject ITerminalManager TerminalManagerService
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
+@using RSChatApp.Web.Models.Terminal
+@using RSChatApp.Web.Services.Terminal
 @implements IDisposable
 
 <div @ref="_terminalElement" class="terminal-manager" style="@GetTerminalStyle()">
@@ -144,7 +143,7 @@
         {
             try
             {
-                _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/terminal.js");
+                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/terminal.js");
                 _dotNetRef = DotNetObjectReference.Create(this);
                 await _jsModule.InvokeVoidAsync("initResize", _terminalElement, _dotNetRef, nameof(UpdateHeight));
             }

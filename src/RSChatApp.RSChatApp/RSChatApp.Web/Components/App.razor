@@ -13,7 +13,11 @@
 <body>
     <Routes @rendermode="@renderMode" />
     <script src="js/app-utils.js" ></script>
-    <script src="js/terminal.js"></script>
+    
+    <!-- _content is generated at runtime --->
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="@Assets["app.js"]" type="module"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     

@@ -17,7 +17,7 @@ public class DistributedServicesFixture : IAsyncLifetime
     private readonly int _rsMcpServerPort;
     private readonly int _rsChatAppPort;
     
-    public WebApplicationFactory<RsMcpServer.Web.Program> RsMcpServerFactory { get; private set; }
+    public WebApplicationFactory<RSChatApp.RsMcpServer.Web.Program> RsMcpServerFactory { get; private set; }
     public WebApplicationFactory<RSChatApp.Web.Program> RsChatAppFactory { get; private set; }
     public HttpClient RsMcpServerClient { get; private set; }
     public HttpClient RsChatAppClient { get; private set; }
@@ -34,7 +34,7 @@ public class DistributedServicesFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         // Start Service2 first (dependency)
-        RsMcpServerFactory = new WebApplicationFactory<RsMcpServer.Web.Program>()
+        RsMcpServerFactory = new WebApplicationFactory<RSChatApp.RsMcpServer.Web.Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseUrls(RsMcpServerBaseUrl);

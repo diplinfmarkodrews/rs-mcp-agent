@@ -1,4 +1,4 @@
-window.setupAuthenticationListener = (dotNetRef) => {
+    window.setupAuthenticationListener = (dotNetRef) => {
         window.authDotNetRef = dotNetRef;
         console.log('Authentication listener set up');
         

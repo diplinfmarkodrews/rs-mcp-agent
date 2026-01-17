@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using System.Security.Cryptography;
 
 namespace RSChatApp.Web.Storage;
 
@@ -31,8 +32,18 @@ public abstract class AbstractStorage<T> : IStorage<T>
         return _browserStorage.DeleteAsync(StorageKey);
     }
 
-    public virtual Task<ProtectedBrowserStorageResult<T>> GetAsync()
+    public virtual async Task<ProtectedBrowserStorageResult<T>> GetAsync()
     {
-        return _browserStorage.GetAsync<T>(StorageKey);
+        try
+        {
+            return await _browserStorage.GetAsync<T>(StorageKey);
+        }
+        catch (CryptographicException)
+        {
+            // Typically happens when data protection keys changed and old browser payloads can no longer be decrypted.
+            // Treat it as cache-miss and clear the corrupted value.
+            await _browserStorage.DeleteAsync(StorageKey);
+            return new ProtectedBrowserStorageResult<T>();
+        }
     }
 } 

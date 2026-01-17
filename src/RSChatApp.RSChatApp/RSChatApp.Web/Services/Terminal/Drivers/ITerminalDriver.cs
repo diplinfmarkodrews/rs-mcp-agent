@@ -18,3 +18,5 @@ public interface ITerminalDriver
 }
 
 public record SessionContext(string RsSessionId);
+// public record TerminalSessionInfo(TerminalType TerminalType, string SessionId, string Prompt, string WorkingDirectory, Dictionary<string, string>? Environment = null);
+// public record CommandResult(string Result, CommandResultType Type, string Error, object Data, string NewPrompt, bool SessionClosed);

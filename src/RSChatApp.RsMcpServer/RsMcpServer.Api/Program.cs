@@ -93,7 +93,7 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 // for testing purposes
-namespace RsMcpServer.Web
+namespace RSChatApp.RsMcpServer.Web
 {
     public partial class Program { }
 }

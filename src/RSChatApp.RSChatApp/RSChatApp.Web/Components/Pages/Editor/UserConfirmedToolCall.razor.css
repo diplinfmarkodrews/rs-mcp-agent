@@ -1,0 +1,54 @@
+.uctc-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    padding: 0.75rem;
+}
+
+.uctc-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.uctc-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uctc-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.uctc-subtitle {
+    color: #4B5563;
+    font-size: 0.85rem;
+}
+
+.uctc-badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid #D1D5DB;
+    background: #F3F4F6;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.uctc-body {
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.uctc-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}

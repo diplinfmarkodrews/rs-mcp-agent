@@ -6,9 +6,9 @@
 // using Microsoft.Playwright;
 // using Microsoft.SemanticKernel;
 // using ModelContextProtocol.Client;
-// using RSChatApp.Mcp.Browser.Tools;
+// using RSChatApp.Infrastructure.Mcp.Browser.Tools;
 //
-// namespace RSChatApp.Mcp;
+// namespace RSChatApp.Infrastructure.Mcp;
 //
 // public class McpKernelBuilder
 // {

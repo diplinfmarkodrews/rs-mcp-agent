@@ -16,7 +16,7 @@ public class AuthController : Controller
         _legacyAuthenticationService = legacyAuthenticationService;
     }
     [HttpGet("challenge")]
-    public IActionResult Challenge(string returnUrl = null, bool popup = false)
+    public IActionResult Challenge(string? returnUrl = null, bool popup = false)
     {
         var properties = new AuthenticationProperties
         {
