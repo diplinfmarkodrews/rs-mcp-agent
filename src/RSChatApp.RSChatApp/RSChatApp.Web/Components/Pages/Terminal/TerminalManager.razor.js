@@ -1,24 +1,15 @@
-// Terminal helper functions
-window.scrollToBottom = function (element) {
-    if (element) {
-        element.scrollTop = element.scrollHeight;
-    }
-};
-
 let isResizing = false;
 let startY = 0;
 let startHeight = 0;
-let terminalElement = null;
 let onHeightChange = null;
 
-window.initResize = function (element, dotNetHelper, callback) {
-    terminalElement = element;
+export function initResize(_element, dotNetHelper, callback) {
     onHeightChange = (height) => {
         dotNetHelper.invokeMethodAsync(callback, height);
     };
 }
 
-window.startResize = function (e, currentHeight) {
+export function startResize(e, currentHeight) {
     isResizing = true;
     startY = e.clientY;
     startHeight = currentHeight;
@@ -29,7 +20,7 @@ window.startResize = function (e, currentHeight) {
     document.body.style.userSelect = 'none';
 }
 
-window.handleMouseMove = function (e) {
+function handleMouseMove(e) {
     if (!isResizing) return;
 
     const deltaY = startY - e.clientY;

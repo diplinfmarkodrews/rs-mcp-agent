@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
@@ -28,22 +29,38 @@ public class TerminalTool
     /// <summary>
     /// Executes a terminal command on the report server
     /// </summary>
-    [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. " +
-                                                "Before executing commands, start a terminal session using " +
-                                                "StartTerminalSessionAsync to get a sessionId. " +
-                                                "When you execute a command, provide sessionId and " +
-                                                "print your command and the returned result or error.")]
+    [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. ")]
     public async Task<string> ExecuteCommandAsync(
-        [Description("session id to identify terminal session")] string sessionId,
+        [Description("session id to identify terminal session. Leave empty to start a new session")]string? sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
+        var result = new StringBuilder();
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            _logger.LogInformation("No sessionId provided. Initializing new terminal session.");
+            var sessionInfo =  await _reportServer.InitSessionAsync();
+            if (sessionInfo.IsSuccess && sessionInfo.Data != null)
+            {
+                sessionId = sessionInfo.Data.SessionId;
+                result.AppendLine($"Initialized new terminal session with sessionId: {sessionId}");            
+            }
+            else
+            {
+                
+            }
+        }
+        
         _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
+        
+        result.AppendLine($"Executing command: {command}");
         // Execute the command with the session ID
+
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
         var serializedCmdResult = JsonSerializer.Serialize(cmdResult);
         _logger.LogDebug("terminal returned: {CmdResult}", serializedCmdResult);
-        return serializedCmdResult;
+        result.AppendLine($"Command result: {serializedCmdResult}");
+        return result.ToString();
     }
     /// <summary>
     /// Executes a terminal command on the report server

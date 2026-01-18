@@ -6,14 +6,21 @@ namespace RSChatApp.Web.Services.UserConfirmation;
 public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
 {
     private readonly IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> _ui;
+    private readonly ILogger<UserConfirmInvocationFilter> _logger;
 
-    public UserConfirmInvocationFilter(IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> ui)
-        => _ui = ui;
+    public UserConfirmInvocationFilter(
+        ILogger<UserConfirmInvocationFilter> logger,
+        IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> ui)
+    {
+        _logger = logger;
+        _ui = ui;
+    } 
 
     public async Task OnFunctionInvocationAsync(FunctionInvocationContext ctx, Func<FunctionInvocationContext, Task> next)
     {
         if (TryCreateTerminalConfirmationRequest(ctx, out var request))
         {
+            _logger.LogInformation($"UserConfirmation: {request}");
             var decision = await _ui.RequestUserInteractionAsync(request);
             if (decision.Result != UserConfirmationResultEnum.Confirmed)
             {
@@ -24,7 +31,6 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
 
         await next(ctx);
     }
-
     private static bool TryCreateTerminalConfirmationRequest(FunctionInvocationContext ctx, out TerminalConfirmRequest request)
     {
         request = default!;
@@ -101,7 +107,6 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         return new string(buffer[..idx]);
     }
 }
-
 public record TerminalConfirmRequest(string ToolName, string Command, string Language = "bash");
 
 public record UserConfirmationResult(UserConfirmationResultEnum Result);
@@ -112,3 +117,4 @@ public enum UserConfirmationResultEnum
     Skipped = 2,
     Cancelled = 3
 }
+

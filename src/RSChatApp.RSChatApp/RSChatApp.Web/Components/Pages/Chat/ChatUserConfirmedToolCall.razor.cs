@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 
-namespace RSChatApp.Web.Components.Pages.Editor;
+namespace RSChatApp.Web.Components.Pages.Chat;
 
-public partial class UserConfirmedToolCall : ComponentBase
+public partial class ChatUserConfirmedToolCall : ComponentBase
 {
 	[Parameter]
 	public bool IsVisible { get; set; }

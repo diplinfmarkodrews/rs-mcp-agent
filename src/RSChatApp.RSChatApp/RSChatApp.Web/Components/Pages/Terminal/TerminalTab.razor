@@ -1,7 +1,7 @@
 @using RSChatApp.Web.Models.Terminal
 
 <div class="terminal-tab @(IsActive ? "active" : "") @(!IsValid ? "invalid" : "")" 
-     @onclick="OnClick">
+    @onclick="HandleClick">
     <span class="terminal-tab-icon" style="color: @GetTypeColor()">●</span>
     <span class="terminal-tab-name">@Terminal.Name</span>
     @if (!IsValid)
@@ -12,7 +12,7 @@
     {
         <span class="terminal-tab-minimize">▼</span>
     }
-    <button class="terminal-tab-close" @onclick="OnClose" @onclick:stopPropagation="true">×</button>
+    <button class="terminal-tab-close" type="button" @onclick="HandleClose" @onclick:stopPropagation="true">×</button>
 </div>
 
 @code {
@@ -34,6 +34,12 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    private Task HandleClick()
+        => OnClick.InvokeAsync();
+
+    private Task HandleClose()
+        => OnClose.InvokeAsync();
+
     private string GetTypeColor()
     {
         return Terminal.Type switch
@@ -43,5 +49,7 @@
             _ => "#d4d4d4"
         };
     }
+
 }
+
 

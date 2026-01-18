@@ -183,7 +183,6 @@ else
     builder.AddOllamaApiClient("chat")
         .AddChatClient()
         .UseFunctionInvocation()
-        
         .UseKernelFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());
@@ -217,7 +216,7 @@ builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
 builder.Services.AddScoped<SemanticSearchTool>();
 builder.Services.AddScoped<AuthenticationTool>();
-
+builder.Services.AddScoped<UserConfirmedTerminalTool>();
 // Browser storage abstraction - choose LocalStorage or SessionStorage
 if (builder.Environment.IsDevelopment())
     builder.Services.AddScoped<IProtectedBrowserStorage, ProtectedLocalStorageAdapter>();
@@ -229,7 +228,6 @@ builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>()
     .AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
 
 // Terminal services
-
 builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();
 builder.Services.AddScoped<RsTerminalDriver>();
 builder.Services.AddScoped<JsTerminalDriver>();

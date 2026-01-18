@@ -143,7 +143,9 @@
         {
             try
             {
-                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/terminal.js");
+                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>(
+                    "import",
+                    "./Components/Pages/Terminal/TerminalManager.razor.js");
                 _dotNetRef = DotNetObjectReference.Create(this);
                 await _jsModule.InvokeVoidAsync("initResize", _terminalElement, _dotNetRef, nameof(UpdateHeight));
             }
@@ -185,8 +187,8 @@
 
     private async Task CreateTerminal(TerminalType type)
     {
-        await TerminalManagerService.CreateAsync(type);
         _showNewTerminalMenu = false;
+        await TerminalManagerService.CreateAsync(type);
     }
 
     private Task SetActiveTerminal(Guid terminalId)

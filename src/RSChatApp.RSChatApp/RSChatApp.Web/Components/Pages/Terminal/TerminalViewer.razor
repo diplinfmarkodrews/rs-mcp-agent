@@ -52,6 +52,7 @@
     private ElementReference _outputContainer;
     private string _currentCommand = string.Empty;
     private bool _isExecuting;
+    private IJSObjectReference? _jsModule;
 
     public async Task SetCommandAsync(string command, CancellationToken token = default)
     {
@@ -61,17 +62,31 @@
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            try
+            {
+                _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                    "import",
+                    "./Components/Pages/Terminal/TerminalViewer.razor.js");
+            }
+            catch
+            {
+                // Ignore JS module load errors
+            }
+        }
+
         if (firstRender && Terminal != null)
         {
             await _inputElement.FocusAsync();
         }
         
         // Auto-scroll to bottom after rendering
-        if (_outputContainer.Context != null)
+        if (_jsModule != null && _outputContainer.Context != null)
         {
             try
             {
-                await JSRuntime.InvokeVoidAsync("scrollToBottom", _outputContainer);
+                await _jsModule.InvokeVoidAsync("scrollToBottom", _outputContainer);
             }
             catch
             {
