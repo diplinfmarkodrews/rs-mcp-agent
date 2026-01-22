@@ -14,13 +14,14 @@
 @using System.Text
 @using Microsoft.AspNetCore.Authorization
 @using RSChatApp.Infrastructure.UserInteraction
-@using RSChatApp.Web.Components.Pages.Editor
 @using RSChatApp.Web.Components.Pages.Terminal
 @using RSChatApp.Web.Mcp.Tools
 @using RSChatApp.Web.Services.UserConfirmation
 @using RSChatApp.Web.Storage
 @using ChatMessage = Microsoft.Extensions.AI.ChatMessage
 @using TextContent = Microsoft.Extensions.AI.TextContent
+@using FunctionCallContent = Microsoft.Extensions.AI.FunctionCallContent
+@using FunctionResultContent = Microsoft.Extensions.AI.FunctionResultContent
 @implements IDisposable
 
 <div class="chat-page @(_terminalVisible ? "terminal-visible" : "")" style="@(_terminalVisible ? $"--terminal-height: {_terminalHeight}px" : "")">
@@ -30,10 +31,10 @@
         <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
             <NoMessagesContent>
                 <div>Welcome to the ReportServer Agent.</div>
-                <ChatCitation File="ReportServer-5_0-ConfigurationGuide-En.pdf"/>
-                <ChatCitation File="ReportServer-5_0-UserGuide-De.pdf"/>
-                <ChatCitation File="ReportServer-5_0-AdminGuide-En.pdf"/>
-                <ChatCitation File="ReportServer-5_0-ScriptGuide-En.pdf"/>
+                <ChatCitation File="admin_RS5.0.pdf"/>
+                <ChatCitation File="config_RS5.0.pdf"/>
+                <ChatCitation File="user_en_RS5.0.pdf"/>
+                <ChatCitation File="script_RS5.0.pdf"/>
             </NoMessagesContent>
         </ChatMessageList>
     </div>
@@ -49,9 +50,9 @@
                     Subtitle="This command will run on the ReportServer terminal."
                     CommandOrPayload="@_pendingTerminalRequest.Command"
                     Language="@_pendingTerminalRequest.Language"
-                    OnRun="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Confirmed))"
-                    OnSkip="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Skipped))"
-                    OnCancel="@(() => ResolveTerminalConfirmationAsync(RSChatApp.Web.Services.UserConfirmation.UserConfirmationResultEnum.Cancelled))" />
+                    OnRun="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Confirmed))"
+                    OnSkip="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Skipped))"
+                    OnCancel="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Cancelled))" />
             </div>
         }
         <div class="chat-suggestions">
@@ -66,6 +67,7 @@
 </div>
 
 @code {
+    //TODO: refactor into SystemPromptService
     private const string SystemPrompt = @"
         You are an assistant for the ReportServer and a omnipotent groovy script developer. 
 
@@ -81,6 +83,74 @@
         You have a browsertool to have full control of the Reportserver front end. 
         The official reportserver documentation is available at 'https://reportserver.net/de/dokumentation'
         Its the content of your knowledgebase, found in Searchtool.
+        Here are some rs terminalcommands
+        Dateisystem & Navigation
+        cd - Verzeichnis wechseln (z.B. cd fileserver/bin)
+        mkdir - Verzeichnis erstellen (z.B. mkdir tmp)
+        ls - Verzeichnisinhalt anzeigen
+        pwd - aktuelles Verzeichnis anzeigen
+        rm - Dateien/Verzeichnisse löschen
+        mv - Dateien/Verzeichnisse verschieben
+        cp - Dateien/Verzeichnisse kopieren
+        Dateibearbeitung
+        createTextFile - Neue Textdatei erstellen (z.B. createTextFile helloworld.groovy)
+        editTextFile - Textdatei bearbeiten (z.B. editTextFile helloworld.groovy)
+        cat - Dateiinhalt im Terminal anzeigen (z.B. cat file.txt)
+        echo - Text ausgeben und in Dateien schreiben (z.B. echo foobar > file.txt oder echo more >> file.txt)
+        Script-Ausführung & Monitoring
+        exec - Script ausführen (z.B. exec helloworld.groovy)
+        Flags: -s (silent/Hintergrund), -w (neues Fenster), -n (kein eigener Thread)
+        ps - Liste der laufenden Scripts anzeigen
+        kill - Script-Ausführung beenden
+        kill ID - Script unterbrechen
+        kill -f ID - Script hart beenden (force)
+        Konfiguration
+        config reload - Konfiguration neu laden (nach Änderungen an Config-Dateien)
+        diffconfigfiles - Hilfe bei fehlenden Config-Dateien nach Upgrades
+        Objekt-Informationen
+        desc - Objekt-Beschreibung anzeigen (z.B. desc User id:User:3)
+        Flag: -w (in neuem Fenster anzeigen)
+        Scheduler
+        scheduleScript - Scripts zeitgesteuert ausführen
+        scheduleScript list - geplante Scripts auflisten
+        scheduleScript execute - Script planen (z.B. scheduleScript execute myScript.groovy """" every day at 15:23)
+        scheduler - Scheduler-Verwaltung
+        scheduler listFireTimes - nächste Ausführungszeiten anzeigen
+        scheduler remove - geplante Aufgabe entfernen
+        scheduler daemon start/stop - Scheduler aktivieren/deaktivieren
+        LDAP-Verwaltung
+        ldaptest - LDAP-Konfiguration testen
+        ldaptest users - Benutzer testen
+        ldaptest groups - Gruppen testen
+        ldaptest organizationalUnits - OUs testen
+        ldaptest filter - Filter testen
+        Flag: -s (Schema anzeigen)
+        ldapfilter - LDAP-Filter analysieren
+        ldapschema - LDAP-Schema erkunden (z.B. ldapschema objectClassInfo organizationalPerson)
+        ldapguid - LDAP GUID-Informationen
+        ldapinfo - LDAP-Informationen
+        ldapimport - LDAP-Import durchführen
+        ssltest - SSL-Konfiguration für LDAP testen
+        Logging
+        listlogfiles - Log-Dateien auflisten
+        Flag: -e (per Email versenden)
+        Flag: -f (Filter)
+        Pakete & Installation
+        pkg install - Pakete installieren (z.B. pkg install -d demobuilder -VERSION_NR)
+        Terminal-Steuerung
+        CTRL+ALT+T - Terminal öffnen (Tastenkombination)
+        Besondere Hinweise:
+        Tab-Vervollständigung: Das Terminal unterstützt Autocomplete mit der TAB-Taste
+
+        Pipes und Weiterleitungen:
+
+        > - Ausgabe in Datei umleiten (überschreiben)
+        >> - Ausgabe an Datei anhängen
+        Rückgabewerte: Die letzte Zeile eines Scripts wird als Rückgabewert interpretiert und im Terminal angezeigt
+
+        Terminal-Output: Das tout-Objekt kann für Ausgaben während der Script-Ausführung verwendet werden:
+
+        tout.println('Hello World')
         ";
 
     private readonly ChatOptions chatOptions = new();
@@ -105,7 +175,6 @@
         // Since new ollama version supports stream & toolcalls, will refactor to stream api only
         // TODO: Test first with ollama version that supports both streaming and toolcalls
         _isOllama = false;
-        await InitChatHistoryAsync();
         
         // Debug logging to see what kernel plugins are available
         var kernelPlugins = Kernel.Plugins.ToList();
@@ -116,9 +185,9 @@
         var allTools = new List<AITool>
         {
             AIFunctionFactory.Create(SemanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
-            AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
-            AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
+            // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
             @* AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated") *@
+            AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
         };
         
         // Add MCP tools
@@ -135,10 +204,12 @@
             string.Join(", ", kernelPlugins.Select(p=> p.Name)));
         
         chatOptions.Tools = allTools;
+        
+        // Load chat history
+        await InitChatHistoryAsync();
     }
 
-    private void OnTerminalUserInteractionRequested(
-        object? sender,
+    private void OnTerminalUserInteractionRequested(object? sender,
         (TerminalConfirmRequest Request, TaskCompletionSource<UserConfirmationResult> TaskCompletionSource) args)
     {
         // Ensure only one pending interaction at a time.
@@ -168,6 +239,20 @@
     {
         try
         {
+            // Debug: Log what we're about to save
+            Logger.LogDebug("Saving {messageCount} messages to chat history", messages.Count);
+            foreach (var msg in messages)
+            {
+                if (msg.Role == ChatRole.Assistant && msg.Contents != null && msg.Contents.Count > 1)
+                {
+                    Logger.LogDebug("Saving Assistant message with {contentCount} contents:", msg.Contents.Count);
+                    foreach (var content in msg.Contents)
+                    {
+                        Logger.LogDebug("  - Content type: {contentType}", content.GetType().Name);
+                    }
+                }
+            }
+            
             await ChatHistoryStorage.SaveAsync(messages);
             Logger.LogInformation("Chat history saved with {messageCount} messages", messages.Count);
         }
@@ -183,10 +268,28 @@
         if (chatHistory.Success)
         {
             Logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Value!.Count);
+            
+            // Debug: Log what content types are in the loaded messages
+            foreach (var msg in chatHistory.Value!)
+            {
+                if (msg.Role == ChatRole.Assistant && msg.Contents != null)
+                {
+                    Logger.LogDebug("Loaded Assistant message with {contentCount} contents:", msg.Contents.Count);
+                    foreach (var content in msg.Contents)
+                    {
+                        Logger.LogDebug("  - Content type: {contentType}", content.GetType().Name);
+                    }
+                }
+            }
+            
             messages.AddRange(chatHistory.Value);
             chatSuggestions?.Update(messages);
-            await InvokeAsync(StateHasChanged);
-            await chatInput!.FocusAsync();
+            
+            // Focus the input after loading
+            if (chatInput is not null)
+            {
+                await chatInput.FocusAsync();
+            }
         }
         else
         {
@@ -254,62 +357,109 @@
         // Display a new response from the IChatClient with streaming
         currentResponseCancellation = new();
         
-        // Initialize streaming response message
-        currentResponseMessage = new ChatMessage(ChatRole.Assistant, string.Empty);
+        // Track text for display and all contents
         var contentBuilder = new StringBuilder();
+        var allContents = new List<AIContent>();
 
         try
         {
-            // Use streaming API to get progressive responses ChatClient.GetStreamingResponseAsync(
-            await foreach (var update in ChatClient.GetStreamingResponseAsync(messages, chatOptions, currentResponseCancellation.Token))
+            // Normalize messages for API (split FunctionCallContent and FunctionResultContent into separate messages)
+            var normalizedMessages = NormalizeMessagesForApi(messages);
+            
+            // Use streaming API to get progressive responses
+            await foreach (var update in ChatClient.GetStreamingResponseAsync(normalizedMessages, chatOptions, currentResponseCancellation.Token))
             {
-                // Handle different types of streaming updates
+                // Collect ALL content types from each update
                 foreach (var content in update.Contents)
                 {
-                    // Only append text content, ignore tool calls and other content types
+                    allContents.Add(content);
+                    
+                    // Also build text for display during streaming
                     if (content is TextContent textContent)
                     {
                         contentBuilder.Append(textContent.Text);
-                        
-                        // Update the current response message with accumulated content
-                        currentResponseMessage = new ChatMessage(ChatRole.Assistant, contentBuilder.ToString());
-                        
-                        // Trigger UI update to show streaming content
-                        await InvokeAsync(StateHasChanged);
                     }
-                    // Note: Tool calls and other content types are handled by the underlying system
-                    // and will be included in the final complete message
                 }
+                
+                // Update current message with ALL collected contents for live rendering
+                var streamingContents = new List<AIContent>();
+                if (contentBuilder.Length > 0)
+                {
+                    streamingContents.Add(new TextContent(contentBuilder.ToString()));
+                }
+                // Add all non-text contents (FunctionCallContent, FunctionResultContent, etc.)
+                streamingContents.AddRange(allContents.Where(c => c is not TextContent));
+                
+                currentResponseMessage = new ChatMessage(ChatRole.Assistant, streamingContents);
+                
+                // Trigger UI update to show streaming content
+                await InvokeAsync(StateHasChanged);
                 
                 // Check for cancellation
                 currentResponseCancellation.Token.ThrowIfCancellationRequested();
             }
 
-            // Finalize the response - add the complete message to conversation
-            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            // Add the complete message with all contents (tool calls, results, text)
+            if (allContents.Count > 0)
             {
-                messages.Add(currentResponseMessage);
+                // Combine multiple TextContent chunks into one, keep other content types as-is
+                var consolidatedContents = new List<AIContent>();
+                var hasText = contentBuilder.Length > 0;
+                
+                // Add consolidated text as single TextContent
+                if (hasText)
+                {
+                    consolidatedContents.Add(new TextContent(contentBuilder.ToString()));
+                }
+                
+                // Add all non-TextContent items (FunctionCallContent, FunctionResultContent, etc.)
+                consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
+                
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents);
+                messages.Add(responseMessage);
+                
+                Logger.LogInformation("Added response message with {contentCount} contents", consolidatedContents.Count);
+                foreach (var content in consolidatedContents)
+                {
+                    Logger.LogInformation("  Content type: {contentType}", content.GetType().Name);
+                }
             }
         }
         catch (OperationCanceledException)
         {
-            // Handle cancellation gracefully
-            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            // Handle cancellation - add partial response if available
+            if (allContents.Count > 0)
             {
-                messages.Add(currentResponseMessage);
+                var consolidatedContents = new List<AIContent>();
+                if (contentBuilder.Length > 0)
+                {
+                    consolidatedContents.Add(new TextContent(contentBuilder.ToString()));
+                }
+                consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
+                
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents);
+                messages.Add(responseMessage);
             }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error during streaming chat response");
             
-            // Add any partial response that was being built
-            if (currentResponseMessage != null && !string.IsNullOrEmpty(currentResponseMessage.Text))
+            // Add any partial response
+            if (allContents.Count > 0)
             {
-                messages.Add(currentResponseMessage);
+                var consolidatedContents = new List<AIContent>();
+                if (contentBuilder.Length > 0)
+                {
+                    consolidatedContents.Add(new TextContent(contentBuilder.ToString()));
+                }
+                consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
+                
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents);
+                messages.Add(responseMessage);
             }
             
-            // Add error message to chat - ensure it's added to the conversation
+            // Add error message
             var errorMessage = new ChatMessage(ChatRole.Assistant, 
                 $"Sorry, I encountered an error while processing your request: {ex.Message}");
             messages.Add(errorMessage);
@@ -353,6 +503,60 @@
     private void ToggleTerminal()
     {
         _terminalVisible = !_terminalVisible;
+    }
+    
+    /// <summary>
+    /// Normalizes messages for the API by splitting assistant messages that contain both FunctionCallContent and FunctionResultContent.
+    /// Claude API requires: Assistant (with tool calls) -> Tool (with results) -> Assistant (with response)
+    /// But we store them combined for display purposes.
+    /// </summary>
+    private List<ChatMessage> NormalizeMessagesForApi(List<ChatMessage> messages)
+    {
+        var normalized = new List<ChatMessage>();
+        
+        foreach (var message in messages)
+        {
+            // Only process assistant messages that might have tool calls
+            if (message.Role != ChatRole.Assistant || message.Contents is null || message.Contents.Count <= 1)
+            {
+                normalized.Add(message);
+                continue;
+            }
+            
+            // Check if this message has both FunctionCallContent and FunctionResultContent
+            var functionCalls = message.Contents.OfType<FunctionCallContent>().ToList();
+            var functionResults = message.Contents.OfType<FunctionResultContent>().ToList();
+            
+            if (functionCalls.Count == 0 || functionResults.Count == 0)
+            {
+                // No splitting needed - either no tool calls or they're already separate
+                normalized.Add(message);
+                continue;
+            }
+            
+            // Split into multiple messages:
+            // 1. Assistant message with text (if any) + FunctionCallContent
+            var assistantContents = new List<AIContent>();
+            var textContent = message.Contents.OfType<TextContent>().FirstOrDefault();
+            if (textContent != null && !string.IsNullOrWhiteSpace(textContent.Text))
+            {
+                assistantContents.Add(textContent);
+            }
+            assistantContents.AddRange(functionCalls.Cast<AIContent>());
+            
+            if (assistantContents.Count > 0)
+            {
+                normalized.Add(new ChatMessage(ChatRole.Assistant, assistantContents));
+            }
+            
+            // 2. Tool message(s) with FunctionResultContent
+            foreach (var result in functionResults)
+            {
+                normalized.Add(new ChatMessage(ChatRole.Tool, new List<AIContent> { result }));
+            }
+        }
+        
+        return normalized;
     }
     
     public void Dispose()

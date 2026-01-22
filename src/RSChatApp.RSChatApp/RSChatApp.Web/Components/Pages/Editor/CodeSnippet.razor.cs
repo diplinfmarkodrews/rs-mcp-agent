@@ -22,6 +22,7 @@ public partial class CodeSnippet : ComponentBase
         _codeValue = CodeValue ?? string.Empty;
         _language = string.IsNullOrWhiteSpace(Language) ? "groovy" : Language;
         _isReadOnly = IsReadOnly;
+        StateHasChanged();
     }
 
     public void SetCodeValue(string code, string? language = null)

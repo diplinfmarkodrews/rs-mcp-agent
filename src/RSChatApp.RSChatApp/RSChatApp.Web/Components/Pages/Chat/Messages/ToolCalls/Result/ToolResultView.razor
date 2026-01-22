@@ -1,0 +1,123 @@
+@using System.Text.RegularExpressions
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="tool-result @GetResultClass()">
+    <div class="tool-result-header">
+        <ToolIcon Type="@(Result.IsSuccess ? "success" : "error")" />
+        <span class="tool-result-status">
+            @(Result.IsSuccess ? GetSuccessTitle() : "Error")
+        </span>
+        <span class="tool-result-time">@Result.CompletedAt.ToString("HH:mm:ss")</span>
+    </div>
+    
+    <div class="tool-result-content">
+        @RenderContent()
+    </div>
+    
+    @if (ShowActions)
+    {
+        <div class="tool-result-actions">
+            @if (Invocation.Permissions.CanCopy)
+            {
+                <button class="tool-action-btn" @onclick="CopyResult" title="Copy">
+                    📋
+                </button>
+            }
+            @if (Invocation.Permissions.CanEditResult)
+            {
+                <button class="tool-action-btn" @onclick="EditInEditor" title="Edit in editor">
+                    ✏️
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    [Parameter, EditorRequired]
+    public required ToolInvocation Invocation { get; set; }
+
+    [Parameter]
+    public bool ShowActions { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+
+    private string GetResultClass()
+    {
+        return Result.IsSuccess ? "tool-result-success" : "tool-result-error";
+    }
+
+    private string GetSuccessTitle()
+    {
+        return Result.ContentType switch
+        {
+            ResultContentType.SearchCitations => $"Found {CountCitations()} result(s)",
+            ResultContentType.Image => "Screenshot captured",
+            ResultContentType.Json => "JSON response",
+            _ => "Result"
+        };
+    }
+
+    private int CountCitations()
+    {
+        if (Result.Data is string text)
+        {
+            return Regex.Matches(text, @"<citation|<result").Count;
+        }
+        return 0;
+    }
+
+    private RenderFragment RenderContent() => builder =>
+    {
+        var seq = 0;
+        switch (Result.ContentType)
+        {
+            case ResultContentType.SearchCitations:
+                builder.OpenComponent<SearchResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Data", Result.Data);
+                builder.CloseComponent();
+                break;
+
+            case ResultContentType.Image:
+                builder.OpenComponent<ImageResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+
+            case ResultContentType.Json:
+                builder.OpenComponent<JsonResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+
+            case ResultContentType.Error:
+                builder.OpenComponent<ErrorResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+
+            default:
+                builder.OpenComponent<TextResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+        }
+    };
+
+    private void CopyResult()
+    {
+        // TODO: Implement clipboard copy
+    }
+
+    private async Task EditInEditor()
+    {
+        var filename = Invocation.Parameters.TryGetValue("filename", out var fn) ? fn?.ToString() : null;
+        var content = Result.Data?.ToString() ?? string.Empty;
+
+        await OnEditInEditor.InvokeAsync(new EditInEditorRequest(Result, filename, content));
+    }
+}

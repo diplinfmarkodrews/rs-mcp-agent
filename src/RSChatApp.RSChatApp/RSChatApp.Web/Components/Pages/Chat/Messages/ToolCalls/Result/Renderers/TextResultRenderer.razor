@@ -1,0 +1,22 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+@using System.Text.Json
+
+<div class="text-result">
+    <pre><code>@GetTextContent()</code></pre>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    private string GetTextContent()
+    {
+        return Result.Data switch
+        {
+            string s => s,
+            JsonElement e when e.ValueKind == JsonValueKind.String => e.GetString() ?? string.Empty,
+            JsonElement e => e.GetRawText(),
+            _ => Result.Data?.ToString() ?? string.Empty
+        };
+    }
+}

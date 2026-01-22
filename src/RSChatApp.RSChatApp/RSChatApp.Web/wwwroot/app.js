@@ -8,9 +8,12 @@ customElements.define('assistant-message', class extends HTMLElement {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'markdown') {
+            // Remove citation/result tags and trim excessive whitespace
             newValue = newValue
                 .replace(/<citation.*?<\/citation>/gs, '')
-                .replace(/<result.*?<\/result>/gs, '');
+                .replace(/<result.*?<\/result>/gs, '')
+                .trim();
+            
             const elements = marked.parse(newValue.replace(/</g, '&lt;'));
             this.innerHTML = purify.sanitize(elements, { KEEP_CONTENT: false });
 

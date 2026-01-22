@@ -1,0 +1,50 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="tool-invocation-card">
+    <ToolCallView 
+        Invocation="@Invocation"
+        OnRerun="@HandleRerun" />
+    
+    @if (Result is not null)
+    {
+        <ToolResultView 
+            Result="@Result"
+            Invocation="@Invocation"
+            OnEditInEditor="@OnEditInEditor" />
+    }
+    else if (InProgress)
+    {
+        <div class="tool-result-pending">
+            <div class="spinner"></div>
+            <span>Executing...</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolInvocation Invocation { get; set; }
+    
+    [Parameter]
+    public ToolResult? Result { get; set; }
+    
+    [Parameter]
+    public bool InProgress { get; set; }
+    
+    [Parameter]
+    public EventCallback<ToolRerunRequest> OnRerun { get; set; }
+    
+    [Parameter]
+    public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+    
+    private async Task HandleRerun()
+    {
+        if (!Invocation.Permissions.CanRerun) return;
+        
+        await OnRerun.InvokeAsync(new ToolRerunRequest(
+            Invocation.CallId,
+            Invocation,
+            string.Empty // MessageId will be set by parent
+        ));
+    }
+}

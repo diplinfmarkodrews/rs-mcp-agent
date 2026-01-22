@@ -1,0 +1,64 @@
+@using System.Text.Json
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="image-result">
+    @if (!string.IsNullOrEmpty(ImageSrc))
+    {
+        <img src="@ImageSrc" alt="Screenshot" style="max-width: 100%; height: auto; border-radius: 0.5rem;" />
+    }
+    else
+    {
+        <p>Unable to display image</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    private string? ImageSrc { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        ImageSrc = null;
+
+        try
+        {
+            var rawText = Result.Data switch
+            {
+                string s => s,
+                JsonElement e => e.GetRawText(),
+                _ => Result.Data?.ToString()
+            };
+
+            if (string.IsNullOrWhiteSpace(rawText))
+            {
+                return;
+            }
+
+            using var doc = JsonDocument.Parse(rawText);
+            if (doc.RootElement.TryGetProperty("image", out var imageProp) && 
+                imageProp.ValueKind == JsonValueKind.String)
+            {
+                var base64 = imageProp.GetString();
+                var format = "png";
+                
+                if (doc.RootElement.TryGetProperty("format", out var formatProp) && 
+                    formatProp.ValueKind == JsonValueKind.String)
+                {
+                    format = formatProp.GetString() ?? "png";
+                }
+
+                var mime = format.Equals("jpeg", StringComparison.OrdinalIgnoreCase) 
+                    ? "image/jpeg" 
+                    : "image/png";
+
+                ImageSrc = $"data:{mime};base64,{base64}";
+            }
+        }
+        catch
+        {
+            // Failed to parse image
+        }
+    }
+}

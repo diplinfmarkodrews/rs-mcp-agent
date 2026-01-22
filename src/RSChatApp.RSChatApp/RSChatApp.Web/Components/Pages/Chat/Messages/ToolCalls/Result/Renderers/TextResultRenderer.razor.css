@@ -1,0 +1,13 @@
+.text-result pre {
+    background: #f9fafb;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    margin: 0;
+}
+
+.text-result code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    color: #1f2937;
+}

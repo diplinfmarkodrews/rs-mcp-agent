@@ -16,7 +16,7 @@ IResourceBuilder<OllamaModelResource>? chat = null;
 if (deployMainModel)
 {
     chat = ollama.AddModel("chat",  
-    builder.Configuration["Ollama:Model"] ?? throw new InvalidDataException("Ollama:Model configuration is required"));
+    builder.Configuration["Ollama:Model"]!);
 }
 
 var embeddings = ollama.AddModel("embeddings", 

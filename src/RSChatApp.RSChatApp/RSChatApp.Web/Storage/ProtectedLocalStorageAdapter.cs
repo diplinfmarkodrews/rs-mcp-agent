@@ -21,9 +21,10 @@ public class ProtectedLocalStorageAdapter : IProtectedBrowserStorage
         await _storage.SetAsync(key, value);
     }
 
-    public async Task<ProtectedBrowserStorageResult<T>> GetAsync<T>(string key)
+    public async Task<StorageResult<T>> GetAsync<T>(string key)
     {
-        return await _storage.GetAsync<T>(key);
+        return (await _storage.GetAsync<T>(key))
+            .ToStorageResult();
     }
 
     public async Task DeleteAsync(string key)

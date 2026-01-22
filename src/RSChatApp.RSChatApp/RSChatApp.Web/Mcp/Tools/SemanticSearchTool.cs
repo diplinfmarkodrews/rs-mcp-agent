@@ -14,11 +14,11 @@ public class SemanticSearchTool
         _semanticSearch = semanticSearch;
     }
     
-    [KernelFunction, McpServerTool,  Description("Searches for information concerning the reportserver, using a phrase or keyword. Cite properly, always provide sources with file and page.")]
+    [KernelFunction, McpServerTool,  Description("Searches for information concerning the reportserver, using a phrase or keyword.")]
     public async Task<IEnumerable<string>> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
         [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
-        [Description("The maximum number of results to return. Default is 17.")] int maxResults = 17)
+        [Description("The maximum number of results to return. Default is 17.")] int maxResults = 20)
     {
         
         var results = await _semanticSearch.SearchAsync(searchPhrase, filenameFilter, maxResults);

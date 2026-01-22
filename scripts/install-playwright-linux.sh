@@ -163,6 +163,7 @@ install_system_dependencies() {
             libgbm1 \
             libglib2.0-0t64 \
             libgtk-3-0t64 \
+            
             libnspr4 \
             libnss3 \
             libpango-1.0-0 \
@@ -177,9 +178,6 @@ install_system_dependencies() {
             libxtst6 \
             fonts-unifont \
             fonts-liberation \
-            libavcodec61 \
-            libavformat61 \
-            libavutil59 \
             libjpeg62-turbo \
             libpng16-16t64 \
             libwebp7 \
@@ -188,8 +186,6 @@ install_system_dependencies() {
             ca-certificates \
             fonts-liberation \
             libappindicator3-1 \
-            libasound2 \
-            libdrm2 \
             libxss1 \
             lsb-release \
             xdg-utils \
@@ -300,9 +296,6 @@ install_playwright_dotnet() {
 install_playwright_browsers() {
     print_step "Installing Playwright browsers (Chromium, Firefox, WebKit)..."
     
-    # Fix library compatibility first
-    fix_library_compatibility
-    
     # Install browsers globally for Node.js
     print_status "Installing browsers for Node.js Playwright..."
     sudo playwright install
@@ -315,7 +308,7 @@ install_playwright_browsers() {
     
     # Try to install system dependencies
     print_status "Attempting to install system dependencies..."
-    sudo playwright install-deps || print_warning "Some system dependencies might not have been installed. The browsers should still work."
+    sudo playwright install-deps 2>/dev/null || print_warning "Some system dependencies might not have been installed automatically. The browsers should still work with the manually installed dependencies."
     
     print_status "Playwright browsers installed successfully!"
 }
@@ -424,8 +417,7 @@ main() {
     install_system_dependencies
     install_playwright_global
     install_playwright_dotnet
-    install_playwright_browsers
-    create_test_script
+    install_playwright_browsers    
     
     echo
     print_status "✨ Installation completed successfully!"

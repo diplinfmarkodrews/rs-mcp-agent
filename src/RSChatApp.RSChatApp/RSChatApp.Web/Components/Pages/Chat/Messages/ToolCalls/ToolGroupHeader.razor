@@ -1,0 +1,60 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+@using RSChatApp.Web.Services.Chat.Tools
+
+
+@inject ToolRegistry ToolRegistry
+
+<div class="tool-group-header @(IsCollapsed ? "collapsed" : "expanded")" @onclick="ToggleCollapse">
+    <div class="tool-group-icon">
+        <ToolIcon Type="tool" CustomSvg="@GetGroupIconSvg()" />
+    </div>
+    <div class="tool-group-title">
+        @GetGroupTitle()
+    </div>
+    <div class="tool-group-badge">
+        @Group.Invocations.Count
+    </div>
+    <div class="tool-group-collapse-icon">
+        @if (IsCollapsed)
+        {
+            <span>▼</span>
+        }
+        else
+        {
+            <span>▲</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolGroup Group { get; set; }
+    
+    [Parameter]
+    public bool IsCollapsed { get; set; }
+    
+    [Parameter]
+    public EventCallback OnToggleCollapse { get; set; }
+    
+    private string GetGroupTitle()
+    {
+        var count = Group.Invocations.Count;
+        return Group.Type switch
+        {
+            ToolType.Search => $"{count} Search{(count > 1 ? "es" : "")}",
+            ToolType.TerminalExecute => $"{count} Terminal Command{(count > 1 ? "s" : "")}",
+            ToolType.BrowserExecute => $"{count} Browser Action{(count > 1 ? "s" : "")}",
+            _ => $"{count} Tool Call{(count > 1 ? "s" : "")}"
+        };
+    }
+
+    private string GetGroupIconSvg()
+    {
+        return ToolRegistry.GetDescriptor(Group.Type).GetIconSvg();
+    }
+
+    private async Task ToggleCollapse()
+    {
+        await OnToggleCollapse.InvokeAsync();
+    }
+}

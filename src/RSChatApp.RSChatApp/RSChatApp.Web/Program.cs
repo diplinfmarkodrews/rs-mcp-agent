@@ -1,7 +1,8 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -26,6 +27,8 @@ using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
+using RSChatApp.Web.Services.Chat;
+using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Storage;
 using Serilog;
 
@@ -161,8 +164,14 @@ builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
-    
     .AddInteractiveServerComponents();
+
+// Configure global JSON serialization options for Blazor components (including ProtectedBrowserStorage)
+builder.Services.Configure<JsonSerializerOptions>(options =>
+{
+    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.Converters.Add(new ChatMessageConverter());
+});
 
 // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
 builder.AddServiceDefaults();
@@ -217,6 +226,11 @@ builder.Services.AddSingleton<SemanticSearch>();
 builder.Services.AddScoped<SemanticSearchTool>();
 builder.Services.AddScoped<AuthenticationTool>();
 builder.Services.AddScoped<UserConfirmedTerminalTool>();
+
+// Tool call processing services
+builder.Services.AddSingleton<ToolRegistry>();
+builder.Services.AddScoped<ToolCallProcessor>();
+
 // Browser storage abstraction - choose LocalStorage or SessionStorage
 if (builder.Environment.IsDevelopment())
     builder.Services.AddScoped<IProtectedBrowserStorage, ProtectedLocalStorageAdapter>();

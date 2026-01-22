@@ -1,347 +1,52 @@
-@using System.Text.Json
-@using System.Text.RegularExpressions
-@using System.Linq
+@using RSChatApp.Web.Models.Chat.ToolCalls
+@using RSChatApp.Web.Services.Chat
+
 @rendermode InteractiveAuto
+
+@inject ToolCallProcessor ToolProcessor
 
 @if (Message.Role == ChatRole.User)
 {
-    <div class="user-message">
-        @Message.Text
-    </div>
+    <UserMessageView Message="@Message" />
 }
-else if (Message.Role == ChatRole.Assistant)
+else if (Message.Role == ChatRole.Assistant && _processedMessage is not null)
 {
-    ToolCallContext? pending = null;
-
-    foreach (var content in Message.Contents)
-    {
-        if (content is Microsoft.Extensions.AI.TextContent { Text: { Length: > 0 } text })
-        {
-            var parsed = ParseSources(text);
-
-            <div class="assistant-message">
-                <div>
-                    <div class="assistant-message-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="assistant-message-header">Assistant</div>
-                <div class="assistant-message-text">
-                    <assistant-message markdown="@parsed.CleanedText"></assistant-message>
-
-                    @foreach (var citation in parsed.Citations)
-                    {
-                        <ChatCitation File="@citation.File" PageNumber="@citation.Page" Quote="@citation.Quote" />
-                    }
-                </div>
-            </div>
-        }
-        else if (content is Microsoft.Extensions.AI.FunctionCallContent fcc)
-        {
-            Console.Write("Toolcall detected");
-            pending = TryCreateToolCallContext(fcc);
-            @RenderToolCall(fcc, pending)
-        }
-        else if (content is Microsoft.Extensions.AI.FunctionResultContent frc)
-        {
-            Console.Write("Toolcall result detected");
-            var fragment = RenderToolResult(frc, pending);
-            pending = null;
-            @fragment
-        }
-    }
+    <AssistantMessageView 
+        ProcessedMessage="@_processedMessage"
+        OnToolRerun="@HandleToolRerun"
+        OnEditInEditor="@HandleEditInEditor" />
 }
 
 @code {
-    private static readonly Regex CitationRegex = new(@"<citation\s+filename='(?<file>[^']*)'\s+page_number='(?<page>\d*)'\s*>(?<quote>.*?)</citation>", RegexOptions.Singleline | RegexOptions.NonBacktracking);
-    private static readonly Regex ResultRegex = new(@"<result\s+filename=(?<file>[^\s>]+)\s+page_number=(?<page>\d*)\s*>(?<quote>.*?)</result>", RegexOptions.Singleline | RegexOptions.NonBacktracking);
-
-    private readonly record struct CitationInfo(string File, int? Page, string Quote);
-    private readonly record struct ParsedMessage(string CleanedText, IReadOnlyList<CitationInfo> Citations);
-    private readonly record struct ToolUi(string Title, string? Detail);
-    private enum ToolKind
-    {
-        Other = 0,
-        Search = 1,
-        TerminalExecuteCommand = 2,
-        BrowserExecuteScript = 3,
-    }
-
-    private readonly record struct ToolCallContext(ToolKind Kind, string DisplayName, string? SessionId, string? CommandOrScript);
-
     [Parameter, EditorRequired]
     public required ChatMessage Message { get; set; }
-
+    
     [Parameter]
-    public bool InProgress { get; set;}
-
-    private static ParsedMessage ParseSources(string text)
+    public bool InProgress { get; set; }
+    
+    [Parameter]
+    public EventCallback<ToolRerunRequest> OnToolRerun { get; set; }
+    
+    [Parameter]
+    public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+    
+    private ProcessedMessage? _processedMessage;
+    
+    protected override void OnParametersSet()
     {
-        // Sources can be returned as <result ...>...</result> (current) or <citation ...>...</citation> (legacy).
-        var citations = new List<CitationInfo>();
-
-        foreach (Match match in ResultRegex.Matches(text))
+        if (Message.Role == ChatRole.Assistant)
         {
-            citations.Add(new CitationInfo(
-                match.Groups["file"].Value.Trim('"', '\''),
-                int.TryParse(match.Groups["page"].Value, out var page) ? page : null,
-                match.Groups["quote"].Value));
-        }
-
-        foreach (Match match in CitationRegex.Matches(text))
-        {
-            citations.Add(new CitationInfo(
-                match.Groups["file"].Value,
-                int.TryParse(match.Groups["page"].Value, out var page) ? page : null,
-                match.Groups["quote"].Value));
-        }
-
-        var cleaned = ResultRegex.Replace(text, string.Empty);
-        cleaned = CitationRegex.Replace(cleaned, string.Empty);
-
-        return new ParsedMessage(cleaned, citations);
-    }
-
-    private RenderFragment RenderToolCall(Microsoft.Extensions.AI.FunctionCallContent fcc, ToolCallContext? ctx) => builder =>
-    {
-        // Keep the existing styling footprint by reusing the "assistant-search" layout.
-        var tool = DescribeToolCall(fcc, ctx);
-
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", "assistant-search");
-
-        builder.OpenElement(2, "div");
-        builder.AddAttribute(3, "class", "assistant-search-icon");
-        builder.AddMarkupContent(4, "\n<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z\" /></svg>\n");
-        builder.CloseElement();
-
-        builder.OpenElement(5, "div");
-        builder.AddAttribute(6, "class", "assistant-search-content");
-
-        builder.AddContent(7, tool.Title);
-        if (!string.IsNullOrWhiteSpace(tool.Detail))
-        {
-            builder.OpenElement(8, "div");
-            builder.AddContent(9, tool.Detail);
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-        builder.CloseElement();
-    };
-
-    private RenderFragment RenderToolResult(Microsoft.Extensions.AI.FunctionResultContent frc, ToolCallContext? ctx) => builder =>
-    {
-        var raw = GetResultAsString(frc);
-        var (success, json) = TryParseJson(raw);
-
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", "assistant-search");
-
-        builder.OpenElement(2, "div");
-        builder.AddAttribute(3, "class", "assistant-search-icon");
-        builder.AddMarkupContent(4, "\n<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\" /></svg>\n");
-        builder.CloseElement();
-
-        builder.OpenElement(5, "div");
-        builder.AddAttribute(6, "class", "assistant-search-content");
-
-        builder.OpenElement(7, "span");
-        builder.AddAttribute(8, "class", "assistant-search-phrase");
-        builder.AddContent(9, ctx is null ? "Result" : $"Command result ({ctx.Value.DisplayName})");
-        builder.CloseElement();
-
-        // Special-case screenshot results: render an <img> if present.
-        if (json is not null && TryGetString(json.RootElement, "image", out var base64))
-        {
-            var format = TryGetString(json.RootElement, "format", out var fmt) ? fmt : "png";
-            var mime = format.Equals("jpeg", StringComparison.OrdinalIgnoreCase) ? "image/jpeg" : "image/png";
-
-            builder.OpenElement(10, "div");
-            builder.OpenElement(11, "img");
-            builder.AddAttribute(12, "style", "max-width: 100%; height: auto;");
-            builder.AddAttribute(13, "src", $"data:{mime};base64,{base64}");
-            builder.AddAttribute(14, "alt", "Screenshot");
-            builder.CloseElement();
-            builder.CloseElement();
-        }
-        else
-        {
-            // Fallback: show compact JSON/plaintext.
-            builder.OpenElement(15, "pre");
-            builder.OpenElement(16, "code");
-            builder.AddContent(17, success && json is not null ? JsonSerializer.Serialize(json.RootElement) : raw);
-            builder.CloseElement();
-            builder.CloseElement();
-        }
-
-        builder.CloseElement();
-        builder.CloseElement();
-    };
-
-    private static ToolCallContext? TryCreateToolCallContext(Microsoft.Extensions.AI.FunctionCallContent fcc)
-    {
-        var normalized = NormalizeToolName(fcc.Name);
-
-        if (normalized == "terminalexecutecommand")
-        {
-            var sessionId = TryGetArgAsString(fcc.Arguments, "sessionId");
-            var command = TryGetArgAsString(fcc.Arguments, "command") ?? TryGetArgAsString(fcc.Arguments, "cmd");
-            return new ToolCallContext(ToolKind.TerminalExecuteCommand, "Terminal", sessionId, command);
-        }
-
-        // Common spellings for browser script execution.
-        if (normalized is "browserttoolexecutescript" or "browsertoolexecutescript" or "executescript" or "executejavascript" or "executejavascriptasync")
-        {
-            var sessionId = TryGetArgAsString(fcc.Arguments, "sessionId");
-            var script = TryGetArgAsString(fcc.Arguments, "script") ?? TryGetArgAsString(fcc.Arguments, "code");
-            return new ToolCallContext(ToolKind.BrowserExecuteScript, "Browser", sessionId, script);
-        }
-
-        return null;
-    }
-
-    private static ToolUi DescribeToolCall(Microsoft.Extensions.AI.FunctionCallContent fcc, ToolCallContext? ctx)
-    {
-        var canonicalName = CanonicalizeFunctionName(fcc.Name);
-
-        // Search (existing behavior)
-        if (canonicalName == "Search" && fcc.Arguments?.TryGetValue("searchPhrase", out var searchPhraseObj) is true)
-        {
-            var phrase = FormatArgumentValue(searchPhraseObj);
-            if (fcc.Arguments?.TryGetValue("filenameFilter", out var filenameObj) is true && filenameObj is string filename && !string.IsNullOrEmpty(filename))
-            {
-                return new ToolUi("Searching:", $"{phrase} in {filename}");
-            }
-            return new ToolUi("Searching:", phrase);
-        }
-
-        if (ctx is { Kind: ToolKind.TerminalExecuteCommand })
-        {
-            var sid = string.IsNullOrWhiteSpace(ctx.Value.SessionId) ? "" : $"sessionId={ctx.Value.SessionId}";
-            var cmd = string.IsNullOrWhiteSpace(ctx.Value.CommandOrScript) ? "" : ctx.Value.CommandOrScript;
-            var detail = string.Join(" ", new[] { sid, cmd }.Where(s => !string.IsNullOrWhiteSpace(s)));
-            return new ToolUi("Terminal command:", string.IsNullOrWhiteSpace(detail) ? FormatArguments(fcc.Arguments) : detail);
-        }
-
-        if (ctx is { Kind: ToolKind.BrowserExecuteScript })
-        {
-            var sid = string.IsNullOrWhiteSpace(ctx.Value.SessionId) ? "" : $"sessionId={ctx.Value.SessionId}";
-            var script = string.IsNullOrWhiteSpace(ctx.Value.CommandOrScript) ? "" : Truncate(ctx.Value.CommandOrScript, 160);
-            var detail = string.Join(" ", new[] { sid, script }.Where(s => !string.IsNullOrWhiteSpace(s)));
-            return new ToolUi("Browser script:", string.IsNullOrWhiteSpace(detail) ? FormatArguments(fcc.Arguments) : detail);
-        }
-
-        return new ToolUi("Tool call:", $"{canonicalName}{(string.IsNullOrWhiteSpace(FormatArguments(fcc.Arguments)) ? string.Empty : " — " + FormatArguments(fcc.Arguments))}");
-    }
-
-    private static string CanonicalizeFunctionName(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return string.Empty;
-        }
-        var last = name.Split('.', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? name;
-        return last.EndsWith("Async", StringComparison.Ordinal) ? last[..^5] : last;
-    }
-
-    private static string NormalizeToolName(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return string.Empty;
-        }
-
-        var canonical = CanonicalizeFunctionName(name);
-        Span<char> buffer = stackalloc char[canonical.Length];
-        var idx = 0;
-        foreach (var ch in canonical)
-        {
-            if (char.IsLetterOrDigit(ch))
-            {
-                buffer[idx++] = char.ToLowerInvariant(ch);
-            }
-        }
-        return new string(buffer[..idx]);
-    }
-
-    private static string? TryGetArgAsString(IDictionary<string, object?>? args, string key)
-    {
-        if (args is null)
-        {
-            return null;
-        }
-        return args.TryGetValue(key, out var value) ? FormatArgumentValue(value) : null;
-    }
-
-    private static string Truncate(string value, int max)
-        => value.Length <= max ? value : value[..max] + "…";
-
-    private static (bool success, JsonDocument? doc) TryParseJson(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return (false, null);
-        }
-        try
-        {
-            return (true, JsonDocument.Parse(raw));
-        }
-        catch
-        {
-            return (false, null);
+            _processedMessage = ToolProcessor.ProcessMessage(Message);
         }
     }
-
-    private static bool TryGetString(JsonElement element, string propertyName, out string value)
+    
+    private async Task HandleToolRerun(ToolRerunRequest request)
     {
-        value = string.Empty;
-        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out var prop))
-        {
-            return false;
-        }
-        if (prop.ValueKind == JsonValueKind.String)
-        {
-            value = prop.GetString() ?? string.Empty;
-            return !string.IsNullOrEmpty(value);
-        }
-        return false;
+        await OnToolRerun.InvokeAsync(request);
     }
-
-    private static string? GetResultAsString(Microsoft.Extensions.AI.FunctionResultContent frc)
+    
+    private async Task HandleEditInEditor(EditInEditorRequest request)
     {
-        // Different providers may store results as string/JsonElement/other.
-        var result = frc.Result;
-        return result switch
-        {
-            null => null,
-            string s => s,
-            JsonElement e => e.GetRawText(),
-            _ => result.ToString()
-        };
-    }
-
-    private static string? FormatArguments(IDictionary<string, object?>? args)
-    {
-        if (args is null || args.Count == 0)
-        {
-            return null;
-        }
-
-        // Compact, stable formatting for UI.
-        return string.Join(", ", args.Select(kvp => $"{kvp.Key}={FormatArgumentValue(kvp.Value)}"));
-    }
-
-    private static string FormatArgumentValue(object? value)
-    {
-        return value switch
-        {
-            null => "null",
-            string s => s,
-            JsonElement e => e.ValueKind == JsonValueKind.String ? (e.GetString() ?? string.Empty) : e.GetRawText(),
-            _ => value.ToString() ?? string.Empty
-        };
+        await OnEditInEditor.InvokeAsync(request);
     }
 }

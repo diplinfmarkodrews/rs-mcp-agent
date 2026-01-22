@@ -33,6 +33,11 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
+    <Folder Include="wwwroot\Data\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\Pages\Chat\ToolCalls\ChatCitation.razor" />
   </ItemGroup>
 
 </Project>

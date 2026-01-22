@@ -1,0 +1,8 @@
+.error-result {
+    color: #991b1b;
+}
+
+.error-message {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}

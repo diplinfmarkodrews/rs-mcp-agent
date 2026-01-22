@@ -1,3 +1,4 @@
+@using RSChatApp.Web.Components.Pages.Editor
 @if (IsVisible)
 {
 	<div class="uctc-card" role="region" aria-label="User confirmation required">
@@ -25,10 +26,10 @@
 		<div class="uctc-actions">
 			<button class="btn-default" disabled="@IsBusy" @onclick="OnRunClicked">Run</button>
 			<button class="btn-subtle" disabled="@IsBusy" @onclick="OnSkipClicked">Skip</button>
-			@if (ShowCancel)
-			{
-				<button class="btn-subtle" disabled="@IsBusy" @onclick="OnCancelClicked">Cancel</button>
-			}
+			@* @if (ShowCancel) *@
+			@* { *@
+			@* 	<button class="btn-subtle" disabled="@IsBusy" @onclick="OnCancelClicked">Cancel</button> *@
+			@* } *@
 		</div>
 	</div>
 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using ReportServer.Abstraction;
-using RsMcpServer.Identity.Services;
 
 namespace RSChatApp.Mcp.ReportServer.Tools;
 
@@ -43,38 +42,44 @@ public class TerminalTool
             if (sessionInfo.IsSuccess && sessionInfo.Data != null)
             {
                 sessionId = sessionInfo.Data.SessionId;
-                result.AppendLine($"Initialized new terminal session with sessionId: {sessionId}");            
             }
             else
             {
-                
+                return new StringBuilder("Error fetching SessionId.")
+                    .Append(sessionInfo.Error?.Message)
+                    .ToString();
             }
         }
         
         _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
-        
-        result.AppendLine($"Executing command: {command}");
+        result.Append("SessionId: ")
+            .AppendLine(sessionId)
+            .AppendLine(", ");
         // Execute the command with the session ID
 
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
         var serializedCmdResult = JsonSerializer.Serialize(cmdResult);
         _logger.LogDebug("terminal returned: {CmdResult}", serializedCmdResult);
-        result.AppendLine($"Command result: {serializedCmdResult}");
+        result.AppendLine("CommandResult: { ")
+            .AppendLine(serializedCmdResult)
+            .AppendLine("}");
+        
         return result.ToString();
     }
-    /// <summary>
-    /// Executes a terminal command on the report server
-    /// </summary>
-    [KernelFunction, McpServerTool, Description("Starts a terminal session on the report server. " +
-                                                "Returns the session information including session ID. Use the sessionId for subsequent commands.")]
-    public async Task<string> InitTerminalSessionAsync(
-        CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Starting terminal session");
-        var sessionInfo = await _reportServer.InitSessionAsync();
-        var serializedSessionInfo = JsonSerializer.Serialize(sessionInfo);
-        _logger.LogDebug("Started terminal session: {SessionInfo}", serializedSessionInfo);
-        return serializedSessionInfo;
-    }
+    // Command is included in ExecuteCommand due simplicity
+    // /// <summary>
+    // /// Executes a terminal command on the report server
+    // /// </summary>
+    // [KernelFunction, McpServerTool, Description("Starts a terminal session on the report server. " +
+    //                                             "Returns the session information including session ID. Use the sessionId for subsequent commands.")]
+    // public async Task<string> InitTerminalSessionAsync(
+    //     CancellationToken cancellationToken = default)
+    // {
+    //     _logger.LogInformation("Starting terminal session");
+    //     var sessionInfo = await _reportServer.InitSessionAsync();
+    //     var serializedSessionInfo = JsonSerializer.Serialize(sessionInfo);
+    //     _logger.LogDebug("Started terminal session: {SessionInfo}", serializedSessionInfo);
+    //     return serializedSessionInfo;
+    // }
 }
 
