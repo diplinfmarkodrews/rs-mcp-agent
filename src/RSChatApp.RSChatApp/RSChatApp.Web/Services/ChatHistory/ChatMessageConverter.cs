@@ -92,10 +92,15 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
     private static FunctionResultContent CreateFunctionResultContent(JsonElement contentElement)
     {
         var callId = contentElement.GetProperty("CallId").GetString() ?? "";
-        var result = contentElement.TryGetProperty("Result", out var resultElement)
-            ? resultElement.GetString()  // Get as string, not raw JSON
-            : null;
-        
+        object? result = null;
+
+        if (contentElement.TryGetProperty("Result", out var resultElement))
+        {
+            result = resultElement.ValueKind == JsonValueKind.String
+                ? resultElement.GetString()
+                : resultElement.Clone();
+        }
+
         return new FunctionResultContent(callId, result);
     }
     
@@ -170,8 +175,16 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
                         if (frc.Result != null)
                         {
                             writer.WritePropertyName("Result");
-                            // Write result as raw string, it's already JSON/text from the API
-                            writer.WriteStringValue(frc.Result.ToString() ?? "");
+                            switch (frc.Result)
+                            {
+                                case JsonElement json:
+                                    json.WriteTo(writer);
+                                    break;
+                                default:
+                                    // Backward compatible: store as string
+                                    writer.WriteStringValue(frc.Result.ToString() ?? "");
+                                    break;
+                            }
                         }
                         break;
                     

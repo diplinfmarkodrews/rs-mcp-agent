@@ -116,7 +116,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                     Type = 1, // List type
                     Error = string.Empty,
                     Data = directoryList,
-                    NewPrompt = "groovy>",
+                    NewPrompt = ReportServerExtension.RsTerminalPrompt,
                     SessionClosed = false
                 };
 

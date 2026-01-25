@@ -122,8 +122,9 @@ public class ToolCallProcessor
         {
             if (TryParseJson(rawResult, out var json))
             {
-                var hasSessionId = json.RootElement.TryGetProperty("SessionId", out _);
-                var hasCmdResult = json.RootElement.TryGetProperty("CmdResult", out _);
+                var root = json.RootElement;
+                var hasSessionId = TryGetPropertyIgnoreCase(root, "SessionId", out _);
+                var hasCmdResult = TryGetPropertyIgnoreCase(root, "CmdResult", out _);
                 
                 _logger.LogDebug("Terminal detection: hasSessionId={HasSessionId}, hasCmdResult={HasCmdResult}", 
                     hasSessionId, hasCmdResult);
@@ -238,5 +239,31 @@ public class ToolCallProcessor
         {
             return false;
         }
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
+    {
+        value = default;
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (element.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -65,15 +65,28 @@
                 root = inner.RootElement;
             }
 
-            var sessionId = root.GetProperty("SessionId").GetString() ?? string.Empty;
-            var command = root.GetProperty("Command").GetString() ?? string.Empty;
-            
-            var cmdResult = root.GetProperty("CmdResult");
-            var data = cmdResult.GetProperty("Data");
-            
-            var result = data.GetProperty("Result").GetString() ?? string.Empty;
-            var error = data.GetProperty("Error").GetString() ?? string.Empty;
-            var newPrompt = data.GetProperty("NewPrompt").GetString() ?? ">";
+            var sessionId = GetStringProperty(root, "SessionId") ?? string.Empty;
+            var command = GetStringProperty(root, "Command") ?? string.Empty;
+
+            // Expected shapes:
+            // - { sessionId, command, cmdResult: { data: { result, error, newPrompt, ... }, isSuccess, ... } }
+            // - { SessionId, Command, CmdResult: { Data: { Result, Error, NewPrompt, ... }, ... } }
+            if (!TryGetPropertyIgnoreCase(root, "CmdResult", out var cmdResult))
+            {
+                _error = "Terminal result JSON missing cmdResult";
+                return;
+            }
+
+            // Some result wrappers store the actual command output under cmdResult.data (camelCase)
+            if (!TryGetPropertyIgnoreCase(cmdResult, "Data", out var data))
+            {
+                // If cmdResult itself is the data payload, fall back to that.
+                data = cmdResult;
+            }
+
+            var result = GetStringProperty(data, "Result") ?? string.Empty;
+            var error = GetStringProperty(data, "Error") ?? string.Empty;
+            var newPrompt = GetStringProperty(data, "NewPrompt") ?? ">";
 
             _terminalData = new TerminalData(sessionId, command, result, error, newPrompt);
         }
@@ -81,6 +94,49 @@
         {
             _error = $"Failed to parse terminal result: {ex.Message}";
         }
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        if (TryGetPropertyIgnoreCase(element, propertyName, out var value))
+        {
+            if (value.ValueKind == JsonValueKind.String)
+            {
+                return value.GetString();
+            }
+
+            if (value.ValueKind == JsonValueKind.Number || value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
+            {
+                return value.ToString();
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
+    {
+        value = default;
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (element.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool TryExtractMcpText(JsonElement element, out string text)
