@@ -7,7 +7,7 @@ public class Result
     public bool IsSuccess { get; set; } 
     public SerializableException? Error { get; set; } 
     public string? Message { get; set; } = string.Empty;
-
+    public DateTime? Timestamp { get; set; } = DateTime.Now;
     public static Result Fail(string message, Exception? error = null)
         => new Result
         {

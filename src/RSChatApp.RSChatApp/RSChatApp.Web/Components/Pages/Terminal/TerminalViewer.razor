@@ -1,3 +1,4 @@
+@using ReportServer.RpcClient.Extensions
 @using RSChatApp.Web.Models.Terminal
 @using RSChatApp.Web.Services.Terminal
 
@@ -116,7 +117,7 @@
             ? Terminal.Prompt 
             : Terminal.Type switch
             {
-                TerminalType.ReportServer => "rs>",
+                TerminalType.ReportServer => ReportServerExtension.RsTerminalPrompt,
                 TerminalType.JavaScript => "js>",
                 _ => ">"
             };

@@ -103,6 +103,9 @@ public class ToolCallProcessor
             return ResultContentType.Text;
         }
 
+        _logger.LogDebug("Detecting content type for tool: {ToolType}, RawName: {RawName}", 
+            invocation?.Type, invocation?.RawName);
+
         // Search results contain citations
         if (invocation?.Type == ToolType.Search)
         {
@@ -113,8 +116,33 @@ public class ToolCallProcessor
             }
         }
 
+        // Terminal command results
+        if (invocation?.Type == ToolType.TerminalExecute 
+            || invocation?.Type == ToolType.BrowserExecute)
+        {
+            if (TryParseJson(rawResult, out var json))
+            {
+                var hasSessionId = json.RootElement.TryGetProperty("SessionId", out _);
+                var hasCmdResult = json.RootElement.TryGetProperty("CmdResult", out _);
+                
+                _logger.LogDebug("Terminal detection: hasSessionId={HasSessionId}, hasCmdResult={HasCmdResult}", 
+                    hasSessionId, hasCmdResult);
+                
+                if (hasSessionId && hasCmdResult)
+                {
+                    _logger.LogInformation("Detected Terminal content type for tool: {ToolName}", invocation.RawName);
+                    return ResultContentType.Terminal;
+                }
+            }
+            else
+            {
+                _logger.LogDebug("Failed to parse JSON for terminal detection. First 100 chars: {Preview}", 
+                    rawResult?.Length > 100 ? rawResult[..100] : rawResult);
+            }
+        }
+
         // Browser screenshot results
-        if (invocation?.Type == ToolType.BrowserExecute || invocation?.Type == ToolType.BrowserScreenshot)
+        if (invocation?.Type == ToolType.BrowserScreenshot)
         {
             if (TryParseJson(rawResult, out var json) && 
                 json.RootElement.TryGetProperty("image", out _))
@@ -161,6 +189,11 @@ public class ToolCallProcessor
             null => null,
             string s => s,
             JsonElement e when e.ValueKind == JsonValueKind.String => e.GetString(),
+            // For compatibility reason support array types. usually ToolCallResult are string
+            JsonElement e when e.ValueKind == JsonValueKind.Array =>
+                string.Join(",", e.EnumerateArray().Select(item =>
+                    item.ValueKind == JsonValueKind.String ? item.GetString() : item.GetRawText())),
+            IEnumerable<string> enumerable => string.Join(",", enumerable),
             JsonElement e => e.GetRawText(),
             _ => frc.Result.ToString()
         };
@@ -177,7 +210,8 @@ public class ToolCallProcessor
         // as they may contain these words in their actual content
         if (contentType == ResultContentType.SearchCitations || 
             contentType == ResultContentType.Json ||
-            contentType == ResultContentType.Image)
+            contentType == ResultContentType.Image ||
+            contentType == ResultContentType.Terminal)
         {
             return false;
         }

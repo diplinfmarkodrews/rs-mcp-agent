@@ -1,7 +1,8 @@
 .app-layout {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .top-nav {
@@ -30,7 +31,8 @@
 
 .main-content {
     flex: 1;
-    min-height: calc(100vh - 60px);
+    overflow: hidden;
+    min-height: 0;
 }
 
 #blazor-error-ui {

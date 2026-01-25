@@ -34,10 +34,12 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
             // Serialize to JSON string with our custom converter
             var json = JsonSerializer.Serialize(item, JsonOptions);
             
-            _logger.LogDebug("Serialized {messageCount} messages, JSON length: {jsonLength}", item.Count, json.Length);
+            _logger.LogInformation("Saving {messageCount} messages to storage key '{storageKey}', JSON length: {jsonLength}", item.Count, StorageKey, json.Length);
             
             // Store the JSON string (ProtectedBrowserStorage will encrypt it)
             await BrowserStorage.SetAsync(StorageKey, json);
+            
+            _logger.LogInformation("Successfully saved chat history to storage");
         }
         catch (Exception ex)
         {
@@ -50,16 +52,25 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
     {
         try
         {
+            _logger.LogInformation("Attempting to load chat history from storage key '{storageKey}'", StorageKey);
+            
             // Get the JSON string
             var result = await BrowserStorage.GetAsync<string>(StorageKey);
             
+            _logger.LogInformation("Storage result - Success: {success}, HasValue: {hasValue}, ValueLength: {length}", 
+                result.Success, 
+                result.Value != null, 
+                result.Value?.Length ?? 0);
+            
             if (!result.Success || string.IsNullOrEmpty(result.Value))
             {
-                _logger.LogDebug("No chat history found in storage");
+                _logger.LogInformation("No chat history found in storage (Success={success}, IsNullOrEmpty={isEmpty})", 
+                    result.Success, 
+                    string.IsNullOrEmpty(result.Value));
                 return new StorageResult<List<ChatMessage>>();
             }
             
-            _logger.LogDebug("Retrieved JSON from storage, length: {length}", result.Value.Length);
+            _logger.LogInformation("Retrieved JSON from storage, attempting deserialization. Length: {length}", result.Value.Length);
             
             // Deserialize with our custom converter
             var messages = JsonSerializer.Deserialize<List<ChatMessage>>(result.Value, JsonOptions);
@@ -88,9 +99,9 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
         }
         catch (TaskCanceledException)
         {
-            // JS interop not ready yet, return empty result
-            _logger.LogDebug("Chat history loading cancelled (JS interop not ready)");
-            return new StorageResult<List<ChatMessage>>();
+            // JS interop not ready yet, let it bubble up so caller can retry
+            _logger.LogDebug("Chat history loading cancelled (JS interop not ready, likely during prerender)");
+            throw;
         }
         catch (Exception ex)
         {

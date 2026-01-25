@@ -43,9 +43,10 @@ public class UserConfirmedTerminalTool
             return JsonSerializer.Serialize(new
             {
                 TerminalId = executingTerminalId,
+                Command = command,
                 CommandResult = result
             });
         }
-        return $"User has {userConfirmationResult.Result.ToString()} the execution of the terminal command.";
+        return $"{userConfirmationResult.Result.ToString()}: User has {userConfirmationResult.Result.ToString()} the execution of the terminal command.";
     }
 }

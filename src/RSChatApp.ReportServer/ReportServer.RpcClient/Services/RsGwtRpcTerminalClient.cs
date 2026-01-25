@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction.Exceptions;
 using ReportServer.RpcClient.DTOs;
 using ReportServer.RpcClient.DTOs.Terminal;
+using ReportServer.RpcClient.Extensions;
 using ReportServer.RpcClient.Infrastructure;
 
 namespace ReportServer.RpcClient.Services;
@@ -49,7 +50,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                         var sessionInfo = new TerminalSessionInfoDto
                         {
                             SessionId = sessionId,
-                            Prompt = "groovy>", // Default prompt
+                            Prompt = ReportServerExtension.RsTerminalPrompt, // Default prompt
                             WorkingDirectory = "/",
                             Environment = new Dictionary<string, string>()
                         };

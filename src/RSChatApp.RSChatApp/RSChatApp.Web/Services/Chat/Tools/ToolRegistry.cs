@@ -15,10 +15,10 @@ public class ToolRegistry
             "Search", "SearchAsync", "search");
         
         RegisterDescriptor(new TerminalToolDescriptor(), 
-            "TerminalExecuteCommand", "terminal.executeCommand", "executeCommand", "terminal");
+            "RsMcpServer_execute_command");
         
         RegisterDescriptor(new BrowserToolDescriptor(), 
-            "BrowserExecuteScript", "browser.executeScript", "executeScript", "browser");
+            "BrowserTool", "BrowserTool_executejavascript", "executeScript", "browser");
     }
 
     public void RegisterDescriptor(IToolDescriptor descriptor, params string[] toolNames)

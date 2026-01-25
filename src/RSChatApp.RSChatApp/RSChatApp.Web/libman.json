@@ -1,0 +1,35 @@
+{
+  "version": "3.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "pdfjs-dist@4.10.38",
+      "destination": "wwwroot/lib/pdfjs-dist/dist/build",
+      "files": [
+        "build/pdf.min.mjs",
+        "build/pdf.worker.min.mjs"
+      ]
+    },
+    {
+      "library": "dompurify@3.2.3",
+      "destination": "wwwroot/lib/dompurify",
+      "files": [
+        "dist/purify.es.mjs"
+      ]
+    },
+    {
+      "library": "marked@14.1.3",
+      "destination": "wwwroot/lib/marked",
+      "files": [
+        "lib/marked.esm.js"
+      ]
+    },
+    {
+      "library": "tailwindcss@3.4.17",
+      "destination": "wwwroot/lib/tailwindcss",
+      "files": [
+        "tailwind.css"
+      ]
+    }
+  ]
+}

@@ -7,5 +7,6 @@ public enum ResultContentType
     Image,
     Html,
     Error,
-    SearchCitations
+    SearchCitations,
+    Terminal
 }

@@ -21,6 +21,24 @@
     gap: 0.5rem;
     margin-bottom: 0.5rem;
     font-weight: 600;
+    cursor: pointer;
+    position: relative;
+}
+
+.tool-result-header ::deep .search-expand-icon {
+    width: 0.625rem;
+    height: 0.625rem;
+    color: #6b7280;
+    transition: transform 0.2s ease;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    flex-shrink: 0;
+}
+
+.tool-result-header ::deep .search-expand-icon.expanded {
+    transform: translateY(-50%) rotate(180deg);
 }
 
 .tool-result-status {

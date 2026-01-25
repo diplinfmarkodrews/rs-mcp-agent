@@ -1,18 +1,24 @@
 @using System.Text.RegularExpressions
 @using RSChatApp.Web.Models.Chat.ToolCalls
+@using RSChatApp.Web.Components.Pages.Chat.Messages.ToolCalls.Result.Renderers
 
 <div class="tool-result @GetResultClass()">
-    <div class="tool-result-header">
+    <div class="tool-result-header" @onclick="ToggleExpanded">
         <ToolIcon Type="@(Result.IsSuccess ? "success" : "error")" />
         <span class="tool-result-status">
             @(Result.IsSuccess ? GetSuccessTitle() : "Error")
         </span>
-        <span class="tool-result-time">@Result.CompletedAt.ToString("HH:mm:ss")</span>
+        <svg class="search-expand-icon @(isExpanded ? "expanded" : "")" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
     </div>
     
-    <div class="tool-result-content">
-        @RenderContent()
-    </div>
+    @if (isExpanded)
+    {
+        <div class="tool-result-content">
+            @RenderContent()
+        </div>
+    }
     
     @if (ShowActions)
     {
@@ -45,6 +51,8 @@
 
     [Parameter]
     public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+
+    private bool isExpanded = false;
 
     private string GetResultClass()
     {
@@ -100,6 +108,12 @@
                 builder.CloseComponent();
                 break;
 
+            case ResultContentType.Terminal:
+                builder.OpenComponent<TerminalResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+
             default:
                 builder.OpenComponent<TextResultRenderer>(seq++);
                 builder.AddAttribute(seq++, "Result", Result);
@@ -107,6 +121,11 @@
                 break;
         }
     };
+
+    private void ToggleExpanded()
+    {
+        isExpanded = !isExpanded;
+    }
 
     private void CopyResult()
     {

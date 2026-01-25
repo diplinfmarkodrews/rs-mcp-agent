@@ -29,12 +29,12 @@ public class TerminalTool
     /// Executes a terminal command on the report server
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. ")]
-    public async Task<string> ExecuteCommandAsync(
+    public async Task<object> ExecuteCommandAsync(
         [Description("session id to identify terminal session. Leave empty to start a new session")]string? sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
-        var result = new StringBuilder();
+        
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             _logger.LogInformation("No sessionId provided. Initializing new terminal session.");
@@ -45,27 +45,36 @@ public class TerminalTool
             }
             else
             {
-                return new StringBuilder("Error fetching SessionId.")
-                    .Append(sessionInfo.Error?.Message)
-                    .ToString();
+                return new
+                {
+                    SessionId = sessionId ?? string.Empty,
+                    Command = command,
+                    Error = new StringBuilder("Error fetching SessionId.")
+                        .Append(sessionInfo.Error?.Message)
+                        .ToString()
+                };
             }
         }
         
         _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
-        result.Append("SessionId: ")
-            .AppendLine(sessionId)
-            .AppendLine(", ");
+        
         // Execute the command with the session ID
 
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
-        var serializedCmdResult = JsonSerializer.Serialize(cmdResult);
-        _logger.LogDebug("terminal returned: {CmdResult}", serializedCmdResult);
-        result.AppendLine("CommandResult: { ")
-            .AppendLine(serializedCmdResult)
-            .AppendLine("}");
         
-        return result.ToString();
+        var result = new
+        {
+            SessionId = sessionId,
+            Command = command,
+            CmdResult = cmdResult,
+            
+        };
+
+        _logger.LogDebug("terminal returned (structured): {SessionId} {Command}", sessionId, command);
+        return result;
+        
     }
+    
     // Command is included in ExecuteCommand due simplicity
     // /// <summary>
     // /// Executes a terminal command on the report server
@@ -82,4 +91,4 @@ public class TerminalTool
     //     return serializedSessionInfo;
     // }
 }
-
+public record TerminalCommandResult(string SessionId, string Command, string CmdResult);

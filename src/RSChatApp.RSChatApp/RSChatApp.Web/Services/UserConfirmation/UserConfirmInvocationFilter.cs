@@ -39,15 +39,25 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         var plugin = ctx.Function.Metadata.PluginName ?? string.Empty;
         var function = ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty;
 
-        var normalized = NormalizeToolName($"{plugin}.{function}");
-        if (!normalized.Contains("terminal", StringComparison.Ordinal) || !normalized.Contains("executecommand", StringComparison.Ordinal))
+        var normalized = NormalizeToolName($"{plugin}{function}");
+        
+        // Match RsMcpServer_execute_command or similar terminal execution functions
+        bool isTerminalCommand = normalized.Contains("executecommand", StringComparison.Ordinal) 
+                                 || (normalized.Contains("rsmcpserver", StringComparison.Ordinal) && normalized.Contains("execute", StringComparison.Ordinal));
+        
+        // Optionally match browser script execution
+        bool isBrowserScript = normalized.Contains("browsertool", StringComparison.Ordinal) 
+                               && normalized.Contains("executejavascript", StringComparison.Ordinal);
+        
+        if (!isTerminalCommand && !isBrowserScript)
         {
             return false;
         }
 
         // Extract command argument (common spellings).
         var command = TryGetArgAsString(ctx.Arguments, "command")
-                      ?? TryGetArgAsString(ctx.Arguments, "cmd");
+                      ?? TryGetArgAsString(ctx.Arguments, "cmd")
+                      ?? TryGetArgAsString(ctx.Arguments, "script");
         if (string.IsNullOrWhiteSpace(command))
         {
             return false;
@@ -56,7 +66,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         request = new TerminalConfirmRequest(
             ToolName: string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
             Command: command,
-            Language: "bash");
+            Language: isBrowserScript ? "javascript" : "bash");
 
         return true;
     }

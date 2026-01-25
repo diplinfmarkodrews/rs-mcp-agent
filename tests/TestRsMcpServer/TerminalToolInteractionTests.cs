@@ -46,7 +46,8 @@ public sealed class TerminalToolInteractionTests
 
         // Assert
         Assert.IsNotNull(result, "Result should not be null");
-        Assert.IsTrue(result.Contains("Authentication required"), 
+        var resultText = result.ToString() ?? string.Empty;
+        Assert.IsTrue(resultText.Contains("Authentication required"), 
             "Should return authentication error when no session is available");
         
         // Verify the log messages
