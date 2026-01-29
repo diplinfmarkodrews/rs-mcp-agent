@@ -44,6 +44,7 @@ public static class DependencyInjection
                 .GetChatClient(openAISettings.Model)
                 .AsIChatClient()
                 .AsBuilder()
+                // .UseFunctionInvocation()
                 .UseKernelFunctionInvocation(loggerFactory)
                 .UseOpenTelemetry(loggerFactory, openTelemetrySourceName, openTelemetryConfig);
 
@@ -54,7 +55,14 @@ public static class DependencyInjection
             return builder.Build();
         }
 
-        services.AddKeyedSingleton<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
+        if (serviceId is null)
+        {
+            services.AddSingleton<IChatClient>(sp => Factory(sp, null));
+        }
+        else
+        {
+            services.AddKeyedSingleton<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
+        }
         
         return services;
     }

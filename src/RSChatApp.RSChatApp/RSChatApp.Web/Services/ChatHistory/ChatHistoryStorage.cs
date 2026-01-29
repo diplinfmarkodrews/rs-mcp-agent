@@ -76,7 +76,11 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
             var messages = JsonSerializer.Deserialize<List<ChatMessage>>(result.Value, JsonOptions);
             
             _logger.LogInformation("Successfully deserialized {messageCount} messages from storage", messages?.Count ?? 0);
-            
+            foreach (var chatMessage in messages)
+            {
+                
+                _logger.LogInformation("Successfully deserialized message from storage: {Messages}", JsonSerializer.Serialize(chatMessage, JsonOptions));
+            }
             return new StorageResult<List<ChatMessage>>
             {
                 Success = true,
@@ -97,7 +101,7 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
             await BrowserStorage.DeleteAsync(StorageKey);
             return new StorageResult<List<ChatMessage>>();
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException canceledException)
         {
             // JS interop not ready yet, let it bubble up so caller can retry
             _logger.LogDebug("Chat history loading cancelled (JS interop not ready, likely during prerender)");
@@ -108,5 +112,10 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
             _logger.LogError(ex, "Unexpected error loading chat history: {Message}", ex.Message);
             return new StorageResult<List<ChatMessage>>();
         }
+    }
+
+    Polly.AsyncPolicy<StorageResult<List<ChatMessage>>> RetryPolicy()
+    {
+        throw  new NotImplementedException();
     }
 }

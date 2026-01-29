@@ -1,21 +1,16 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
-using OpenAI.Chat;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Web.Components.Pages.Terminal;
 using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Chat;
-using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
-using AIFunctionResultContent = Microsoft.Extensions.AI.FunctionResultContent;
 using TextContent = Microsoft.Extensions.AI.TextContent;
-
+using RSChatApp.Mcp.ExtensionAI.Processing;
 namespace RSChatApp.Web.Components.Pages.Chat;
 
 public partial class Chat(
@@ -249,27 +244,7 @@ public partial class Chat(
             if (chatHistory.Success && chatHistory.Value!.Count > 0)
             {
                 Logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Value!.Count);
-                
-                // Debug: Log what content types are in the loaded messages
-                foreach (var msg in chatHistory.Value!)
-                {
-                    if (msg.Role == ChatRole.Assistant && msg.Contents != null)
-                    {
-                        Logger.LogDebug("Loaded Assistant message with {contentCount} contents:", msg.Contents.Count);
-                        foreach (var content in msg.Contents)
-                        {
-                            Logger.LogDebug("  - Content type: {contentType}", content.GetType().Name);
-                        }
-                    }
-                }
-                
                 messages.AddRange(chatHistory.Value);
-
-                // Normalize loaded messages so tool results are parsed into JSON when possible.
-                // for (var i = 0; i < messages.Count; i++)
-                // {
-                //     messages[i] = NormalizeChatMessage(messages[i]);
-                // }
                 chatSuggestions?.Update(messages);
                 
                 // Trigger UI update
@@ -340,7 +315,7 @@ public partial class Chat(
             // Normalize any newly-added assistant/tool messages so tool results are stored as JSON when possible
             for (var i = beforeCount; i < messages.Count; i++)
             {
-                messages[i] = NormalizeChatMessage(messages[i]);
+                messages[i] = messages[i].NormalizeChatMessageContents();
             }
             chatSuggestions?.Update(messages);
         }
@@ -412,7 +387,7 @@ public partial class Chat(
                 // Add all non-text contents (FunctionCallContent, FunctionResultContent, etc.)
                 streamingContents.AddRange(allContents.Where(c => c is not TextContent));
 
-                currentResponseMessage = new ChatMessage(ChatRole.Assistant, NormalizeAssistantContents(streamingContents));
+                currentResponseMessage = new ChatMessage(ChatRole.Assistant, streamingContents.NormalizeAssistantContents());
                 
                 // Trigger UI update to show streaming content
                 await InvokeAsync(StateHasChanged);
@@ -437,7 +412,7 @@ public partial class Chat(
                 // Add all non-TextContent items (FunctionCallContent, FunctionResultContent, etc.)
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
-                var responseMessage = new ChatMessage(ChatRole.Assistant, NormalizeAssistantContents(consolidatedContents));
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
                 messages.Add(responseMessage);
                 
                 Logger.LogInformation("Added response message with {contentCount} contents", consolidatedContents.Count);
@@ -459,7 +434,7 @@ public partial class Chat(
                 }
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
-                var responseMessage = new ChatMessage(ChatRole.Assistant, NormalizeAssistantContents(consolidatedContents));
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
                 messages.Add(responseMessage);
             }
         }
@@ -477,7 +452,7 @@ public partial class Chat(
                 }
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
-                var responseMessage = new ChatMessage(ChatRole.Assistant, NormalizeAssistantContents(consolidatedContents));
+                var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
                 messages.Add(responseMessage);
             }
             
@@ -497,228 +472,7 @@ public partial class Chat(
         }
     }
 
-    private static ChatMessage NormalizeChatMessage(ChatMessage message)
-    {
-        if (message.Contents is null || message.Contents.Count == 0)
-        {
-            return message;
-        }
-
-        var normalizedContents = NormalizeAssistantContents(message.Contents);
-        return new ChatMessage(message.Role, normalizedContents);
-    }
-
-    private static List<AIContent> NormalizeAssistantContents(IEnumerable<AIContent> contents)
-    {
-        var normalized = contents is ICollection<AIContent> collection
-            ? new List<AIContent>(collection.Count)
-            : new List<AIContent>();
-
-        foreach (var content in contents)
-        {
-            if (content is AIFunctionResultContent frc)
-            {
-                var normalizedResult = NormalizeToolResultObject(frc.Result);
-                normalized.Add(new AIFunctionResultContent(frc.CallId, normalizedResult));
-                continue;
-            }
-
-            normalized.Add(content);
-        }
-
-        return normalized;
-    }
-
-    private static object? NormalizeToolResultObject(object? result)
-    {
-        return result switch
-        {
-            null => null,
-            JsonDocument doc => NormalizeJsonElement(doc.RootElement),
-            JsonElement element => NormalizeJsonElement(element),
-            string s => NormalizeFromString(s),
-            _ => result
-        };
-    }
-
-    private static object NormalizeJsonElement(JsonElement element)
-    {
-        // If this is an MCP envelope, unwrap the inner text and try parse it.
-        if (TryExtractMcpText(element, out var mcpText))
-        {
-            return NormalizeFromString(mcpText);
-        }
-
-        // If it's a JSON string value, treat it like a string payload.
-        if (element.ValueKind == JsonValueKind.String)
-        {
-            return NormalizeFromString(element.GetString() ?? string.Empty);
-        }
-
-        // Already a structured JSON value.
-        return element.Clone();
-    }
-
-    private static object NormalizeFromString(string value)
-    {
-        var trimmed = value.Trim();
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            return value;
-        }
-
-        // 1) Try parse directly.
-        if (TryParseJsonValue(trimmed, out var parsed))
-        {
-            return parsed;
-        }
-
-        // 2) If parsing fails, attempt a single decode pass (handles literal \u0022 etc.).
-        var decoded = TryDecodeJsonEscapesOnce(trimmed);
-        if (!string.IsNullOrEmpty(decoded) && decoded != trimmed && TryParseJsonValue(decoded, out parsed))
-        {
-            return parsed;
-        }
-
-        return value;
-    }
-
-    private static bool TryParseJsonValue(string text, out JsonElement parsed)
-    {
-        parsed = default;
-
-        try
-        {
-            using var doc = JsonDocument.Parse(text);
-            var root = doc.RootElement;
-
-            // If the root is a JSON string that itself contains JSON, parse that too.
-            if (root.ValueKind == JsonValueKind.String)
-            {
-                var inner = root.GetString();
-                if (!string.IsNullOrWhiteSpace(inner))
-                {
-                    try
-                    {
-                        using var innerDoc = JsonDocument.Parse(inner);
-                        parsed = innerDoc.RootElement.Clone();
-                        return true;
-                    }
-                    catch
-                    {
-                        // fall through and return root string as non-JSON by failing
-                    }
-                }
-
-                return false;
-            }
-
-            parsed = root.Clone();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static string? TryDecodeJsonEscapesOnce(string text)
-    {
-        // Interpret escape sequences like \u0022 by parsing the text as a JSON string literal.
-        // We must escape quotes and control characters, but keep backslashes intact.
-        try
-        {
-            var escaped = EscapeForJsonStringLiteral(text);
-            using var doc = JsonDocument.Parse("\"" + escaped + "\"");
-            return doc.RootElement.GetString();
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static string EscapeForJsonStringLiteral(string text)
-    {
-        var sb = new StringBuilder(text.Length + 16);
-
-        foreach (var c in text)
-        {
-            switch (c)
-            {
-                case '"':
-                    sb.Append("\\\"");
-                    break;
-                case '\n':
-                    sb.Append("\\n");
-                    break;
-                case '\r':
-                    sb.Append("\\r");
-                    break;
-                case '\t':
-                    sb.Append("\\t");
-                    break;
-                default:
-                    if (c < 0x20)
-                    {
-                        sb.Append("\\u");
-                        sb.Append(((int)c).ToString("x4"));
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                    break;
-            }
-        }
-
-        return sb.ToString();
-    }
-
-    private static bool TryExtractMcpText(JsonElement element, out string text)
-    {
-        text = string.Empty;
-
-        // Common MCP shape: { "content": [ { "type": "text", "text": "..." } ] }
-        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("content", out var content) &&
-            content.ValueKind == JsonValueKind.Array)
-        {
-            var parts = new List<string>();
-            foreach (var item in content.EnumerateArray())
-            {
-                if (item.ValueKind != JsonValueKind.Object)
-                {
-                    continue;
-                }
-
-                if (item.TryGetProperty("type", out var typeEl) && typeEl.ValueKind == JsonValueKind.String)
-                {
-                    var type = typeEl.GetString();
-                    if (!string.Equals(type, "text", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                }
-
-                if (item.TryGetProperty("text", out var textEl) && textEl.ValueKind == JsonValueKind.String)
-                {
-                    var part = textEl.GetString();
-                    if (!string.IsNullOrEmpty(part))
-                    {
-                        parts.Add(part);
-                    }
-                }
-            }
-
-            if (parts.Count > 0)
-            {
-                text = string.Join("\n", parts);
-                return true;
-            }
-        }
-
-        return false;
-    }
+    
 
     private void CancelAnyCurrentResponse()
     {

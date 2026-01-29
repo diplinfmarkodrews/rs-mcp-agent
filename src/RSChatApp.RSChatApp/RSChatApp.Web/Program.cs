@@ -180,18 +180,19 @@ if (string.IsNullOrEmpty(openAISettings.Model) == false)
 {
     if (openAISettings.IsValid() == false)
         throw new InvalidConfigurationException("OpenAI API key not set properly in env.");
-    
-    builder.Services.AddOpenAIChatClient(openAISettings.Model,
-        new Uri(openAISettings.Url),
-        openAISettings.ApiKey,
-        openTelemetryConfig:(f) => f.EnableSensitiveData = false
-    );       
+
+    // IMPORTANT:
+    // Use our custom OpenAI chat client registration that enables Semantic Kernel
+    // function invocation middleware so SK IFunctionInvocationFilter(s) run.
+    builder.Services.AddOpenAIChatClient(
+        openAISettings,
+        openTelemetryConfig: f => f.EnableSensitiveData = false);
 }
 else
 {
     builder.AddOllamaApiClient("chat")
         .AddChatClient()
-        .UseFunctionInvocation()
+        // .UseFunctionInvocation()
         .UseKernelFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());

@@ -18,6 +18,11 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
 
     public async Task OnFunctionInvocationAsync(FunctionInvocationContext ctx, Func<FunctionInvocationContext, Task> next)
     {
+        _logger.LogInformation(
+            "SK invoking function {Plugin}.{Function}",
+            ctx.Function.Metadata.PluginName ?? string.Empty,
+            ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty);
+
         if (TryCreateTerminalConfirmationRequest(ctx, out var request))
         {
             _logger.LogInformation($"UserConfirmation: {request}");
@@ -39,7 +44,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         var plugin = ctx.Function.Metadata.PluginName ?? string.Empty;
         var function = ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty;
 
-        var normalized = NormalizeToolName($"{plugin}{function}");
+        var normalized = NormalizeToolName($"{plugin}.{function}");
         
         // Match RsMcpServer_execute_command or similar terminal execution functions
         bool isTerminalCommand = normalized.Contains("executecommand", StringComparison.Ordinal) 

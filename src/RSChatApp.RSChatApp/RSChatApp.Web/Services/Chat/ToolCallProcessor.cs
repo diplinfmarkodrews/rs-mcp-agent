@@ -67,8 +67,7 @@ public class ToolCallProcessor
         var descriptor = _registry.GetDescriptor(fcc.Name);
         var parameters = fcc.Arguments?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
                       ?? new Dictionary<string, object?>();
-
-        return new ToolInvocation(
+        var result = new ToolInvocation(
             CallId: fcc.CallId,
             Type: descriptor.Type,
             RawName: fcc.Name,
@@ -77,6 +76,7 @@ public class ToolCallProcessor
             Metadata: descriptor.ExtractMetadata(parameters),
             Permissions: descriptor.GetPermissions(parameters)
         );
+        return result;
     }
 
     private ToolResult CreateResult(FunctionResultContent frc, List<ToolInvocation> invocations)
@@ -98,22 +98,18 @@ public class ToolCallProcessor
 
     private ResultContentType DetectContentType(ToolInvocation? invocation, string? rawResult)
     {
-        if (string.IsNullOrWhiteSpace(rawResult))
-        {
-            return ResultContentType.Text;
-        }
-
         _logger.LogDebug("Detecting content type for tool: {ToolType}, RawName: {RawName}", 
             invocation?.Type, invocation?.RawName);
 
-        // Search results contain citations
+        // Search results are always SearchCitations type (even if empty)
         if (invocation?.Type == ToolType.Search)
         {
-            if (rawResult.Contains("<citation", StringComparison.OrdinalIgnoreCase) || 
-                rawResult.Contains("<result", StringComparison.OrdinalIgnoreCase))
-            {
-                return ResultContentType.SearchCitations;
-            }
+            return ResultContentType.SearchCitations;
+        }
+
+        if (string.IsNullOrWhiteSpace(rawResult))
+        {
+            return ResultContentType.Text;
         }
 
         // Terminal command results

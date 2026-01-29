@@ -59,7 +59,7 @@
 
 @code {
     private static readonly Regex CitationRegex = new(
-        @"<citation\s+filename='(?<file>[^']*)'\s+page_number='(?<page>\d*)'\s*>(?<quote>.*?)</citation>", 
+        @"<citation\s+filename=[""'](?<file>[^""']*)[""']\s+page_number=[""'](?<page>\d*)[""']\s*>(?<quote>.*?)</citation>", 
         RegexOptions.Singleline | RegexOptions.NonBacktracking
     );
     
