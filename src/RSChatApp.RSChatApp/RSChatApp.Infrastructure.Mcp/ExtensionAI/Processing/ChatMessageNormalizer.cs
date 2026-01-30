@@ -93,7 +93,6 @@ public static class ChatMessageNormalizer
 
     private static bool ShouldSkipNormalization(FunctionResultContent frc)
     {
-        // Could check AdditionalProperties["ToolName"] or pattern match CallId
         // Or check if result contains <citation> tags
         if (frc.Result is JsonElement s 
             && s.ValueKind == JsonValueKind.String 

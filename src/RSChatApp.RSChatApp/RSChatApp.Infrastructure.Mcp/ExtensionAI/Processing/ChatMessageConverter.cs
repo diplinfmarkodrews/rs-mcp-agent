@@ -1,8 +1,8 @@
-using Microsoft.Extensions.AI;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.AI;
 
-namespace RSChatApp.Web.Services.ChatHistory;
+namespace RSChatApp.Mcp.ExtensionAI.Processing;
 
 /// <summary>
 /// Custom JSON converter for ChatMessage that preserves polymorphic AIContent types

@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using OpenAI;
 using RSChatApp.Web.Services.Authentication;
+using RSChatApp.Web.Services.Prompt;
 
 namespace RSChatApp.Web.Extensions;
 
@@ -33,7 +34,6 @@ public static class DependencyInjection
         IChatClient Factory(IServiceProvider serviceProvider, object? _)
         {
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
             var builder = new OpenAIClient(
                     credential: new ApiKeyCredential(openAISettings.ApiKey),
                     options: new OpenAIClientOptions
@@ -44,8 +44,7 @@ public static class DependencyInjection
                 .GetChatClient(openAISettings.Model)
                 .AsIChatClient()
                 .AsBuilder()
-                // .UseFunctionInvocation()
-                .UseKernelFunctionInvocation(loggerFactory)
+                .UseFunctionInvocation(loggerFactory)
                 .UseOpenTelemetry(loggerFactory, openTelemetrySourceName, openTelemetryConfig);
 
             if (loggerFactory is not null)
@@ -57,13 +56,21 @@ public static class DependencyInjection
 
         if (serviceId is null)
         {
-            services.AddSingleton<IChatClient>(sp => Factory(sp, null));
+            services.AddScoped<IChatClient>(sp => Factory(sp, null));
         }
         else
         {
-            services.AddKeyedSingleton<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
+            services.AddKeyedScoped<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
         }
         
+        return services;
+    }
+
+    public static IServiceCollection AddPromptServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IPromptStore, FilePromptStore>();
+        services.AddScoped<IPromptService, PromptService>();
+        services.AddHostedService<PromptStartupValidatorHostedService>();
         return services;
     }
     

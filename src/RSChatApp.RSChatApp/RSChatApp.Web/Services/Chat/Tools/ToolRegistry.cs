@@ -24,7 +24,6 @@ public class ToolRegistry
     public void RegisterDescriptor(IToolDescriptor descriptor, params string[] toolNames)
     {
         _descriptorsByType[descriptor.Type] = descriptor;
-        
         foreach (var name in toolNames)
         {
             _descriptorsByName[name] = descriptor;

@@ -127,7 +127,7 @@ public class ToolCallProcessor
                 
                 if (hasSessionId && hasCmdResult)
                 {
-                    _logger.LogInformation("Detected Terminal content type for tool: {ToolName}", invocation.RawName);
+                    _logger.LogDebug("Detected Terminal content type for tool: {ToolName}", invocation.RawName);
                     return ResultContentType.Terminal;
                 }
             }

@@ -14,6 +14,7 @@ using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
 using RSChatApp.Mcp.Browser.Tools;
+using RSChatApp.Mcp.ExtensionAI.Processing;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
@@ -33,7 +34,7 @@ using RSChatApp.Web.Storage;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-// builder.Configuration.AddJsonFile("prompts.json", optional: true, reloadOnChange: true);
+// Configure logging
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
@@ -45,6 +46,7 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 builder.Services.AddOptions();
+
 builder.Services.Configure<BrowserInstanceConfiguration>(
     builder.Configuration.GetSection(nameof(BrowserInstanceConfiguration)));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
@@ -180,10 +182,7 @@ if (string.IsNullOrEmpty(openAISettings.Model) == false)
 {
     if (openAISettings.IsValid() == false)
         throw new InvalidConfigurationException("OpenAI API key not set properly in env.");
-
-    // IMPORTANT:
-    // Use our custom OpenAI chat client registration that enables Semantic Kernel
-    // function invocation middleware so SK IFunctionInvocationFilter(s) run.
+    
     builder.Services.AddOpenAIChatClient(
         openAISettings,
         openTelemetryConfig: f => f.EnableSensitiveData = false);
@@ -192,11 +191,9 @@ else
 {
     builder.AddOllamaApiClient("chat")
         .AddChatClient()
-        // .UseFunctionInvocation()
-        .UseKernelFunctionInvocation()
+        .UseFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());
-    
 }
 // Create local EmbeddingClient with Ollama
 builder.AddOllamaApiClient("embeddings")
@@ -205,7 +202,8 @@ builder.AddOllamaApiClient("embeddings")
 builder.AddQdrantClient("vectordb");
 
 // User interaction / confirmations (scoped per Blazor circuit)
-builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>,
+
+builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>, 
     WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
 builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
 
@@ -227,6 +225,8 @@ builder.Services.AddSingleton<SemanticSearch>();
 builder.Services.AddScoped<SemanticSearchTool>();
 builder.Services.AddScoped<AuthenticationTool>();
 builder.Services.AddScoped<UserConfirmedTerminalTool>();
+
+builder.Services.AddPromptServices();
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();

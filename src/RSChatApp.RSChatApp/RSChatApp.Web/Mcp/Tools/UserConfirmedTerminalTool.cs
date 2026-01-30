@@ -30,7 +30,7 @@ public class UserConfirmedTerminalTool
         _logger.LogDebug("Requesting user confirmation for terminal command: {Command}", command);
        
         var userConfirmationResult = await _userConfirmation.RequestUserInteractionAsync(
-            new TerminalConfirmRequest("Terminal", command, "bash"));
+            new TerminalConfirmRequest("Terminal_executecommand", command, "bash"));
         
         _logger.LogDebug("UserConfirmation result: {Result}", userConfirmationResult.Result);
         if (userConfirmationResult.Result == UserConfirmationResultEnum.Confirmed)
@@ -42,7 +42,7 @@ public class UserConfirmedTerminalTool
             var result = await _terminalManager.ExecuteAsync(executingTerminalId, command, cancellationToken);
             return JsonSerializer.Serialize(new
             {
-                TerminalId = executingTerminalId,
+                SessionId = executingTerminalId, 
                 Command = command,
                 CommandResult = result
             });

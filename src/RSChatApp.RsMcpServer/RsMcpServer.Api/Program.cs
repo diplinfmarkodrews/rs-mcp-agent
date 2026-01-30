@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
 using ReportServer.RpcClient.Extensions;
+using RSChatApp.Mcp.ReportServer.Resources;
 using RSChatApp.Mcp.ReportServer.Tools;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
@@ -22,11 +23,11 @@ builder.Services.AddLogging(logging =>
         .WriteTo.File("Logs/rsmcpserver-.log", rollingInterval: RollingInterval.Day)
         .CreateLogger());
     logging.AddDebug();
-    logging.SetMinimumLevel(LogLevel.Information);
+    logging.SetMinimumLevel(LogLevel.Debug);
 });
 builder.Services.AddHealthChecks();
 var reportServerUrl = builder.Configuration["ReportServer:Url"] 
-                      ?? throw new InvalidOperationException("ReportServer:Url");
+    ?? throw new InvalidOperationException("ReportServer:Url");
 
 builder.Services.AddReportServerRpcClient(reportServerUrl);
 // Add Keycloak authentication with enhanced features
@@ -40,7 +41,8 @@ builder.Services.AddHttpContextAccessor();
 // Create kernel and register plugins
 builder.Services.AddSingleton((serviceProvider) => {
     KernelPluginCollection pluginCollection = [];
-    pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
+    // pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
+    pluginCollection.AddFromType<TerminalRessource>("TerminalRessource");
     return pluginCollection;
 });
 
@@ -58,6 +60,7 @@ builder.Services.AddSingleton<Kernel>((serviceProvider) => {
 
 builder.Services.AddMcpServer()
     .WithTools<TerminalTool>()
+    // .WithResources<TerminalRessource>()
     // .WithHttpLogging(HttpLoggingFields.All, -1, -1)
     .WithHttpTransport();
 

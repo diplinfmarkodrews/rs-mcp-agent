@@ -1,9 +1,12 @@
 .uctc-card {
     background: white;
     border: 1px solid #E5E7EB;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 1rem;
+    width: 500px;
+    margin-left: auto;
+    margin-right: 1rem;
 }
 
 .uctc-header {
@@ -21,30 +24,32 @@
 }
 
 .uctc-title {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.95rem;
+    color: #111827;
 }
 
 .uctc-subtitle {
-    color: #4B5563;
+    color: #6B7280;
     font-size: 0.85rem;
 }
 
 .uctc-badge {
     font-size: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    border: 1px solid #D1D5DB;
-    background: #F3F4F6;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
     color: #374151;
     white-space: nowrap;
 }
 
 .uctc-body {
     border: 1px solid #E5E7EB;
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    height: 300px;
 }
 
 .uctc-actions {

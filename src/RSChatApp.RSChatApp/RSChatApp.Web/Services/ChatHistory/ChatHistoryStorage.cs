@@ -1,9 +1,10 @@
 using System.Security.Cryptography;
-using Microsoft.Extensions.AI;
-using RSChatApp.Web.Storage;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
+using Microsoft.Extensions.AI;
+using Polly;
+using RSChatApp.Mcp.ExtensionAI.Processing;
+using RSChatApp.Web.Storage;
 
 namespace RSChatApp.Web.Services.ChatHistory;
 
@@ -50,72 +51,89 @@ public class ChatHistoryStorage : AbstractStorage<List<ChatMessage>>
     
     public override async Task<StorageResult<List<ChatMessage>>> GetAsync()
     {
-        try
-        {
-            _logger.LogInformation("Attempting to load chat history from storage key '{storageKey}'", StorageKey);
-            
-            // Get the JSON string
-            var result = await BrowserStorage.GetAsync<string>(StorageKey);
-            
-            _logger.LogInformation("Storage result - Success: {success}, HasValue: {hasValue}, ValueLength: {length}", 
-                result.Success, 
-                result.Value != null, 
-                result.Value?.Length ?? 0);
-            
-            if (!result.Success || string.IsNullOrEmpty(result.Value))
+        return await RetryPolicy()
+            .ExecuteAsync(async () =>
             {
-                _logger.LogInformation("No chat history found in storage (Success={success}, IsNullOrEmpty={isEmpty})", 
-                    result.Success, 
-                    string.IsNullOrEmpty(result.Value));
-                return new StorageResult<List<ChatMessage>>();
-            }
-            
-            _logger.LogInformation("Retrieved JSON from storage, attempting deserialization. Length: {length}", result.Value.Length);
-            
-            // Deserialize with our custom converter
-            var messages = JsonSerializer.Deserialize<List<ChatMessage>>(result.Value, JsonOptions);
-            
-            _logger.LogInformation("Successfully deserialized {messageCount} messages from storage", messages?.Count ?? 0);
-            foreach (var chatMessage in messages)
-            {
-                
-                _logger.LogInformation("Successfully deserialized message from storage: {Messages}", JsonSerializer.Serialize(chatMessage, JsonOptions));
-            }
-            return new StorageResult<List<ChatMessage>>
-            {
-                Success = true,
-                Value = messages ?? new List<ChatMessage>()
-            };
-        }
-        catch (CryptographicException cryptoEx)
-        {
-            // Data protection keys changed, clear corrupted value
-            _logger.LogWarning(cryptoEx, "CryptographicException loading chat history, clearing storage");
-            await BrowserStorage.DeleteAsync(StorageKey);
-            return new StorageResult<List<ChatMessage>>();
-        }
-        catch (JsonException jsonException)
-        {
-            // Corrupted JSON, clear it
-            _logger.LogError(jsonException, "JsonException loading chat history: {Message}", jsonException.Message);
-            await BrowserStorage.DeleteAsync(StorageKey);
-            return new StorageResult<List<ChatMessage>>();
-        }
-        catch (TaskCanceledException canceledException)
-        {
-            // JS interop not ready yet, let it bubble up so caller can retry
-            _logger.LogDebug("Chat history loading cancelled (JS interop not ready, likely during prerender)");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error loading chat history: {Message}", ex.Message);
-            return new StorageResult<List<ChatMessage>>();
-        }
+                try
+                {
+                    _logger.LogInformation("Attempting to load chat history from storage key '{storageKey}'", StorageKey);
+
+                    // Get the JSON string
+                    var result = await BrowserStorage.GetAsync<string>(StorageKey);
+
+                    _logger.LogInformation("Storage result - Success: {success}, HasValue: {hasValue}, ValueLength: {length}",
+                        result.Success,
+                        result.Value != null,
+                        result.Value?.Length ?? 0);
+
+                    if (!result.Success || string.IsNullOrEmpty(result.Value))
+                    {
+                        _logger.LogInformation("No chat history found in storage (Success={success}, IsNullOrEmpty={isEmpty})",
+                            result.Success,
+                            string.IsNullOrEmpty(result.Value));
+                        return new StorageResult<List<ChatMessage>>();
+                    }
+
+                    _logger.LogInformation("Retrieved JSON from storage, attempting deserialization. Length: {length}", result.Value.Length);
+
+                    // Deserialize with our custom converter
+                    var messages = JsonSerializer.Deserialize<List<ChatMessage>>(result.Value, JsonOptions);
+
+                    _logger.LogInformation("Successfully deserialized {messageCount} messages from storage", messages?.Count ?? 0);
+                    foreach (var chatMessage in messages)
+                        _logger.LogDebug("Successfully deserialized message from storage: {Messages}", JsonSerializer.Serialize(chatMessage, JsonOptions));
+
+                    return new StorageResult<List<ChatMessage>>
+                    {
+                        Success = true,
+                        Value = messages ?? new List<ChatMessage>()
+                    };
+                }
+                catch (CryptographicException cryptoEx)
+                {
+                    // Data protection keys changed, clear corrupted value
+                    _logger.LogWarning(cryptoEx, "CryptographicException loading chat history, clearing storage");
+                    await BrowserStorage.DeleteAsync(StorageKey);
+                    return new StorageResult<List<ChatMessage>>();
+                }
+                catch (JsonException jsonException)
+                {
+                    // Corrupted JSON, clear it
+                    _logger.LogError(jsonException, "JsonException loading chat history: {Message}", jsonException.Message);
+                    await BrowserStorage.DeleteAsync(StorageKey);
+                    return new StorageResult<List<ChatMessage>>();
+                }
+                catch (TaskCanceledException canceledException)
+                {
+                    // JS interop not ready yet (common during prerender). Throw so Polly can retry immediately.
+                    _logger.LogDebug("Chat history loading cancelled (JS interop not ready, likely during prerender): {Message}", canceledException.Message);
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error loading chat history: {Message}", ex.Message);
+                    return new StorageResult<List<ChatMessage>>();
+                }
+            });
     }
 
-    Polly.AsyncPolicy<StorageResult<List<ChatMessage>>> RetryPolicy()
+    private AsyncPolicy<StorageResult<List<ChatMessage>>> RetryPolicy()
     {
-        throw  new NotImplementedException();
+        var retry = Policy<StorageResult<List<ChatMessage>>>
+            .Handle<TaskCanceledException>()
+            .RetryAsync(3, onRetry: (_, retryNumber) =>
+            {
+                _logger.LogWarning("Retry {RetryNumber} loading chat history due to task cancellation", retryNumber);
+            });
+
+        var fallback = Policy<StorageResult<List<ChatMessage>>>
+            .Handle<TaskCanceledException>()
+            .FallbackAsync((_) =>
+            {
+                _logger.LogWarning("Chat history load cancelled after retries; returning empty history");
+                return Task.FromResult(new StorageResult<List<ChatMessage>>());
+            });
+
+        return fallback.WrapAsync(retry);
     }
 }
