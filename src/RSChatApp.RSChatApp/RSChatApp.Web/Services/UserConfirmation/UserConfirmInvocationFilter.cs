@@ -28,20 +28,6 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
             functionName);
         try
         {
-            // if (TryCreateTerminalConfirmationRequest(ctx, out var request))
-            // {
-            //     _logger.LogDebug($"UserConfirmation: {request}");
-            //     var decision = await _ui.RequestUserInteractionAsync(request);
-            //     if (decision.Result != UserConfirmationResultEnum.Confirmed)
-            //     {
-            //         _logger.LogDebug($"UserConfirmation: {decision} - not confirmed");
-            //         ctx.Result = new FunctionResult(ctx.Function, $"User {decision.Result} execution.");
-            //         return;
-            //     }
-            //     _logger.LogDebug($"UserConfirmation: {decision} - confirmed");
-            // }
-            
-            // await next(ctx);
             if (TryCreateTerminalConfirmationRequest(ctx, out var request))
             {
                 _logger.LogInformation(
@@ -82,9 +68,9 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                 if (!string.IsNullOrWhiteSpace(decision.Command) && ctx.Arguments is not null)
                 {
                     // Common argument names.
-                    if (ctx.Arguments.TryGetValue("command", out _)) ctx.Arguments["command"] = decision.Command;
+                    if (ctx.Arguments.TryGetValue("command", out _)) ctx.Arguments["command"] = decision.Command; // Rs
                     if (ctx.Arguments.TryGetValue("cmd", out _)) ctx.Arguments["cmd"] = decision.Command;
-                    if (ctx.Arguments.TryGetValue("script", out _)) ctx.Arguments["script"] = decision.Command;
+                    if (ctx.Arguments.TryGetValue("script", out _)) ctx.Arguments["script"] = decision.Command; //Js
                 }
 
                 _logger.LogInformation(
@@ -97,18 +83,8 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                 pluginName,
                 functionName,
                 ctx.CancellationToken.IsCancellationRequested);
-
-            var sw = Stopwatch.StartNew();
-            // Add a safety timeout while diagnosing "hangs". If this triggers, we'll have a concrete stack/log to chase.
-            await next(ctx).WaitAsync(TimeSpan.FromMinutes(2), ctx.CancellationToken);
-            sw.Stop();
-
-            _logger.LogDebug(
-                "Completed SK function body for {Plugin}.{Function} in {ElapsedMs}ms",
-                pluginName,
-                functionName,
-                sw.ElapsedMilliseconds);
-            return;
+            
+            await next(ctx).WaitAsync(ctx.CancellationToken);
         }
         catch (Exception ex)
         {
