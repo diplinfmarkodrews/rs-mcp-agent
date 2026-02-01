@@ -1,0 +1,10 @@
+<div class="user-message">
+    @Message.Text
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ChatMessage Message { get; set; }
+}
+
+@using ChatMessage = Microsoft.Extensions.AI.ChatMessage

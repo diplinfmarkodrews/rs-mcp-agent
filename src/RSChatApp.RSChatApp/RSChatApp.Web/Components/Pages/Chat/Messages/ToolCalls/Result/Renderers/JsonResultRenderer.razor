@@ -1,0 +1,36 @@
+@using System.Text.Json
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="json-result">
+    <pre><code>@FormattedJson</code></pre>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    private string FormattedJson { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            var rawText = Result.Data switch
+            {
+                string s => s,
+                JsonElement e => e.GetRawText(),
+                _ => Result.Data?.ToString() ?? "{}"
+            };
+
+            using var doc = JsonDocument.Parse(rawText);
+            FormattedJson = JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+        }
+        catch
+        {
+            FormattedJson = Result.Data?.ToString() ?? string.Empty;
+        }
+    }
+}

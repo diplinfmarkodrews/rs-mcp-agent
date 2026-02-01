@@ -1,0 +1,45 @@
+.terminal-result-renderer {
+    font-family: 'Courier New', monospace;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.terminal-entry {
+    margin: 0;
+}
+
+.terminal-prompt {
+    color: #4ec9b0;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.terminal-output {
+    margin-left: 0;
+}
+
+    .terminal-output pre {
+        margin: 0;
+        padding: 0;
+        color: #d4d4d4;
+        background: transparent;
+        border: none;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+.terminal-error {
+    color: #f48771;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+.terminal-session-info {
+    color: #808080;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}

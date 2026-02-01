@@ -1,0 +1,52 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+@using RSChatApp.Web.Services.Chat
+
+@rendermode InteractiveAuto
+
+@inject ToolCallProcessor ToolProcessor
+
+@if (Message.Role == ChatRole.User)
+{
+    <UserMessageView Message="@Message" />
+}
+else if (Message.Role == ChatRole.Assistant && _processedMessage is not null)
+{
+    <AssistantMessageView 
+        ProcessedMessage="@_processedMessage"
+        OnToolRerun="@HandleToolRerun"
+        OnEditInEditor="@HandleEditInEditor" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required ChatMessage Message { get; set; }
+    
+    [Parameter]
+    public bool InProgress { get; set; }
+    
+    [Parameter]
+    public EventCallback<ToolRerunRequest> OnToolRerun { get; set; }
+    
+    [Parameter]
+    public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+    
+    private ProcessedMessage? _processedMessage;
+    
+    protected override void OnParametersSet()
+    {
+        if (Message.Role == ChatRole.Assistant)
+        {
+            _processedMessage = ToolProcessor.ProcessMessage(Message);
+        }
+    }
+    
+    private async Task HandleToolRerun(ToolRerunRequest request)
+    {
+        await OnToolRerun.InvokeAsync(request);
+    }
+    
+    private async Task HandleEditInEditor(EditInEditorRequest request)
+    {
+        await OnEditInEditor.InvokeAsync(request);
+    }
+}

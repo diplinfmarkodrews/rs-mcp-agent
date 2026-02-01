@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>13</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+      <PackageReference Include="System.Text.Json" Version="9.0.8" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common\RSChatApp.Common.csproj" />
+    </ItemGroup>
+
+</Project>

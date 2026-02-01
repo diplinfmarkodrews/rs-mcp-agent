@@ -1,3 +1,5 @@
+# Local editor settings
+.vscode/settings.json
 # .NET Core / .NET Framework
 bin/
 obj/

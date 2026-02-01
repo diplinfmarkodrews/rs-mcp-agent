@@ -1,0 +1,51 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="tool-group @GetGroupClass()">
+    <ToolGroupHeader 
+        Group="@Group"
+        IsCollapsed="@_isCollapsed"
+        OnToggleCollapse="@ToggleCollapse" />
+    
+    @if (!_isCollapsed)
+    {
+        <div class="tool-group-content">
+            @foreach (var (invocation, index) in Group.Invocations.Select((inv, i) => (inv, i)))
+            {
+                <ToolInvocationCard
+                    Invocation="@invocation"
+                    Result="@Group.Results[index]"
+                    OnRerun="@OnRerun"
+                    OnEditInEditor="@OnEditInEditor" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolGroup Group { get; set; }
+    
+    [Parameter]
+    public EventCallback<ToolRerunRequest> OnRerun { get; set; }
+    
+    [Parameter]
+    public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
+    
+    private bool _isCollapsed;
+    
+    private string GetGroupClass()
+    {
+        return Group.Type switch
+        {
+            ToolType.Search => "tool-group-search",
+            ToolType.TerminalExecute => "tool-group-terminal",
+            ToolType.BrowserExecute => "tool-group-browser",
+            _ => "tool-group-default"
+        };
+    }
+
+    private void ToggleCollapse()
+    {
+        _isCollapsed = !_isCollapsed;
+    }
+}

@@ -1,0 +1,181 @@
+@using System.Text.Json
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="terminal-result-renderer">
+    @if (_error != null)
+    {
+        <div class="terminal-error">
+            <strong>Error:</strong> @_error
+        </div>
+    }
+    else if (_terminalData != null)
+    {
+        <div class="terminal-entry success">
+            <div class="terminal-prompt">@_terminalData.NewPrompt @_terminalData.Command</div>
+            <div class="terminal-output">
+                <pre>@_terminalData.Result</pre>
+                @if (!string.IsNullOrEmpty(_terminalData.Error))
+                {
+                    <div class="terminal-error">@_terminalData.Error</div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(_terminalData.SessionId))
+            {
+                <div class="terminal-session-info">Session: @_terminalData.SessionId</div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    private string? _error;
+    private TerminalData? _terminalData;
+
+    protected override void OnParametersSet()
+    {
+        _error = null;
+        _terminalData = null;
+
+        try
+        {
+            var rawText = Result.Data switch
+            {
+                string s => s,
+                JsonElement e => e.GetRawText(),
+                _ => Result.Data?.ToString()
+            };
+
+            if (string.IsNullOrEmpty(rawText))
+            {
+                _error = "No terminal output";
+                return;
+            }
+
+            using var doc = JsonDocument.Parse(rawText);
+            var root = doc.RootElement;
+
+            // MCP tools may wrap the actual payload: { content: [{ type: "text", text: "..." }] }
+            // In that case, extract the text and parse again.
+            if (TryExtractMcpText(root, out var mcpText) && !string.IsNullOrWhiteSpace(mcpText))
+            {
+                using var inner = JsonDocument.Parse(mcpText);
+                root = inner.RootElement;
+            }
+
+            var sessionId = GetStringProperty(root, "SessionId") ?? string.Empty;
+            var command = GetStringProperty(root, "Command") ?? string.Empty;
+
+            // Expected shapes:
+            // - { sessionId, command, cmdResult: { data: { result, error, newPrompt, ... }, isSuccess, ... } }
+            // - { SessionId, Command, CmdResult: { Data: { Result, Error, NewPrompt, ... }, ... } }
+            if (!TryGetPropertyIgnoreCase(root, "CmdResult", out var cmdResult))
+            {
+                _error = "Terminal result JSON missing cmdResult";
+                return;
+            }
+
+            // Some result wrappers store the actual command output under cmdResult.data (camelCase)
+            if (!TryGetPropertyIgnoreCase(cmdResult, "Data", out var data))
+            {
+                // If cmdResult itself is the data payload, fall back to that.
+                data = cmdResult;
+            }
+
+            var result = GetStringProperty(data, "Result") ?? string.Empty;
+            var error = GetStringProperty(data, "Error") ?? string.Empty;
+            var newPrompt = GetStringProperty(data, "NewPrompt") ?? ">";
+
+            _terminalData = new TerminalData(sessionId, command, result, error, newPrompt);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to parse terminal result: {ex.Message}";
+        }
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        if (TryGetPropertyIgnoreCase(element, propertyName, out var value))
+        {
+            if (value.ValueKind == JsonValueKind.String)
+            {
+                return value.GetString();
+            }
+
+            if (value.ValueKind == JsonValueKind.Number || value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
+            {
+                return value.ToString();
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
+    {
+        value = default;
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (element.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryExtractMcpText(JsonElement element, out string text)
+    {
+        text = string.Empty;
+
+        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("content", out var content) &&
+            content.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in content.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                if (item.TryGetProperty("type", out var typeEl) && typeEl.ValueKind == JsonValueKind.String)
+                {
+                    var type = typeEl.GetString();
+                    if (!string.Equals(type, "text", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
+                if (item.TryGetProperty("text", out var textEl) && textEl.ValueKind == JsonValueKind.String)
+                {
+                    var part = textEl.GetString();
+                    if (!string.IsNullOrEmpty(part))
+                    {
+                        text = part;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private record TerminalData(string SessionId, string Command, string Result, string Error, string NewPrompt);
+}

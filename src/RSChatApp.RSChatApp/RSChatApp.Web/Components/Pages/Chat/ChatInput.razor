@@ -1,0 +1,73 @@
+@inject IJSRuntime JS
+
+<EditForm Model="@this" OnValidSubmit="@SendMessageAsync">
+    <label class="input-box page-width">
+        <textarea @ref="@_textArea" @bind="@_messageText" placeholder="Type your message..." rows="1"></textarea>
+
+        <div class="tools">
+            @if (_isProcessing)
+            {
+                <button type="button" title="Stop" class="send-button stop-icon" @onclick="AbortProcessingAsync"></button>
+            }
+            else
+            {
+                <button type="submit" title="Send" class="send-button send-icon"></button>
+            }
+        </div>
+    </label>
+</EditForm>
+
+@code {
+    private ElementReference _textArea;
+    private string? _messageText;
+    private bool _isProcessing = false;
+    
+    [Parameter]
+    public EventCallback<ChatMessage> OnSend { get; set; }
+    
+    [Parameter]
+    public EventCallback OnAbort { get; set; }
+    
+    public ValueTask FocusAsync()
+        => _textArea.FocusAsync();
+
+    public void SetProcessing(bool isProcessing)
+    {
+        _isProcessing = isProcessing;
+        StateHasChanged();
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (_messageText is { Length: > 0 } text && !_isProcessing)
+        {
+            _messageText = null;
+            _isProcessing = true;
+            await OnSend.InvokeAsync(new ChatMessage(ChatRole.User, text));           
+        }
+    }
+
+    private async Task AbortProcessingAsync()
+    {
+        if (_isProcessing)
+        {
+            await OnAbort.InvokeAsync();
+            _isProcessing = false;
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Chat/ChatInput.razor.js");
+                await module.InvokeVoidAsync("init", _textArea);
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

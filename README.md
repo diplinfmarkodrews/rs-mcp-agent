@@ -1,10 +1,10 @@
 # Enterprise MCP Server and AI Chat application for ReportServer
 
-A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration via front and backend with Java-based ReportServer application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for cloud-native application development.
+A sophisticated **Model Context Protocol (MCP)** server implementation that provides AI-powered integration via front and backend with Java-based ReportServer BI application. Built with .NET 9.0, this system leverages Microsoft's latest technologies for AI application development, Extensions.AI & SemanticKernel.
 
 ## 🏗️ Architecture Overview
 
-![RSChatApp Architecture](./architecture-diagram.png)
+![RSChatApp Architecture](./docs/img/architecture-diagram.png)
 
 ### 📖 Architecture Description
 
@@ -12,7 +12,7 @@ The RSChatApp operates as a **browser-based workspace** that provides an intelli
 
 **🌐 Browser-Based Workspace (RSChatApp.Web)**
 
-![RSChatApp example](./RSAIChat.Web.png)
+![RSChatApp example](./docs/img/RSAIChat.Web.png)
 
 - **Session Management**: Currently maintains conversation context in browser memory & cache for immediate responsiveness
 - **Interactive Chat Interface**: Real-time Blazor UI for seamless user interaction with AI models
@@ -123,7 +123,7 @@ Start the entire application stack with one command:
 
 ```bash
 # Navigate to the Aspire host directory
-cd RSChatApp.AppHost
+cd src/RSChatApp.AppHost/RSChatApp.AppHost
 
 # Start all services (Ollama with auto-downloaded models, Qdrant, MCP Server, Web App)
 dotnet run
@@ -212,7 +212,7 @@ This will automatically:
 2. Navigate to the RSChatApp.AppHost directory:
 
 ```bash
-cd RSChatApp.AppHost
+cd src/RSChatApp.AppHost/RSChatApp.AppHost
 ```
 
 3. Run the application:
@@ -262,6 +262,29 @@ Configure the ollama hosted models here
 ```
 
 #### **RSChatApp.Web Configuration**
+
+##### Prompts (System + Suggestions)
+
+The chat app loads prompts from plain text/Markdown files (so prompts can be multi-line and nicely formatted without JSON escaping).
+
+- **Location:** [src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/](src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/)
+- **Required files:**
+  - [src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/SystemPrompt.md](src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/SystemPrompt.md)
+  - [src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/SuggestionPrompt.md](src/RSChatApp.RSChatApp/RSChatApp.Web/Prompts/SuggestionPrompt.md)
+
+Startup behavior:
+- A hosted startup validator checks that both prompts exist and are non-empty.
+- If a required prompt is missing/empty, the app logs a **critical** message and fails fast.
+
+Reload behavior:
+- Prompts are cached in memory.
+- When a `.md` file changes, prompts are automatically reloaded.
+
+Customization notes:
+- Required prompt keys are `SystemPrompt` and `SuggestionPrompt`.
+- To add more prompt types, extend:
+  - [src/RSChatApp.RSChatApp/RSChatApp.Web/Services/Prompt/PromptNames.cs](src/RSChatApp.RSChatApp/RSChatApp.Web/Services/Prompt/PromptNames.cs)
+  - [src/RSChatApp.RSChatApp/RSChatApp.Web/Services/Prompt/FilePromptStore.cs](src/RSChatApp.RSChatApp/RSChatApp.Web/Services/Prompt/FilePromptStore.cs)
 
 ```json
 {
@@ -412,8 +435,10 @@ Configure the ollama hosted models here
 ```
 
 **6. Start Chat Application**
+
+
 ```bash
-cd RSChatApp.Web
+cd src/RSChatApp.Web/RSChatApp.Web
 dotnet run
 ```
 

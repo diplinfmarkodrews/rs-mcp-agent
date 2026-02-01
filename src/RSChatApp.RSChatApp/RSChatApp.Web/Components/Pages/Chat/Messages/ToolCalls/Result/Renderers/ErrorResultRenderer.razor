@@ -1,0 +1,12 @@
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="error-result">
+    <div class="error-message">
+        @(Result.ErrorMessage ?? "An error occurred")
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+}

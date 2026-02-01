@@ -1,0 +1,50 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using RSChatApp.Web.Components.Pages.Terminal
+@using RSChatApp.Web.Services.UserConfirmation
+
+@attribute [AllowAnonymous]
+
+<div class="chat-page @(_terminalVisible ? "terminal-visible" : "")" style="@(_terminalVisible ? $"--terminal-height: {_terminalHeight}px" : "")">
+    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" />
+    
+    <div class="chat-messages-area">
+        <ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
+            <NoMessagesContent>
+                <div>Welcome to the ReportServer Agent.</div>
+                <ChatCitation File="admin_RS5.0.pdf"/>
+                <ChatCitation File="config_RS5.0.pdf"/>
+                <ChatCitation File="user_en_RS5.0.pdf"/>
+                <ChatCitation File="script_RS5.0.pdf"/>
+            </NoMessagesContent>
+        </ChatMessageList>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-suggestions">
+            <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions"/>
+        </div>
+        <div class="chat-input">
+            <ChatInput OnSend="@AddUserMessageAsync" OnAbort="@CancelAnyCurrentResponse" @ref="@_chatInput"/>
+        </div>
+    </div>
+    
+    <TerminalManager @ref="_terminalManager" IsVisible="@_terminalVisible" Height="@_terminalHeight" OnHeightChanged="@((h) => { _terminalHeight = h; StateHasChanged(); })" />
+
+    @if (_pendingTerminalRequest is not null)
+    {
+        <div class="confirm-overlay" role="presentation">
+            <ChatUserConfirmedToolCall
+                IsVisible="true"
+                Title="Confirm terminal command"
+                ToolName="@_pendingTerminalRequest.ToolName"
+                Subtitle="This command will run on the ReportServer terminal."
+                CommandOrPayload="@_pendingTerminalRequest.Command"
+                Language="@_pendingTerminalRequest.Language"
+                OnRun="@((command) => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Confirmed, command)))"
+                OnSkip="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Skipped)))"
+                OnCancel="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Cancelled)))" />
+        </div>
+    }
+</div>
+

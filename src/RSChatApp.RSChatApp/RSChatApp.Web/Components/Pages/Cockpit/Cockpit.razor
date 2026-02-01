@@ -1,0 +1,30 @@
+@page "/dual"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Options
+@using RSChatApp.Mcp.Browser.Configuration
+@using RSChatApp.Web.Components.Pages.Browser
+@attribute [AllowAnonymous]
+@inject IOptions<BrowserInstanceConfiguration> BrowserOptions
+<div class="cockpit-container">
+    <div class="browser-section">
+        <BrowserViewer InitialUrl="@BrowserOptions.Value.BaseUrl" 
+                       OnNavigate="HandleNavigation"
+                       
+                       OnPageTitleChanged="HandleTitleChanged" />
+    </div>
+    <div class="chat-section">
+        <Chat />
+    </div>
+</div>
+
+@code {
+    private void HandleNavigation(string url)
+    {
+        Console.WriteLine($"Navigated to: {url}");
+    }
+
+    private void HandleTitleChanged(string title)
+    {
+        Console.WriteLine($"Page title changed: {title}");
+    }
+}

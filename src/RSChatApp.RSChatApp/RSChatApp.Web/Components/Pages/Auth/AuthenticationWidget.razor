@@ -1,0 +1,80 @@
+@inject IAuthenticationInfoService AuthenticationInfoService
+@inject NavigationManager Navigation
+@inject ILogger<AuthenticationWidget> Logger
+@inject IJSRuntime JSRuntime
+@using RSChatApp.Infrastructure.Identity.Models
+@using RSChatApp.Web.Services.Authentication
+@implements IDisposable
+
+@if (authInfo.IsAuthenticated)
+{
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <button class="btn-default" @onclick="@Logout">
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Logout
+        </button>
+        @if (!string.IsNullOrEmpty(authInfo.DisplayName))
+        {
+            <span style="color: #0d1117; font-size: 0.9rem;">Welcome, @authInfo.DisplayName</span>
+        }
+    </div>
+}
+else
+{
+    <button class="btn-default" @onclick="@OpenLoginModal">
+        <i class="fas fa-sign-in-alt me-2"></i>
+        Login
+    </button>
+}
+
+@code {
+    [Parameter]
+    public EventCallback OnLoginRequested { get; set; }
+    [Parameter]
+    public EventCallback OnLogoutRequested { get; set; }
+    
+    private AuthenticationInfo authInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateAuthenticationState();
+        
+        // Subscribe to authentication state changes
+        AuthenticationInfoService.AuthenticationStateChanged += OnAuthenticationInfoInfoChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthenticationInfoService.AuthenticationStateChanged -= OnAuthenticationInfoInfoChanged;
+    }
+
+    private async void OnAuthenticationInfoInfoChanged(object? sender, AuthenticationInfo newAuthInfo)
+    {
+        Logger.LogInformation("Authentication state changed event received. Old IsAuthenticated: {OldAuth}, New IsAuthenticated: {NewAuth}, DisplayName: {DisplayName}", 
+            authInfo.IsAuthenticated, newAuthInfo.IsAuthenticated, newAuthInfo.DisplayName);
+        
+        authInfo = newAuthInfo;
+        await InvokeAsync(StateHasChanged);
+        
+        Logger.LogInformation("UI state updated after authentication change");
+    }
+
+    private async Task UpdateAuthenticationState()
+    {
+        authInfo = await AuthenticationInfoService.GetAuthenticationInfoAsync();
+    }
+
+    private async Task OpenLoginModal()
+    {
+        await OnLoginRequested.InvokeAsync();
+    }
+
+    private async Task Logout()
+    {
+        // Call logout endpoint via JavaScript
+        await JSRuntime.InvokeAsync<object>("postLogoutRequest");
+        
+        // Reload the page to clear authentication state
+        Navigation.Refresh(forceReload: true);
+    }
+}

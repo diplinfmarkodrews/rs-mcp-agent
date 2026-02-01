@@ -1,6 +1,0 @@
-@MCPServerSDK.Api_HostAddress = http://localhost:5002
-
-POST {{MCPServerSDK.Api_HostAddress}}/rs-authenticate?user=admin&password=admin
-Accept: application/json
-
-###

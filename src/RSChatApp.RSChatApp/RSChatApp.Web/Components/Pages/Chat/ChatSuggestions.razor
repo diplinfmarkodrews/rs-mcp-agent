@@ -1,0 +1,121 @@
+@using RSChatApp.Web.Services.Prompt
+@inject IChatClient ChatClient
+@inject ILogger<ChatSuggestions> Logger
+@inject IPromptService PromptService
+@if (suggestions is not null)
+{
+    <div class="page-width suggestions">
+        @foreach (var suggestion in suggestions)
+        {
+            <button class="btn-subtle" @onclick="@(() => AddSuggestionAsync(suggestion))">
+                @suggestion
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private string Prompt => PromptService.GetPrompt(new SuggestionPromptRequest());
+
+    private string[]? suggestions;
+    private CancellationTokenSource? cancellation;
+
+    [Parameter]
+    public EventCallback<ChatMessage> OnSelected { get; set; }
+
+    public void Clear()
+    {
+        suggestions = null;
+        cancellation?.Cancel();
+    }
+
+    public void Update(IReadOnlyList<ChatMessage> messages)
+    {
+        // Runs in the background and handles its own cancellation/errors
+        _ = UpdateSuggestionsAsync(messages);
+    }
+
+    private async Task UpdateSuggestionsAsync(IReadOnlyList<ChatMessage> messages)
+    {
+        cancellation?.Cancel();
+        cancellation = new CancellationTokenSource();
+
+        try
+        {
+            var reducedMessages = ReduceMessages(messages).ToList();
+            
+            // Skip if no safe messages to work with
+            if (reducedMessages.Count <= 1) // Only system message or empty
+            {
+                suggestions = null;
+                StateHasChanged();
+                return;
+            }
+
+            var response = await ChatClient.GetResponseAsync(
+                [.. reducedMessages, new(ChatRole.User, Prompt)],
+                cancellationToken: cancellation.Token);
+                
+            if (response is not null)
+            {
+                var responseMessages = new List<ChatMessage>();
+                responseMessages.AddMessages(response);
+                
+                var responseText = responseMessages.LastOrDefault()?.Text?.Trim();
+                if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
+                {
+                    suggestions = ParseLinesFromResponse(responseText);
+                }
+                else
+                {
+                    suggestions = null;
+                }
+            }
+            else
+            {
+                suggestions = null;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Logger.LogError(ex, "Error generating chat suggestions");
+            suggestions = null;
+            StateHasChanged();
+        }
+    }
+
+    private string[] ParseLinesFromResponse(string responseText)
+    {
+        return responseText
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim().TrimStart('-', '*', '•', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.', ')', ' '))
+            .Where(line => !string.IsNullOrWhiteSpace(line) && line.Length > 3)
+            .Take(3)
+            .ToArray();
+    }
+
+    private async Task AddSuggestionAsync(string text)
+    {
+        await OnSelected.InvokeAsync(new(ChatRole.User, text));
+    }
+
+    private IEnumerable<ChatMessage> ReduceMessages(IReadOnlyList<ChatMessage> messages)
+    {
+        // Get system messages
+        var systemMessages = messages.TakeWhile(m => m.Role == ChatRole.System);
+        
+        // Get safe user/assistant messages (text-only, no tool calls)
+        var safeMessages = messages
+            .Skip(systemMessages.Count())
+            .Where(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) &&
+                       !string.IsNullOrWhiteSpace(m.Text) && 
+                       m.Contents?.Count == 1 && 
+                       m.Contents.FirstOrDefault() is Microsoft.Extensions.AI.TextContent)
+            .Select(m => new ChatMessage(m.Role, m.Text))
+            .TakeLast(4);
+        
+        return systemMessages.Concat(safeMessages);
+    }
+}
