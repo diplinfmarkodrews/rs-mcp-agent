@@ -38,15 +38,17 @@ public class UserConfirmedTerminalTool
             // we need to capture the terminal id before execution as it might be unavailable     
             var terminalManagerAccess = new TerminalManagerAccess(_terminalManager);
             Guid executingTerminalId = await terminalManagerAccess.GetActiveTerminalIdAsync(TerminalType.ReportServer, cancellationToken);
-            _logger.LogInformation("User confirmed execution of terminal command: {Command}", command);
+            _logger.LogDebug("User confirmed execution of terminal command: {Command}", command);
             var result = await _terminalManager.ExecuteAsync(executingTerminalId, command, cancellationToken);
+            
             return JsonSerializer.Serialize(new
             {
-                SessionId = executingTerminalId, 
+                TerminalId = executingTerminalId,
+                SessionId = _terminalManager.ActiveTerminal?.RsSessionId,
                 Command = command,
                 CommandResult = result
             });
         }
-        return $"{userConfirmationResult.Result.ToString()}: User has {userConfirmationResult.Result.ToString()} the execution of the terminal command.";
+        return $"User has {userConfirmationResult.Result} the execution.";
     }
 }

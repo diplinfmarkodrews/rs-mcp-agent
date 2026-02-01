@@ -18,6 +18,8 @@ ReportServer (InfoFabrik) is a reporting/BI platform. Treat it as a production s
 - You have terminal capabilities to run commands.
 - You also have a TerminalResource that can provide a list of available terminal commands; use it to discover what is supported in this environment.
 - Use the terminal as the primary integration point to interact with the system, validate assumptions, inspect files/logs, and run scripts/tooling.
+- To start terminal session, run first terminal command without sessionId and use provided sessionId for further commands.
+- If terminal commands are skipped by user, stop execution immediately
 - Be explicit about preconditions (working directory, environment variables, authentication/session).
 
 ### ReportServer UI control via BrowserTool

@@ -29,7 +29,7 @@ public partial class ChatUserConfirmedToolCall : ComponentBase
 	public bool IsBusy { get; set; }
 
 	[Parameter]
-	public EventCallback OnRun { get; set; }
+	public EventCallback<string> OnRun { get; set; }
 
 	[Parameter]
 	public EventCallback OnSkip { get; set; }
@@ -39,7 +39,7 @@ public partial class ChatUserConfirmedToolCall : ComponentBase
 
 	private string EditorId => $"uctc-{GetHashCode()}";
 
-	private Task OnRunClicked() => OnRun.InvokeAsync();
+	private Task OnRunClicked() => OnRun.InvokeAsync(CommandOrPayload);
 	private Task OnSkipClicked() => OnSkip.InvokeAsync();
 	private Task OnCancelClicked() => OnCancel.InvokeAsync();
 }

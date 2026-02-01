@@ -1,0 +1,14 @@
+/* Ensure Monaco fills the host container and stays readable */
+.code-snippet {
+	height: 100%;
+	min-height: 8rem;
+}
+
+.code-snippet ::deep .monaco-editor,
+.code-snippet ::deep .monaco-editor .overflow-guard {
+	height: 100% !important;
+}
+
+.code-snippet ::deep .monaco-editor {
+	font-size: 13px;
+}

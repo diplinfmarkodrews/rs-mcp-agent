@@ -13,17 +13,13 @@
 
     <ItemGroup>
       <PackageReference Include="Polly.Core" Version="8.6.5" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
+        <PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.3" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common\RSChatApp.Common.csproj" />
       <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.SignalR.Client.Core">
-        <HintPath>..\..\..\..\..\.nuget\packages\microsoft.aspnetcore.signalr.client.core\9.0.0\lib\net9.0\Microsoft.AspNetCore.SignalR.Client.Core.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>

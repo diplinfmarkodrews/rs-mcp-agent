@@ -1,5 +1,6 @@
 using Microsoft.SemanticKernel;
 using RSChatApp.Infrastructure.UserInteraction;
+using System.Diagnostics;
 
 namespace RSChatApp.Web.Services.UserConfirmation;
 
@@ -18,24 +19,105 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
 
     public async Task OnFunctionInvocationAsync(FunctionInvocationContext ctx, Func<FunctionInvocationContext, Task> next)
     {
+        var pluginName = ctx.Function.Metadata.PluginName ?? string.Empty;
+        var functionName = ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty;
+
         _logger.LogInformation(
             "SK invoking function {Plugin}.{Function}",
-            ctx.Function.Metadata.PluginName ?? string.Empty,
-            ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty);
-
-        if (TryCreateTerminalConfirmationRequest(ctx, out var request))
+            pluginName,
+            functionName);
+        try
         {
-            _logger.LogInformation($"UserConfirmation: {request}");
-            var decision = await _ui.RequestUserInteractionAsync(request);
-            if (decision.Result != UserConfirmationResultEnum.Confirmed)
+            // if (TryCreateTerminalConfirmationRequest(ctx, out var request))
+            // {
+            //     _logger.LogDebug($"UserConfirmation: {request}");
+            //     var decision = await _ui.RequestUserInteractionAsync(request);
+            //     if (decision.Result != UserConfirmationResultEnum.Confirmed)
+            //     {
+            //         _logger.LogDebug($"UserConfirmation: {decision} - not confirmed");
+            //         ctx.Result = new FunctionResult(ctx.Function, $"User {decision.Result} execution.");
+            //         return;
+            //     }
+            //     _logger.LogDebug($"UserConfirmation: {decision} - confirmed");
+            // }
+            
+            // await next(ctx);
+            if (TryCreateTerminalConfirmationRequest(ctx, out var request))
             {
-                ctx.Result = new FunctionResult(ctx.Function, $"User {decision.Result} execution.");
-                return;
-            }
-        }
+                _logger.LogInformation(
+                    "User confirmation requested for {ToolName}",
+                    request.ToolName);
 
-        await next(ctx);
+                UserConfirmationResult decision;
+                try
+                {
+                    // Tie the wait to the invocation lifetime so we don't silently hang.
+                    decision = await _ui.RequestUserInteractionAsync(request)
+                        .WaitAsync(ctx.CancellationToken);
+                }
+                catch (OperationCanceledException oce)
+                {
+                    _logger.LogWarning(
+                        oce,
+                        "User confirmation was cancelled before executing {Plugin}.{Function}",
+                        pluginName,
+                        functionName);
+
+                    ctx.Result = new FunctionResult(ctx.Function, "Tool execution cancelled before confirmation.");
+                    return;
+                }
+
+                if (decision.Result != UserConfirmationResultEnum.Confirmed)
+                {
+                    _logger.LogInformation(
+                        "User confirmation result for {ToolName}: {Decision}",
+                        request.ToolName,
+                        decision.Result);
+
+                    ctx.Result = new FunctionResult(ctx.Function, $"User {decision.Result} execution.");
+                    return;
+                }
+
+                // If the UI allowed editing, prefer the confirmed command (best-effort).
+                if (!string.IsNullOrWhiteSpace(decision.Command) && ctx.Arguments is not null)
+                {
+                    // Common argument names.
+                    if (ctx.Arguments.TryGetValue("command", out _)) ctx.Arguments["command"] = decision.Command;
+                    if (ctx.Arguments.TryGetValue("cmd", out _)) ctx.Arguments["cmd"] = decision.Command;
+                    if (ctx.Arguments.TryGetValue("script", out _)) ctx.Arguments["script"] = decision.Command;
+                }
+
+                _logger.LogInformation(
+                    "User confirmed execution of {ToolName}",
+                    request.ToolName);
+            }
+
+            _logger.LogDebug(
+                "About to execute SK function body for {Plugin}.{Function} (CancellationRequested={CancellationRequested})",
+                pluginName,
+                functionName,
+                ctx.CancellationToken.IsCancellationRequested);
+
+            var sw = Stopwatch.StartNew();
+            // Add a safety timeout while diagnosing "hangs". If this triggers, we'll have a concrete stack/log to chase.
+            await next(ctx).WaitAsync(TimeSpan.FromMinutes(2), ctx.CancellationToken);
+            sw.Stop();
+
+            _logger.LogDebug(
+                "Completed SK function body for {Plugin}.{Function} in {ElapsedMs}ms",
+                pluginName,
+                functionName,
+                sw.ElapsedMilliseconds);
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "SK invocation failed for {Plugin}.{Function}", pluginName, functionName);
+            throw;
+        }
     }
+
+    
     private static bool TryCreateTerminalConfirmationRequest(FunctionInvocationContext ctx, out TerminalConfirmRequest request)
     {
         request = default!;
@@ -124,7 +206,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
 }
 public record TerminalConfirmRequest(string ToolName, string Command, string Language = "bash");
 
-public record UserConfirmationResult(UserConfirmationResultEnum Result);
+public record UserConfirmationResult(UserConfirmationResultEnum Result, string? Command = null);
 
 public enum UserConfirmationResultEnum
 {

@@ -30,14 +30,16 @@ public class TerminalTool
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. ")]
     public async Task<object> ExecuteCommandAsync(
-        [Description("session id to identify terminal session. Leave empty to start a new session")]string? sessionId,
+        [Description("session id to identify terminal session. Leave empty to start a new session!")]string? sessionId,
         [Description("command to be executed in ReportServer terminal")]string command,
         CancellationToken cancellationToken = default)
     {
-        
+        if (string.IsNullOrWhiteSpace(sessionId) == false 
+            && Guid.TryParse(sessionId, out _) == false)
+            sessionId = null;
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            _logger.LogInformation("No sessionId provided. Initializing new terminal session.");
+            _logger.LogDebug("[TerminalTool]No sessionId provided. Initializing new terminal session.");
             var sessionInfo =  await _reportServer.InitSessionAsync();
             if (sessionInfo.IsSuccess && sessionInfo.Data != null)
             {
@@ -56,22 +58,18 @@ public class TerminalTool
             }
         }
         
-        _logger.LogInformation("{SessionId}:Executing terminal command: {Command}", sessionId, command);
+        _logger.LogDebug("[TerminalTool]{SessionId}:Executing terminal command: {Command}", sessionId, command);
         
         // Execute the command with the session ID
 
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
         
-        var result = new
+        return new
         {
             SessionId = sessionId,
             Command = command,
             CmdResult = cmdResult,
-            
         };
-
-        _logger.LogDebug("terminal returned (structured): {SessionId} {Command}", sessionId, command);
-        return result;
         
     }
     

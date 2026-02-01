@@ -23,7 +23,7 @@ builder.Services.AddLogging(logging =>
         .WriteTo.File("Logs/rsmcpserver-.log", rollingInterval: RollingInterval.Day)
         .CreateLogger());
     logging.AddDebug();
-    logging.SetMinimumLevel(LogLevel.Debug);
+    logging.SetMinimumLevel(LogLevel.Trace);
 });
 builder.Services.AddHealthChecks();
 var reportServerUrl = builder.Configuration["ReportServer:Url"] 
@@ -37,12 +37,11 @@ builder.Services.AddLegacyAuthentication();
 builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 
-
 // Create kernel and register plugins
 builder.Services.AddSingleton((serviceProvider) => {
     KernelPluginCollection pluginCollection = [];
-    // pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
-    pluginCollection.AddFromType<TerminalRessource>("TerminalRessource");
+    pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
+    // pluginCollection.AddFromType<TerminalResource>("TerminalResource");
     return pluginCollection;
 });
 
@@ -60,8 +59,7 @@ builder.Services.AddSingleton<Kernel>((serviceProvider) => {
 
 builder.Services.AddMcpServer()
     .WithTools<TerminalTool>()
-    // .WithResources<TerminalRessource>()
-    // .WithHttpLogging(HttpLoggingFields.All, -1, -1)
+    // .WithResources<TerminalResource>()
     .WithHttpTransport();
 
 var app = builder.Build();
@@ -85,7 +83,6 @@ app.MapMcp()
     .WithHttpLogging(HttpLoggingFields.All)
     .WithDescription("MCP Server for the Report Server")
     .WithOpenApi()
-    
     // .RequireAuthorization()
     ; // Require authentication for MCP endpoints
 

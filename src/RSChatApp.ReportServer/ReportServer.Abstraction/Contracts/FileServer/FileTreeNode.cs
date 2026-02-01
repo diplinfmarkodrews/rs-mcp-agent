@@ -3,8 +3,8 @@ namespace ReportServer.Abstraction.Contracts.FileServer;
 public class FileTreeNode : IContract
 {
     public long Id { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
     public bool IsFolder { get; set; }
-    public List<FileTreeNode> Children { get; set; }
+    public List<FileTreeNode>? Children { get; set; }
 }

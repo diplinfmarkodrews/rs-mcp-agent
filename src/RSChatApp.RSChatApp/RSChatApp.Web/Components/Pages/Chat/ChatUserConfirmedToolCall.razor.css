@@ -4,9 +4,8 @@
     border-radius: 8px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 1rem;
-    width: 500px;
-    margin-left: auto;
-    margin-right: 1rem;
+    width: 440px;
+    max-width: min(440px, 48vw);
 }
 
 .uctc-header {
@@ -49,7 +48,23 @@
     border-radius: 6px;
     overflow: hidden;
     margin-bottom: 0.75rem;
-    height: 300px;
+    height: clamp(140px, 28vh, 240px);
+    min-height: 140px;
+    max-height: 50vh;
+    resize: vertical;
+    display: flex;
+}
+
+/* CodeSnippet is a child component; use ::deep so it can size Monaco correctly */
+.uctc-body ::deep .code-snippet {
+    flex: 1;
+    min-height: 140px;
+}
+
+.uctc-body ::deep .monaco-editor,
+.uctc-body ::deep .monaco-editor .overflow-guard {
+    height: 100% !important;
+    min-height: 140px;
 }
 
 .uctc-actions {

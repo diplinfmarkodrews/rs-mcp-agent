@@ -46,7 +46,9 @@ public partial class CodeSnippet : ComponentBase
             AutomaticLayout = true,
             Language = _language,
             Value = _codeValue,
-            ReadOnly = _isReadOnly
+            ReadOnly = _isReadOnly,
+            // Theme = "vs",
+            
         };
     }
     

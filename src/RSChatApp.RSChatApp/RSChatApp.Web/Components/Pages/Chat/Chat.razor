@@ -9,7 +9,7 @@
     <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" />
     
     <div class="chat-messages-area">
-        <ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
+        <ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
             <NoMessagesContent>
                 <div>Welcome to the ReportServer Agent.</div>
                 <ChatCitation File="admin_RS5.0.pdf"/>
@@ -21,29 +21,30 @@
     </div>
 
     <div class="chat-container">
-        @if (_pendingTerminalRequest is not null)
-        {
-            <div style="margin: 0.5rem 0;">
-                <ChatUserConfirmedToolCall
-                    IsVisible="true"
-                    Title="Confirm terminal command"
-                    ToolName="@_pendingTerminalRequest.ToolName"
-                    Subtitle="This command will run on the ReportServer terminal."
-                    CommandOrPayload="@_pendingTerminalRequest.Command"
-                    Language="@_pendingTerminalRequest.Language"
-                    OnRun="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Confirmed))"
-                    OnSkip="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Skipped))"
-                    OnCancel="@(() => ResolveTerminalConfirmationAsync(UserConfirmationResultEnum.Cancelled))" />
-            </div>
-        }
         <div class="chat-suggestions">
-            <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions"/>
+            <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions"/>
         </div>
         <div class="chat-input">
-            <ChatInput OnSend="@AddUserMessageAsync" OnAbort="@CancelAnyCurrentResponse" @ref="@chatInput"/>
+            <ChatInput OnSend="@AddUserMessageAsync" OnAbort="@CancelAnyCurrentResponse" @ref="@_chatInput"/>
         </div>
     </div>
     
     <TerminalManager @ref="_terminalManager" IsVisible="@_terminalVisible" Height="@_terminalHeight" OnHeightChanged="@((h) => { _terminalHeight = h; StateHasChanged(); })" />
+
+    @if (_pendingTerminalRequest is not null)
+    {
+        <div class="confirm-overlay" role="presentation">
+            <ChatUserConfirmedToolCall
+                IsVisible="true"
+                Title="Confirm terminal command"
+                ToolName="@_pendingTerminalRequest.ToolName"
+                Subtitle="This command will run on the ReportServer terminal."
+                CommandOrPayload="@_pendingTerminalRequest.Command"
+                Language="@_pendingTerminalRequest.Language"
+                OnRun="@((command) => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Confirmed, command)))"
+                OnSkip="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Skipped)))"
+                OnCancel="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Cancelled)))" />
+        </div>
+    }
 </div>
 

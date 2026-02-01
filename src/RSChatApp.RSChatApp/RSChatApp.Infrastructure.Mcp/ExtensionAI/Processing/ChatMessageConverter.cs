@@ -9,7 +9,7 @@ namespace RSChatApp.Mcp.ExtensionAI.Processing;
 /// </summary>
 public class ChatMessageConverter : JsonConverter<ChatMessage>
 {
-    public override ChatMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override ChatMessage Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
@@ -38,16 +38,16 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
                 
                 AIContent? content = typeName switch
                 {
-                    string t when t.Contains("TextContent") => 
+                    { } t when t.Contains("TextContent") => 
                         new TextContent(contentElement.GetProperty("Text").GetString() ?? ""),
-                    
-                    string t when t.Contains("FunctionCallContent") => 
+
+                    { } t when t.Contains("FunctionCallContent") => 
                         CreateFunctionCallContent(contentElement),
-                    
-                    string t when t.Contains("FunctionResultContent") => 
+
+                    { } t when t.Contains("FunctionResultContent") => 
                         CreateFunctionResultContent(contentElement),
-                    
-                    string t when t.Contains("UsageContent") => 
+
+                    { } t when t.Contains("UsageContent") => 
                         CreateUsageContent(contentElement),
                     
                     // Skip other unknown types
@@ -138,7 +138,7 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
         writer.WritePropertyName("Contents");
         writer.WriteStartArray();
         
-        if (value.Contents != null)
+        if (value?.Contents != null)
         {
             foreach (var content in value.Contents)
             {
@@ -190,7 +190,7 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
                     
                     case UsageContent usageContent:
                         writer.WriteString("$type", "UsageContent");
-                        if (usageContent.Details != null)
+                        if (usageContent?.Details != null)
                         {
                             writer.WriteNumber("InputTokenCount", usageContent.Details.InputTokenCount ?? 0);
                             writer.WriteNumber("OutputTokenCount", usageContent.Details.OutputTokenCount ?? 0);
@@ -199,8 +199,7 @@ public class ChatMessageConverter : JsonConverter<ChatMessage>
                         break;
                     
                     // Skip other unknown types
-                    default:
-                        break;
+               
                 }
                 
                 writer.WriteEndObject();

@@ -7,9 +7,9 @@ using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
-using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
+using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Mcp.Browser.Configuration;
 using RSChatApp.Mcp.Browser.Extensions;
 using RSChatApp.Mcp.Browser.Middleware;
@@ -19,17 +19,18 @@ using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
+using RSChatApp.Web.Mcp.McpClient;
 using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Models.Terminal;
+using RSChatApp.Web.Services.Chat;
+using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.Ingestion;
 using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
-using RSChatApp.Web.Services.Chat;
-using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Storage;
 using Serilog;
 
@@ -38,15 +39,28 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLogging(logging =>
 {
     logging.ClearProviders();
+    logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
     logging.AddConsole();
-    logging.AddSerilog(new LoggerConfiguration()
-        .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
-        .CreateLogger());
     logging.AddDebug();
-    logging.SetMinimumLevel(LogLevel.Information);
+
+    // Serilog has its own minimum level; set it to Debug so file logging can capture Debug events.
+    // The effective filtering is still controlled by the Microsoft "Logging" configuration above.
+    logging.AddSerilog(
+        new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Information)
+            .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger(),
+        dispose: true);
 });
 builder.Services.AddOptions();
-
+// Configure global JSON serialization options for Blazor components (including ProtectedBrowserStorage)
+builder.Services.Configure<JsonSerializerOptions>(options =>
+{
+    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.Converters.Add(new ChatMessageConverter());
+});
 builder.Services.Configure<BrowserInstanceConfiguration>(
     builder.Configuration.GetSection(nameof(BrowserInstanceConfiguration)));
 builder.Services.Configure<OpenAIPromptExecutionSettings>(
@@ -57,11 +71,11 @@ builder.Services.Configure<OpenAIPromptExecutionSettings>(
         config.FunctionChoiceBehavior = FunctionChoiceBehavior.Auto();
     });
 
-OpenAISettings openAISettings = new();
+OpenAISettings openAiSettings = new();
 builder.Configuration.GetSection(nameof(OpenAISettings))
-    .Bind(openAISettings);
+    .Bind(openAiSettings);
 
-openAISettings.SetApiKey();
+openAiSettings.SetApiKey();
 
 var reportServerUrl = builder.Configuration.GetValue<string>("ReportServer:Url")
                       ?? throw new InvalidConfigurationException("ReportServer:Url is missing");
@@ -106,8 +120,10 @@ builder.Services.AddCors(setup =>
         }
         else
         {
-            var allowedOrigins = builder.Configuration.GetSection("AllowedCorsOrigins").Get<string[]>()
-                               ?? Array.Empty<string>();
+            var allowedOrigins = builder.Configuration
+                                     .GetSection("AllowedCorsOrigins")
+                                     .Get<string[]>() ?? Array.Empty<string>();
+            
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -126,13 +142,16 @@ builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
 
 builder.Services.AddBrowserInstance(reportServerUrl);
 
+// create the MCP client at startup via BuildServiceProvider
+// and register tool functions into KernelPluginCollection.
+// This is ugly, but works! Couldnt make the Pluginregistration work in HostedService
 using var scopedServiceProvider = builder.Services.BuildServiceProvider();
 await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     new SseClientTransport(
         new SseClientTransportOptions
         {
             Name = RsMcpServerHttpClientName.ClientName,
-            Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"] 
+            Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"]
                                ?? throw new InvalidConfigurationException("RsMcpServer:Url")),
         },
         httpClient: scopedServiceProvider
@@ -147,44 +166,46 @@ builder.Services.AddSingleton((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-    startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}", 
+    startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
-    
+
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName, 
+    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName,
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
     return pluginCollection;
 });
+
+// register a base KernelPluginCollection, then let a hosted service
+// connect to RsMcpServer and insert the MCP tool KernelFunctions into this collection.
+// builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
+// {
+//     KernelPluginCollection pluginCollection = [];
+//     return pluginCollection;
+// });
+// builder.Services.AddHostedService<RsMcpToolRegistrationHostedService>();
 
 // Register IEnumerable<KernelPlugin> for the Kernel constructor
 builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
     var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return pluginCollection;
 });
-
+// 
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Configure global JSON serialization options for Blazor components (including ProtectedBrowserStorage)
-builder.Services.Configure<JsonSerializerOptions>(options =>
-{
-    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    options.Converters.Add(new ChatMessageConverter());
-});
-
 // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
 builder.AddServiceDefaults();
 
-if (string.IsNullOrEmpty(openAISettings.Model) == false)
+if (string.IsNullOrEmpty(openAiSettings.Model) == false)
 {
-    if (openAISettings.IsValid() == false)
+    if (openAiSettings.IsValid() == false)
         throw new InvalidConfigurationException("OpenAI API key not set properly in env.");
     
     builder.Services.AddOpenAIChatClient(
-        openAISettings,
+        openAiSettings,
         openTelemetryConfig: f => f.EnableSensitiveData = false);
 }
 else
@@ -202,19 +223,23 @@ builder.AddOllamaApiClient("embeddings")
 builder.AddQdrantClient("vectordb");
 
 // User interaction / confirmations (scoped per Blazor circuit)
-
 builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>, 
     WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
 builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
 
 builder.Services.AddScoped<Kernel>((serviceProvider)=> {
-    KernelPluginCollection pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
+    // Create a per-scope plugin collection so BrowserTool is constructed within a valid
+    // request/circuit scope (HttpContext + Session available), while MCP tool functions
+    // are shared via the singleton KernelPluginCollection.
+    var sharedPlugins = serviceProvider.GetRequiredService<KernelPluginCollection>();
+    KernelPluginCollection pluginCollection = [];
+    foreach (var plugin in sharedPlugins)
+        pluginCollection.Add(plugin);
+    
     var kernel = new Kernel(serviceProvider, pluginCollection);
-
     foreach (var filter in serviceProvider.GetServices<IFunctionInvocationFilter>())
-    {
         kernel.FunctionInvocationFilters.Add(filter);
-    }
+    
     return kernel;
 });
 
@@ -297,8 +322,8 @@ if (app.Environment.IsDevelopment())
             Name = p.Name,
             FunctionCount = p.Count(),
             Functions = p.Select(f => new {
-                Name = f.Name ?? "Unknown",
-                Description = f.Description ?? "No description"
+                Name = f.Name,
+                Description = f.Description
             }).ToList()
         }).ToList();
 
@@ -343,8 +368,6 @@ if (app.Environment.IsDevelopment())
     // });
 }
 
-    //TODO: Refactor into Service, make ingestion available at runtime to user
-    //
     // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
     // other sources by implementing IIngestionSource.
     // Important: ensure that any content you ingest is trusted, as it may be reflected back

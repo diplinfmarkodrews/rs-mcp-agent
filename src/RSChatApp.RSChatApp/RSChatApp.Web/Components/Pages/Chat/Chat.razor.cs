@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
@@ -15,26 +16,26 @@ using TextContent = Microsoft.Extensions.AI.TextContent;
 namespace RSChatApp.Web.Components.Pages.Chat;
 
 public partial class Chat(
-    IChatClient ChatClient,
-    Kernel Kernel,
-    NavigationManager Nav,
-    IStorage<List<ChatMessage>> ChatHistoryStorage,
-    SemanticSearchTool SemanticSearchTool, 
+    IChatClient chatClient,
+    Kernel kernel,
+    // NavigationManager Nav,
+    IStorage<List<ChatMessage>> chatHistoryStorage,
+    SemanticSearchTool semanticSearchTool, 
     AuthenticationTool AuthenticationTool,
     UserConfirmedTerminalTool UserConfirmedTerminalTool,
-    IPromptService PromptService,
-    ILogger<Chat> Logger,
-    IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> TerminalUserInteraction
+    IPromptService promptService,
+    ILogger<Chat> logger,
+    IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> terminalUserInteraction
     ) : ComponentBase, IDisposable
 {
-    private string SystemPrompt => PromptService.GetPrompt(new SystemPromptRequest(AddFileNames: false));
+    private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
 
-    private readonly ChatOptions chatOptions = new();
-    private readonly List<ChatMessage> messages = new();
-    private CancellationTokenSource? currentResponseCancellation;
-    private ChatMessage? currentResponseMessage;
-    private ChatInput? chatInput;
-    private ChatSuggestions? chatSuggestions;
+    private readonly ChatOptions _chatOptions = new();
+    private readonly List<ChatMessage> _messages = new();
+    private CancellationTokenSource? _currentResponseCancellation;
+    private ChatMessage? _currentResponseMessage;
+    private ChatInput? _chatInput;
+    private ChatSuggestions? _chatSuggestions;
     private bool _isOllama;
     private bool _terminalVisible = false;
     private TerminalManager? _terminalManager;
@@ -43,24 +44,24 @@ public partial class Chat(
     private TerminalConfirmRequest? _pendingTerminalRequest;
     private TaskCompletionSource<UserConfirmationResult>? _pendingTerminalTcs;
     
-    // [Experimental("SKEXP0001")]
+    [Experimental("SKEXP0001")]
     protected override async Task OnInitializedAsync()
     {
-        TerminalUserInteraction.UserInteractionRequested += OnTerminalUserInteractionRequested;
+        terminalUserInteraction.UserInteractionRequested += OnTerminalUserInteractionRequested;
 
-        // Since new ollama version supports stream & toolcalls, will refactor to stream api only
-        // TODO: Test first with ollama version that supports both streaming and toolcalls
+        // Since new ollama version supports stream & tool calls, will refactor to stream api only
+        // TODO: Test first with ollama version that supports both streaming and tool calls
         _isOllama = false;
         
         // Debug logging to see what kernel plugins are available
-        var kernelPlugins = Kernel.Plugins.ToList();
-        Logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
+        var kernelPlugins = kernel.Plugins.ToList();
+        logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
             string.Join(", ", kernelPlugins.Select(p=> p.Name)));
 
         // Create a list of all tools (local search + kernel MCP tools)
         var allTools = new List<AITool>
         {
-            AIFunctionFactory.Create(SemanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
+            AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
             // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
             // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
             // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
@@ -71,13 +72,13 @@ public partial class Chat(
         {
             foreach (var aiFunction in plugin)
             {
-                allTools.Add(aiFunction.AsAIFunction(Kernel));
+                allTools.Add(aiFunction.AsAIFunction(kernel));
             }
         }
-        Logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{kernelPluginsNames} ", allTools.Count, 
+        logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{kernelPluginsNames} ", allTools.Count, 
             string.Join(", ", kernelPlugins.Select(p=> p.Name)));
         
-        chatOptions.Tools = allTools;              
+        _chatOptions.Tools = allTools;              
         // Load chat history
         await InitChatHistoryAsync();
     }
@@ -95,49 +96,49 @@ public partial class Chat(
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private async Task ResolveTerminalConfirmationAsync(UserConfirmationResultEnum result)
+    private async Task ResolveTerminalConfirmationAsync(UserConfirmationResult result)
     {
         if (_pendingTerminalTcs is null)
         {
             return;
         }
-
-        _pendingTerminalTcs.TrySetResult(new UserConfirmationResult(result));
+        logger.LogInformation("Resolving terminal confirmation: {result}", result);
+        _pendingTerminalTcs.TrySetResult(result);
         _pendingTerminalTcs = null;
         _pendingTerminalRequest = null;
         await InvokeAsync(StateHasChanged);
     }
     
-    public async Task StoreChatHistoryAsync()
+    private async Task StoreChatHistoryAsync()
     {
-        await ChatHistoryStorage.SaveAsync(messages);
-        Logger.LogInformation("Chat history saved with {messageCount} messages", messages.Count);
+        await chatHistoryStorage.SaveAsync(_messages);
+        logger.LogInformation("Chat history saved with {messageCount} messages", _messages.Count);
     }
-    private async Task InitChatHistoryAsync(int retryCount = 0)
+    private async Task InitChatHistoryAsync()
     {
-      
-        var chatHistory = await ChatHistoryStorage.GetAsync();
-        messages.Clear();
+        // Try loading chat history from browser storage
+        var chatHistory = await chatHistoryStorage.GetAsync();
+        _messages.Clear();
         
         if (chatHistory.Success && chatHistory.Value!.Count > 0)
         {
-            Logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Value!.Count);
-            messages.AddRange(chatHistory.Value);
-            chatSuggestions?.Update(messages);
+            logger.LogInformation("Loaded {chatHistoryCount} messages from chat history", chatHistory.Value!.Count);
+            _messages.AddRange(chatHistory.Value);
+            _chatSuggestions?.Update(_messages);
             
             // Trigger UI update
             await InvokeAsync(StateHasChanged);
             
             // Focus the input after loading
-            if (chatInput is not null)
+            if (_chatInput is not null)
             {
-                await chatInput.FocusAsync();
+                await _chatInput.FocusAsync();
             }
         }
         else
         {
-            Logger.LogInformation("No chat history found, starting new conversation");
-            messages.Add(new(ChatRole.System, SystemPrompt));
+            logger.LogInformation("No chat history found, starting new conversation");
+            _messages.Add(new(ChatRole.System, SystemPrompt));
         }
     }
     
@@ -154,12 +155,12 @@ public partial class Chat(
         CancelAnyCurrentResponse();
 
         // Add the user message to the conversation
-        messages.Add(userMessage);
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Add(userMessage);
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
 
         // Display a new response from the IChatClient with streaming
-        currentResponseCancellation = new();
+        _currentResponseCancellation = new();
         
         // Track text for display and all contents
         var contentBuilder = new StringBuilder();
@@ -168,10 +169,10 @@ public partial class Chat(
         try
         {
             // Normalize messages for API (split FunctionCallContent and FunctionResultContent into separate messages)
-            var normalizedMessages = messages.NormalizeMessagesForApi();
+            var normalizedMessages = _messages.NormalizeMessagesForApi();
             
             // Use streaming API to get progressive responses
-            await foreach (var update in ChatClient.GetStreamingResponseAsync(normalizedMessages, chatOptions, currentResponseCancellation.Token))
+            await foreach (var update in chatClient.GetStreamingResponseAsync(normalizedMessages, _chatOptions, _currentResponseCancellation.Token))
             {
                 // Collect ALL content types from each update
                 foreach (var content in update.Contents)
@@ -194,13 +195,13 @@ public partial class Chat(
                 // Add all non-text contents (FunctionCallContent, FunctionResultContent, etc.)
                 streamingContents.AddRange(allContents.Where(c => c is not TextContent));
 
-                currentResponseMessage = new ChatMessage(ChatRole.Assistant, streamingContents.NormalizeAssistantContents());
+                _currentResponseMessage = new ChatMessage(ChatRole.Assistant, streamingContents.NormalizeAssistantContents());
                 
                 // Trigger UI update to show streaming content
                 await InvokeAsync(StateHasChanged);
                 
                 // Check for cancellation
-                currentResponseCancellation.Token.ThrowIfCancellationRequested();
+                _currentResponseCancellation.Token.ThrowIfCancellationRequested();
             }
 
             // Add the complete message with all contents (tool calls, results, text)
@@ -220,12 +221,12 @@ public partial class Chat(
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
                 var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
-                messages.Add(responseMessage);
+                _messages.Add(responseMessage);
                 
-                Logger.LogInformation("Added response message with {contentCount} contents", consolidatedContents.Count);
+                logger.LogInformation("Added response message with {contentCount} contents", consolidatedContents.Count);
                 foreach (var content in consolidatedContents)
                 {
-                    Logger.LogInformation("  Content type: {contentType}", content.GetType().Name);
+                    logger.LogInformation("  Content type: {contentType}", content.GetType().Name);
                 }
             }
         }
@@ -242,12 +243,12 @@ public partial class Chat(
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
                 var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
-                messages.Add(responseMessage);
+                _messages.Add(responseMessage);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error during streaming chat response");
+            logger.LogError(ex, "Error during streaming chat response");
             
             // Add any partial response
             if (allContents.Count > 0)
@@ -260,20 +261,20 @@ public partial class Chat(
                 consolidatedContents.AddRange(allContents.Where(c => c is not TextContent));
 
                 var responseMessage = new ChatMessage(ChatRole.Assistant, consolidatedContents.NormalizeAssistantContents());
-                messages.Add(responseMessage);
+                _messages.Add(responseMessage);
             }
             
             // Add error message
             var errorMessage = new ChatMessage(ChatRole.Assistant, 
                 $"Sorry, I encountered an error while processing your request: {ex.Message}");
-            messages.Add(errorMessage);
+            _messages.Add(errorMessage);
         }
         finally
         {
             // Clear the in-progress message and update suggestions
-            currentResponseMessage = null;
-            chatSuggestions?.Update(messages);
-            chatInput?.SetProcessing(false);
+            _currentResponseMessage = null;
+            _chatSuggestions?.Update(_messages);
+            _chatInput?.SetProcessing(false);
             await StoreChatHistoryAsync();
             await InvokeAsync(StateHasChanged);
         }
@@ -281,28 +282,26 @@ public partial class Chat(
 
     private void CancelAnyCurrentResponse()
     {
-        // If a response was cancelled while streaming, include it in the conversation so it's not lost
-        if (currentResponseMessage is not null)
-        {
-            messages.Add(currentResponseMessage);
-        }
+        // If a response was canceled while streaming, include it in the conversation so it's not lost
+        if (_currentResponseMessage is not null)
+            _messages.Add(_currentResponseMessage);
+        
 
         // Cancel the current operation if it exists
-        if (currentResponseCancellation != null && !currentResponseCancellation.Token.IsCancellationRequested)
-        {
-            currentResponseCancellation?.Cancel();
-        }
-        currentResponseMessage = null;
+        if (_currentResponseCancellation != null && !_currentResponseCancellation.Token.IsCancellationRequested)
+            _currentResponseCancellation?.Cancel();
+        
+        _currentResponseMessage = null;
     }
 
     private async Task ResetConversationAsync()
     {
         CancelAnyCurrentResponse();
-        messages.Clear();
-        await ChatHistoryStorage.DeleteAsync();
-        chatSuggestions?.Clear();
-        messages.Add(new(ChatRole.System, SystemPrompt));
-        await chatInput!.FocusAsync();
+        _messages.Clear();
+        await chatHistoryStorage.DeleteAsync();
+        _chatSuggestions?.Clear();
+        _messages.Add(new(ChatRole.System, SystemPrompt));
+        await _chatInput!.FocusAsync();
     }
 
     private void ToggleTerminal()
@@ -312,8 +311,8 @@ public partial class Chat(
     
     public void Dispose()
     {
-        TerminalUserInteraction.UserInteractionRequested -= OnTerminalUserInteractionRequested;
-        currentResponseCancellation?.Cancel();
+        terminalUserInteraction.UserInteractionRequested -= OnTerminalUserInteractionRequested;
+        _currentResponseCancellation?.Cancel();
     }
     /// <summary>
     /// kept for compatibility
@@ -324,49 +323,49 @@ public partial class Chat(
         CancelAnyCurrentResponse();
 
         // Add the user message to the conversation
-        messages.Add(userMessage);
-        chatSuggestions?.Clear();
-        await chatInput!.FocusAsync();
+        _messages.Add(userMessage);
+        _chatSuggestions?.Clear();
+        await _chatInput!.FocusAsync();
 
         try
         {
             // Display a new response from the IChatClient, streaming responses
             // aren't supported because Ollama will not support both streaming and using Tools
-            currentResponseCancellation = new();
-            var response = await ChatClient.GetResponseAsync(messages, chatOptions, currentResponseCancellation.Token);
+            _currentResponseCancellation = new();
+            var response = await chatClient.GetResponseAsync(_messages, _chatOptions, _currentResponseCancellation.Token);
 
             // Store responses in the conversation, and begin getting suggestions
-            var beforeCount = messages.Count;
-            messages.AddMessages(response);
+            var beforeCount = _messages.Count;
+            _messages.AddMessages(response);
 
             // Normalize any newly-added assistant/tool messages so tool results are stored as JSON when possible
-            for (var i = beforeCount; i < messages.Count; i++)
+            for (var i = beforeCount; i < _messages.Count; i++)
             {
-                messages[i] = messages[i].NormalizeChatMessageContents();
+                _messages[i] = _messages[i].NormalizeChatMessageContents();
             }
-            chatSuggestions?.Update(messages);
+            _chatSuggestions?.Update(_messages);
         }
         catch (OperationCanceledException)
         {
             // Handle cancellation gracefully - conversation is preserved
-            Logger.LogDebug("Chat response was cancelled");
+            logger.LogDebug("Chat response was cancelled");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error during chat response");
+            logger.LogError(ex, "Error during chat response");
             
             // Add error message to chat
             var errorMessage = new ChatMessage(ChatRole.Assistant, 
                 $"Sorry, I encountered an error while processing your request: {ex.Message}");
-            messages.Add(errorMessage);
+            _messages.Add(errorMessage);
             
             // Update suggestions and UI
-            chatSuggestions?.Update(messages);
+            _chatSuggestions?.Update(_messages);
             await InvokeAsync(StateHasChanged);
         }
         finally
         {
-            chatInput?.SetProcessing(false);
+            _chatInput?.SetProcessing(false);
         }
     }
 }

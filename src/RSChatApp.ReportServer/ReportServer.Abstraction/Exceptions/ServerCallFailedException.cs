@@ -4,7 +4,7 @@ namespace ReportServer.Abstraction.Exceptions;
 
 public class ServerCallFailedException : SerializableException
 {
-    public string ServerException { get; init; }
+    public string? ServerException { get; init; }
     public ServerCallFailedException(string message) : base(message)
     {
     }

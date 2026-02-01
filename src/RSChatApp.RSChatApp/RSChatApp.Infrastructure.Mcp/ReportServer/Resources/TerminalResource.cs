@@ -3,8 +3,10 @@ using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 
 namespace RSChatApp.Mcp.ReportServer.Resources;
-
-public class TerminalRessource
+/// <summary>
+/// Todo: develop script cache
+/// </summary>
+public class TerminalResource
 {
     [KernelFunction, McpServerResource, Description("List terminal commands of the reportserver")]
     public string ListTerminalCommands()

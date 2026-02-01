@@ -25,6 +25,14 @@
     gap: 0.75rem;
 }
 
+/* Right-side confirmation panel (overlay, keeps chat visible) */
+.confirm-overlay {
+    position: fixed;
+    right: 1.5rem;
+    bottom: calc(var(--terminal-height, 0px) + 1.5rem);
+    z-index: 1100;
+}
+
 /* Terminal container styling when integrated in chat */
 .chat-page ::deep .terminal-manager {
     position: fixed;
