@@ -12,7 +12,7 @@ public partial class CodeSnippet : ComponentBase
     public string CodeValue { get; set; } = string.Empty;
 
     [Parameter]
-    public string Language { get; set; } = "groovy";
+    public string Language { get; set; } = DefaultLanguage;
 
     [Parameter]
     public bool IsReadOnly { get; set; } = true;
@@ -20,7 +20,7 @@ public partial class CodeSnippet : ComponentBase
     protected override void OnParametersSet()
     {
         _codeValue = CodeValue ?? string.Empty;
-        _language = string.IsNullOrWhiteSpace(Language) ? "groovy" : Language;
+        _language = string.IsNullOrWhiteSpace(Language) ? DefaultLanguage : Language;
         _isReadOnly = IsReadOnly;
         StateHasChanged();
     }
@@ -37,8 +37,9 @@ public partial class CodeSnippet : ComponentBase
         StateHasChanged();
     }
     private string _codeValue = string.Empty;
-    private string _language = "groovy";
+    private string _language = DefaultLanguage;
     private bool _isReadOnly = true;
+    private const string DefaultLanguage = "bash";
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
         return new StandaloneEditorConstructionOptions
@@ -47,8 +48,7 @@ public partial class CodeSnippet : ComponentBase
             Language = _language,
             Value = _codeValue,
             ReadOnly = _isReadOnly,
-            // Theme = "vs",
-            
+            Theme = "vs",
         };
     }
     

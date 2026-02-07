@@ -7,5 +7,6 @@ public record ToolInvocation(
     string DisplayName,
     IReadOnlyDictionary<string, object?> Parameters,
     ToolMetadata Metadata,
-    ToolPermissions Permissions
+    ToolPermissions Permissions,
+    ToolUiHints UiHints
 );

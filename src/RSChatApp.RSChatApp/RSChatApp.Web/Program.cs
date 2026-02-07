@@ -10,29 +10,31 @@ using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
-using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Extensions;
-using RSChatApp.Mcp.Browser.Middleware;
-using RSChatApp.Mcp.Browser.Tools;
-using RSChatApp.Mcp.ExtensionAI.Processing;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Extensions;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Middleware;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
+using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Models;
+using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Extension;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
-using RSChatApp.Web.Mcp.McpClient;
 using RSChatApp.Web.Mcp.Tools;
-using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Services.ChatHistory;
-using RSChatApp.Web.Services.Ingestion;
-using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure logging
@@ -48,8 +50,8 @@ builder.Services.AddLogging(logging =>
     logging.AddSerilog(
         new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
             .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
             .CreateLogger(),
         dispose: true);
@@ -141,6 +143,9 @@ builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
     .AddStandardResilienceHandler(); // Only used without aspire
 
 builder.Services.AddBrowserInstance(reportServerUrl);
+
+// Static content sources (configurable additional static file roots + index/file stores)
+builder.Services.AddStaticContentServices(builder.Configuration);
 
 // create the MCP client at startup via BuildServiceProvider
 // and register tool functions into KernelPluginCollection.
@@ -273,6 +278,8 @@ builder.Services.AddScoped<RsTerminalDriver>();
 builder.Services.AddScoped<JsTerminalDriver>();
 builder.Services.AddScoped<TerminalDriverFactory>();
 
+
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -282,6 +289,10 @@ app.UseRouting();
 app.UseCors(); // Enable CORS middleware
 app.UseAuthentication();
 app.UseStaticFiles();
+
+// Add configured additional static content roots (e.g. downloaded ReportServer scripts)
+app.UseConfiguredStaticContent();
+
 app.UseAntiforgery();
 
 app.UseSession();

@@ -1,0 +1,1 @@
+git clone https://github.com/infofabrik/reportserver-samples.git rs-scripts

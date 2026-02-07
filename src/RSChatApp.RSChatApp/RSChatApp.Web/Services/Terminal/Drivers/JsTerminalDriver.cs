@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Terminal;
 using RSChatApp.Common;
-using RSChatApp.Mcp.Browser.Interfaces;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Interfaces;
 using RSChatApp.Web.Models.Terminal;
 
 namespace RSChatApp.Web.Services.Terminal.Drivers;

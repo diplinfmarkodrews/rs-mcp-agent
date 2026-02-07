@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.SemanticKernel;
 using OpenAPISwaggerUI;
 using ReportServer.RpcClient.Extensions;
-using RSChatApp.Mcp.ReportServer.Resources;
-using RSChatApp.Mcp.ReportServer.Tools;
+using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 using RsMcpServer.Identity.Extensions;
 using RsMcpServer.Identity.Middleware;
 using RsMcpServer.Web.Extensions;
@@ -41,7 +40,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton((serviceProvider) => {
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<TerminalTool>("TerminalTool", serviceProvider);
-    // pluginCollection.AddFromType<TerminalResource>("TerminalResource");
+    pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
     return pluginCollection;
 });
 
@@ -52,14 +51,14 @@ builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
 });
 
 // Create the kernel service
-builder.Services.AddSingleton<Kernel>((serviceProvider) => {
+builder.Services.AddScoped<Kernel>((serviceProvider) => {
     KernelPluginCollection pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return new Kernel(serviceProvider, pluginCollection);
 });
 
 builder.Services.AddMcpServer()
     .WithTools<TerminalTool>()
-    // .WithResources<TerminalResource>()
+    .WithResources<TerminalResource>()
     .WithHttpTransport();
 
 var app = builder.Build();

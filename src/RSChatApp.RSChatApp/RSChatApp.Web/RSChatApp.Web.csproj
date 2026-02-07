@@ -11,22 +11,20 @@
     <PackageReference Include="BlazorMonaco" Version="3.4.0" />
     <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.1.1-preview.1.25612.2" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
     <PackageReference Include="ModelContextProtocol-SemanticKernel" Version="0.3.0" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
     <PackageReference Include="ModelContextProtocolServer.Sse" Version="0.4.0" />
     <PackageReference Include="OllamaSharp" Version="5.3.3" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="10.1.1" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.67.0" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.2.0" />
     <PackageReference Include="PdfPig" Version="0.1.10" />
     <PackageReference Include="System.Linq.Async" Version="6.0.3" />
     <PackageReference Include="Aspire.Qdrant.Client" Version="9.4.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.61.0-preview" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RSChatApp.Infrastructure\RSChatApp.Infrastructure.csproj" />
-    <ProjectReference Include="..\RSChatApp.Infrastructure.Mcp\RSChatApp.Infrastructure.Mcp.csproj" />
+    <ProjectReference Include="..\RSChatApp.Shared.Infrastructure.Mcp\RSChatApp.Shared.Infrastructure.Mcp.csproj" />
     <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\RSChatApp.RsMcpServer\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
   </ItemGroup>

@@ -8,6 +8,7 @@ public interface IToolDescriptor
     string GetDisplayName(IReadOnlyDictionary<string, object?> parameters);
     ToolPermissions GetPermissions(IReadOnlyDictionary<string, object?> parameters);
     ToolMetadata ExtractMetadata(IReadOnlyDictionary<string, object?> parameters);
+    ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters);
     string GetIconSvg();
     string GetColorClass();
 }

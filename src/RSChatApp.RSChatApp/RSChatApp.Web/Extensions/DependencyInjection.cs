@@ -1,14 +1,20 @@
 using System.ClientModel;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.SemanticKernel;
 using OpenAI;
+using RSChatApp.Infrastructure.Prompt;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Configuration;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
+using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Services.Authentication;
 using RSChatApp.Web.Services.Prompt;
 
 namespace RSChatApp.Web.Extensions;
 
 /// <summary>
-/// Extension methods for configuring authentication services
+/// Extension methods for configuring web app services.
 /// </summary>
 public static class DependencyInjection
 {
@@ -68,10 +74,10 @@ public static class DependencyInjection
 
     public static IServiceCollection AddPromptServices(this IServiceCollection services)
     {
-        services.AddSingleton<IPromptStore, FilePromptStore>();
+        services.AddSingleton<IPromptFileStore, PromptFileStore>();
         services.AddScoped<IPromptService, PromptService>();
         services.AddHostedService<PromptStartupValidatorHostedService>();
         return services;
     }
-    
+  
 }

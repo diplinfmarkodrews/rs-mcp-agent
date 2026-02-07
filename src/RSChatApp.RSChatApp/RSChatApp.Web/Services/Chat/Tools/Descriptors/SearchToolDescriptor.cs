@@ -40,6 +40,12 @@ public class SearchToolDescriptor : IToolDescriptor
         );
     }
 
+    public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
+    {
+        // Search results can be long/noisy; keep collapsed unless the user expands.
+        return ToolUiHints.Default;
+    }
+
     public string GetIconSvg()
     {
         return """

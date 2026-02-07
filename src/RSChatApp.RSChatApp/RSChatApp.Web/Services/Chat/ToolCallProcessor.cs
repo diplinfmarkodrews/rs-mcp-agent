@@ -74,7 +74,8 @@ public class ToolCallProcessor
             DisplayName: descriptor.GetDisplayName(parameters),
             Parameters: parameters,
             Metadata: descriptor.ExtractMetadata(parameters),
-            Permissions: descriptor.GetPermissions(parameters)
+            Permissions: descriptor.GetPermissions(parameters),
+            UiHints: descriptor.GetUiHints(parameters)
         );
         return result;
     }

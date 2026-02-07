@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
-        <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.0" />
+        <PackageReference Include="Microsoft.Extensions.AI" Version="10.2.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
         <PackageReference Include="ModelContextProtocolServer.Sse" Version="0.4.0" />
         <PackageReference Include="OpenAPISwaggerUI" Version="9.2024.1215.2209" />
@@ -19,7 +19,7 @@
             <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
             <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.RpcClient\ReportServer.RpcClient.csproj" />
             <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common.ServiceDefaults\RSChatApp.Common.ServiceDefaults.csproj" />
-            <ProjectReference Include="..\..\RSChatApp.RSChatApp\RSChatApp.Infrastructure.Mcp\RSChatApp.Infrastructure.Mcp.csproj" />
+            <ProjectReference Include="..\..\RSChatApp.RSChatApp\RSChatApp.Shared.Infrastructure.Mcp\RSChatApp.Shared.Infrastructure.Mcp.csproj" />
             <ProjectReference Include="..\RsMcpServer.Identity\RsMcpServer.Identity.csproj" />
     </ItemGroup>
 

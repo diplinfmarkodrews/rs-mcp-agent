@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using RSChatApp.Web.Hubs;
 using System.Collections.Concurrent;
 using System.Text.Json;
-using RSChatApp.Mcp.Browser.Interfaces;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Interfaces;
 
 namespace RSChatApp.Web.Services.Browser;
 
