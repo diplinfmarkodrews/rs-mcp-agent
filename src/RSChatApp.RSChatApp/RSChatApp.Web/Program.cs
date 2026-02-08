@@ -164,7 +164,7 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
 
-builder.Services.AddSingleton((serviceProvider) =>
+builder.Services.AddScoped((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -189,7 +189,7 @@ builder.Services.AddSingleton((serviceProvider) =>
 // builder.Services.AddHostedService<RsMcpToolRegistrationHostedService>();
 
 // Register IEnumerable<KernelPlugin> for the Kernel constructor
-builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
+builder.Services.AddScoped<IEnumerable<KernelPlugin>>((serviceProvider) => {
     var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return pluginCollection;
 });
