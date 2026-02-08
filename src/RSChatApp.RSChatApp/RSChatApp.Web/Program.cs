@@ -10,29 +10,28 @@ using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
-using RSChatApp.Mcp.Browser.Configuration;
-using RSChatApp.Mcp.Browser.Extensions;
-using RSChatApp.Mcp.Browser.Middleware;
-using RSChatApp.Mcp.Browser.Tools;
-using RSChatApp.Mcp.ExtensionAI.Processing;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Middleware;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
+using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
+using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
+using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
-using RSChatApp.Web.Mcp.McpClient;
 using RSChatApp.Web.Mcp.Tools;
-using RSChatApp.Web.Models.Ingestion;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Services.ChatHistory;
-using RSChatApp.Web.Services.Ingestion;
-using RSChatApp.Web.Services.SemanticSearch;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure logging
@@ -48,8 +47,8 @@ builder.Services.AddLogging(logging =>
     logging.AddSerilog(
         new LoggerConfiguration()
             .MinimumLevel.Debug()
-            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
             .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
             .CreateLogger(),
         dispose: true);
@@ -70,7 +69,7 @@ builder.Services.Configure<OpenAIPromptExecutionSettings>(
     {
         config.FunctionChoiceBehavior = FunctionChoiceBehavior.Auto();
     });
-
+builder.Services.AddOptions<OpenAIPromptExecutionSettings>();
 OpenAISettings openAiSettings = new();
 builder.Configuration.GetSection(nameof(OpenAISettings))
     .Bind(openAiSettings);
@@ -142,6 +141,9 @@ builder.Services.AddHttpClient(RsMcpServerHttpClientName.ClientName, client =>
 
 builder.Services.AddBrowserInstance(reportServerUrl);
 
+// Static content sources (configurable additional static file roots + index/file stores)
+builder.Services.AddStaticContentServices(builder.Configuration);
+
 // create the MCP client at startup via BuildServiceProvider
 // and register tool functions into KernelPluginCollection.
 // This is ugly, but works! Couldnt make the Pluginregistration work in HostedService
@@ -162,7 +164,7 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
 
-builder.Services.AddSingleton((serviceProvider) =>
+builder.Services.AddScoped((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -171,8 +173,9 @@ builder.Services.AddSingleton((serviceProvider) =>
 
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName,
+    pluginCollection.AddFromFunctions("TerminalTool",
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
+    pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
     return pluginCollection;
 });
 
@@ -186,7 +189,7 @@ builder.Services.AddSingleton((serviceProvider) =>
 // builder.Services.AddHostedService<RsMcpToolRegistrationHostedService>();
 
 // Register IEnumerable<KernelPlugin> for the Kernel constructor
-builder.Services.AddSingleton<IEnumerable<KernelPlugin>>((serviceProvider) => {
+builder.Services.AddScoped<IEnumerable<KernelPlugin>>((serviceProvider) => {
     var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return pluginCollection;
 });
@@ -243,15 +246,12 @@ builder.Services.AddScoped<Kernel>((serviceProvider)=> {
     return kernel;
 });
 
-builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
-builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
-builder.Services.AddScoped<DataIngestor>();
-builder.Services.AddSingleton<SemanticSearch>();
-builder.Services.AddScoped<SemanticSearchTool>();
+builder.Services.AddPromptServices();
+builder.Services.AddIngestionAndSemanticSearch();
+
 builder.Services.AddScoped<AuthenticationTool>();
 builder.Services.AddScoped<UserConfirmedTerminalTool>();
 
-builder.Services.AddPromptServices();
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();
@@ -282,6 +282,10 @@ app.UseRouting();
 app.UseCors(); // Enable CORS middleware
 app.UseAuthentication();
 app.UseStaticFiles();
+
+// Add configured additional static content roots (e.g. downloaded ReportServer scripts)
+app.UseConfiguredStaticContent();
+
 app.UseAntiforgery();
 
 app.UseSession();
@@ -297,7 +301,6 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
 
 app.MapHealthChecks("/health");
 

@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
 using Polly;
-using RSChatApp.Mcp.ExtensionAI.Processing;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Web.Storage;
 
 namespace RSChatApp.Web.Services.ChatHistory;

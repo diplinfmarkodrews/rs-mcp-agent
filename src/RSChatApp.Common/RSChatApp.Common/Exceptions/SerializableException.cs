@@ -40,12 +40,13 @@ public class SerializableException : Exception
     // Hide problematic properties from serialization using both JsonIgnore attributes
     [Newtonsoft.Json.JsonIgnore]
     [System.Text.Json.Serialization.JsonIgnore]
-    public new System.Reflection.MethodBase TargetSite => base.TargetSite;
+    public new System.Reflection.MethodBase? TargetSite => base.TargetSite;
     
     [Newtonsoft.Json.JsonIgnore]
     [System.Text.Json.Serialization.JsonIgnore]
-    public new Exception InnerException => base.InnerException;
+    public new Exception? InnerException => base.InnerException;
     
+    [Obsolete("Obsolete")]
     protected SerializableException(System.Runtime.Serialization.SerializationInfo info,
         System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 }

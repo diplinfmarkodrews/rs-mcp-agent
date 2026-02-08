@@ -37,6 +37,12 @@ public class TerminalToolDescriptor : IToolDescriptor
         );
     }
 
+    public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
+    {
+        // Terminal output is usually the primary thing users want to read.
+        return new ToolUiHints(DefaultExpanded: true);
+    }
+
     public string GetIconSvg()
     {
         return """

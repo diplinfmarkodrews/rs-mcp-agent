@@ -52,7 +52,24 @@
     [Parameter]
     public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
 
-    private bool isExpanded = false;
+    private bool isExpanded;
+    private bool _userToggled;
+    private string? _lastCallId;
+
+    protected override void OnParametersSet()
+    {
+        // Apply defaults once per invocation/result, but don't fight the user's manual expand/collapse.
+        if (_lastCallId != Invocation.CallId)
+        {
+            _lastCallId = Invocation.CallId;
+            _userToggled = false;
+        }
+
+        if (!_userToggled)
+        {
+            isExpanded = Invocation.UiHints.DefaultExpanded;
+        }
+    }
 
     private string GetResultClass()
     {
@@ -124,6 +141,13 @@
 
     private void ToggleExpanded()
     {
+        if (!Invocation.UiHints.Collapsible)
+        {
+            isExpanded = true;
+            return;
+        }
+
+        _userToggled = true;
         isExpanded = !isExpanded;
     }
 

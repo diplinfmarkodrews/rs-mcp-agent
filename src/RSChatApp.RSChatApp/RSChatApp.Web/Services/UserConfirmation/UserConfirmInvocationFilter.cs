@@ -41,7 +41,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                     decision = await _ui.RequestUserInteractionAsync(request)
                         .WaitAsync(ctx.CancellationToken);
                 }
-                catch (OperationCanceledException oce)
+                catch (OperationCanceledException oce) // Canceled
                 {
                     _logger.LogWarning(
                         oce,
@@ -53,7 +53,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                     return;
                 }
 
-                if (decision.Result != UserConfirmationResultEnum.Confirmed)
+                if (decision.Result != UserConfirmationResultEnum.Confirmed) // Skipped
                 {
                     _logger.LogInformation(
                         "User confirmation result for {ToolName}: {Decision}",
@@ -88,8 +88,10 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         }
         catch (Exception ex)
         {
+            // Dont crash! return detailed error result
             _logger.LogError(ex, "SK invocation failed for {Plugin}.{Function}", pluginName, functionName);
-            throw;
+            ctx.Result = new FunctionResult(ctx.Function, $"error: SK invocation failed for {pluginName}.{functionName}:  {ex.Message}");
+            return;
         }
     }
 
@@ -106,7 +108,8 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         
         // Match RsMcpServer_execute_command or similar terminal execution functions
         bool isTerminalCommand = normalized.Contains("executecommand", StringComparison.Ordinal) 
-                                 || (normalized.Contains("rsmcpserver", StringComparison.Ordinal) && normalized.Contains("execute", StringComparison.Ordinal));
+                                 || (normalized.Contains("terminaltool", StringComparison.Ordinal) 
+                                     && normalized.Contains("execute", StringComparison.Ordinal));
         
         // Optionally match browser script execution
         bool isBrowserScript = normalized.Contains("browsertool", StringComparison.Ordinal) 

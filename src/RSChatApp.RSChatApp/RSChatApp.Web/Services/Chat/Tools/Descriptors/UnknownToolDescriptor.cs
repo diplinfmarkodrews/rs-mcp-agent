@@ -25,6 +25,11 @@ public class UnknownToolDescriptor : IToolDescriptor
         );
     }
 
+    public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
+    {
+        return ToolUiHints.Default;
+    }
+
     public string GetIconSvg()
     {
         return """

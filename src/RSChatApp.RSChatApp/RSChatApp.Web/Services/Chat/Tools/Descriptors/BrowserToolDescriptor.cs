@@ -37,6 +37,12 @@ public class BrowserToolDescriptor : IToolDescriptor
         );
     }
 
+    public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
+    {
+        // Browser execute JavaScript results are typically immediately relevant.
+        return new ToolUiHints(DefaultExpanded: true);
+    }
+
     public string GetIconSvg()
     {
         return """

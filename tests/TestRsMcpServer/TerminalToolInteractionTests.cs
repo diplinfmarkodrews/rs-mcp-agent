@@ -9,7 +9,7 @@ using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.Abstraction.Contracts.Authentication; // Correct namespace
 using Microsoft.Extensions.FileProviders;
 using RSChatApp.Common;
-using RSChatApp.Mcp.ReportServer.Tools;
+using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 
 namespace TestRsMcpServer;
 

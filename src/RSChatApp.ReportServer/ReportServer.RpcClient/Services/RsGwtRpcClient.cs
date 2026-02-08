@@ -101,7 +101,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         return Result.Fail(response.Exception);
     }
 
-    public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode node = null, Dictionary<string, string> mapper = null)
+    public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode? node = null, Dictionary<string, string>? mapper = null)
     {
         var abstractNodeDto = node is not null ?
             _mapper.Map<AbstractNodeDto>(node) :
@@ -118,7 +118,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         {
             return Result<TerminalSessionInfo>.Success(_mapper.Map<TerminalSessionInfo>(response.Result));
         }
-        return Result<TerminalSessionInfo>.Fail(response.Exception);
+        return Result<TerminalSessionInfo>.Fail(response!.Exception);
     }
 
     public async Task<Result<CommandResult>> ExecuteAsync(string sessionId, string command, CancellationToken cancellationToken = default)

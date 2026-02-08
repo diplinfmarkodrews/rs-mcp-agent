@@ -1,5 +1,8 @@
 # Local editor settings
 .vscode/settings.json
+
+# Downloaded ReportServer scripts (large/external)
+scripts/rs-scripts/
 # .NET Core / .NET Framework
 bin/
 obj/

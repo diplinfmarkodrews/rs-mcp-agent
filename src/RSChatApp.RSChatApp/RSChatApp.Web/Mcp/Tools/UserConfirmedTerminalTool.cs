@@ -45,7 +45,7 @@ public class UserConfirmedTerminalTool
             {
                 TerminalId = executingTerminalId,
                 SessionId = _terminalManager.ActiveTerminal?.RsSessionId,
-                Command = command,
+                //Command = command,
                 CommandResult = result
             });
         }
