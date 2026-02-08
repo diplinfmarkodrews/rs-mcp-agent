@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using UglyToad.PdfPig;
 
-namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch;
+namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Services;
 
 
 public interface IDocumentLookup
@@ -16,7 +16,9 @@ public class DocumentLookup
     {
         _sourceDirectory = Path.Combine(env.WebRootPath, "Data");
     }
-    public DocumentLookupResult Lookup(string documentId, int page, bool  addImages = false){
+    
+    public DocumentLookupResult Lookup(
+        string documentId, int page, bool  addImages = false){
         string documentPath = Path.Combine(_sourceDirectory, documentId);
         PdfDocument? document; 
         document = PdfDocument.Open(documentPath);

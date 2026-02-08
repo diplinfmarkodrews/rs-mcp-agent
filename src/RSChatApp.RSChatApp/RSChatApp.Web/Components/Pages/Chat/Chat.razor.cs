@@ -6,6 +6,7 @@ using Microsoft.SemanticKernel;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Components.Pages.Terminal;
 using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Services.Prompt;
@@ -19,11 +20,12 @@ namespace RSChatApp.Web.Components.Pages.Chat;
 public partial class Chat(
     IChatClient chatClient,
     Kernel kernel,
-    // NavigationManager Nav,
     IStorage<List<ChatMessage>> chatHistoryStorage,
     SemanticSearchTool semanticSearchTool, 
-    AuthenticationTool AuthenticationTool,
-    UserConfirmedTerminalTool UserConfirmedTerminalTool,
+    DocumentLookupTool documentLookupTool,
+    ScriptCacheTool scriptCacheTool,
+    AuthenticationTool authenticationTool,
+    UserConfirmedTerminalTool userConfirmedTerminalTool,
     IPromptService promptService,
     ILogger<Chat> logger,
     IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> terminalUserInteraction
@@ -63,6 +65,9 @@ public partial class Chat(
         var allTools = new List<AITool>
         {
             AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
+            AIFunctionFactory.Create(documentLookupTool.GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
+            AIFunctionFactory.Create(scriptCacheTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
+            AIFunctionFactory.Create(scriptCacheTool.GetText, "GetTextFileFromPath","Get a text file of a given path. can be scripts or other text files")
             // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
             // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
             // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
@@ -76,8 +81,8 @@ public partial class Chat(
                 allTools.Add(aiFunction.AsAIFunction(kernel));
             }
         }
-        logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{kernelPluginsNames} ", allTools.Count, 
-            string.Join(", ", kernelPlugins.Select(p=> p.Name)));
+        logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{allTools} ", allTools.Count, 
+            string.Join(", ", allTools.Select(p=> p.Name)));
         
         _chatOptions.Tools = allTools;              
         // Load chat history

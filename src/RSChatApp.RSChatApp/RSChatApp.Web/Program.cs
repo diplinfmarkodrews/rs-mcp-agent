@@ -11,15 +11,12 @@ using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
-using RSChatApp.Shared.Infrastructure.Mcp.Browser.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Middleware;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
-using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Models;
+using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Extension;
+using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
@@ -72,7 +69,7 @@ builder.Services.Configure<OpenAIPromptExecutionSettings>(
     {
         config.FunctionChoiceBehavior = FunctionChoiceBehavior.Auto();
     });
-
+builder.Services.AddOptions<OpenAIPromptExecutionSettings>();
 OpenAISettings openAiSettings = new();
 builder.Configuration.GetSection(nameof(OpenAISettings))
     .Bind(openAiSettings);
@@ -176,8 +173,9 @@ builder.Services.AddSingleton((serviceProvider) =>
 
     KernelPluginCollection pluginCollection = [];
     pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions(RsMcpServerHttpClientName.ClientName,
+    pluginCollection.AddFromFunctions("TerminalTool",
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
+    pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
     return pluginCollection;
 });
 
@@ -248,15 +246,12 @@ builder.Services.AddScoped<Kernel>((serviceProvider)=> {
     return kernel;
 });
 
-builder.Services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
-builder.Services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
-builder.Services.AddScoped<DataIngestor>();
-builder.Services.AddSingleton<SemanticSearch>();
-builder.Services.AddScoped<SemanticSearchTool>();
+builder.Services.AddPromptServices();
+builder.Services.AddIngestionAndSemanticSearch();
+
 builder.Services.AddScoped<AuthenticationTool>();
 builder.Services.AddScoped<UserConfirmedTerminalTool>();
 
-builder.Services.AddPromptServices();
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();
@@ -277,8 +272,6 @@ builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();
 builder.Services.AddScoped<RsTerminalDriver>();
 builder.Services.AddScoped<JsTerminalDriver>();
 builder.Services.AddScoped<TerminalDriverFactory>();
-
-
 
 builder.Services.AddControllers();
 
@@ -308,7 +301,6 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
 
 app.MapHealthChecks("/health");
 

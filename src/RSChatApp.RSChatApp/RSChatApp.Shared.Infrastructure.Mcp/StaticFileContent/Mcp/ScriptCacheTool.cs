@@ -10,7 +10,7 @@ public class ScriptCacheTool
 {
     private readonly IStaticContentIndexStore _fileIndexStore;
     private readonly IStaticContentFileStore _fileStore;
-    private const string ScriptSourcePath = "src";
+    private const string ScriptSourcePath = "rs-scripts";
     
     public ScriptCacheTool(IStaticContentIndexStore fileIndexStore,
         IStaticContentFileStore fileStore) 

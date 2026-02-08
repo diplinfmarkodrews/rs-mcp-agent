@@ -108,7 +108,8 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         
         // Match RsMcpServer_execute_command or similar terminal execution functions
         bool isTerminalCommand = normalized.Contains("executecommand", StringComparison.Ordinal) 
-                                 || (normalized.Contains("rsmcpserver", StringComparison.Ordinal) && normalized.Contains("execute", StringComparison.Ordinal));
+                                 || (normalized.Contains("terminaltool", StringComparison.Ordinal) 
+                                     && normalized.Contains("execute", StringComparison.Ordinal));
         
         // Optionally match browser script execution
         bool isBrowserScript = normalized.Contains("browsertool", StringComparison.Ordinal) 

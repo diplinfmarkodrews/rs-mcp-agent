@@ -6,9 +6,9 @@ namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 
 public class SemanticSearchTool
 {
-    private readonly SemanticSearch _semanticSearch;
+    private readonly Services.SemanticSearch _semanticSearch;
 
-    public SemanticSearchTool(SemanticSearch semanticSearch)
+    public SemanticSearchTool(Services.SemanticSearch semanticSearch)
     {
         _semanticSearch = semanticSearch;
     }
@@ -19,7 +19,6 @@ public class SemanticSearchTool
         [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
         [Description("The maximum number of results to return. Default is 25.")] int maxResults = 25)
     {
-        
         var results = await _semanticSearch.SearchAsync(searchPhrase, filenameFilter, maxResults);
         return string.Join("", results.Select(result =>
             $"<citation filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</citation>"));

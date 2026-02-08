@@ -9,12 +9,12 @@ public sealed class PromptStartupValidatorHostedService : IHostedService
 {
     private readonly IWebHostEnvironment _environment;
     private readonly IPromptFileStore _promptFileStore;
-    private readonly ILogger _startupLogger;
+    private readonly ILogger<PromptStartupValidatorHostedService> _startupLogger;
 
     public PromptStartupValidatorHostedService(
         IWebHostEnvironment environment,
         IPromptFileStore promptFileStore,
-        ILogger startupLogger)
+        ILogger<PromptStartupValidatorHostedService> startupLogger)
     {
         _environment = environment;
         _promptFileStore = promptFileStore;

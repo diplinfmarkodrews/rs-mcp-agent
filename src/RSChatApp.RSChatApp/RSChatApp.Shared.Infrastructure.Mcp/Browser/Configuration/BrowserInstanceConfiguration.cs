@@ -11,6 +11,7 @@ public class BrowserInstanceConfiguration
     public int Width_Viewport { get; set; } = 1280;
     public int Height_Viewport { get; set; } = 800;
     public string BaseUrl { get; set; }
+    public bool Sandboxed { get; set; } = false;
     
     public int SlidingExpirationMinutes { get; set; } = 30;
     

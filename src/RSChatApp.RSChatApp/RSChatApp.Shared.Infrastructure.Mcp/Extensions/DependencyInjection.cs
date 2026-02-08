@@ -4,14 +4,52 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Implementations;
+using RSChatApp.Shared.Infrastructure.Mcp.Browser.Interfaces;
+using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Models;
+using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Services;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Configuration;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 
-namespace RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Extension;
+namespace RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddStaticContentServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddBrowserInstance(this IServiceCollection services, string reportServerUrl)
+    {
+        services.AddHttpContextAccessor();
+        services.Configure<BrowserInstanceConfiguration>(config =>
+        {
+            config.BaseUrl = reportServerUrl;
+        });
+        // Add LazyCache, adds InMemoryCache as well
+        // We use it to block access to browser instance from multiple threads
+        services.AddLazyCache();
+        services.AddSingleton<IBrowserInstanceStore, InMemoryBrowserInstanceStore>();
+        services.AddSingleton<IBrowserInstanceFactory, PlayWrightBrowserInstanceFactory>();        
+        services.AddSingleton<IBrowserInstanceProvider, BrowserInstanceProvider>();
+        
+        return services;
+    }
+    public static IServiceCollection AddIngestionAndSemanticSearch(this IServiceCollection services)
+    {
+        services.AddQdrantCollection<Guid, IngestedChunk>("data-rschatapp-chunks");
+        services.AddQdrantCollection<Guid, IngestedDocument>("data-rschatapp-documents");
+        services.AddScoped<DataIngestor>();
+        services.AddScoped<SemanticSearch.Services.SemanticSearch>();
+        services.AddScoped<DocumentLookup>();
+        services.AddScoped<SemanticSearchTool>()
+            .AddScoped<DocumentLookupTool>();
+        
+        return services;
+    }
+    
+    
+    public static IServiceCollection AddStaticContentServices(this IServiceCollection services, IConfiguration configuration, bool addTools = true)
     {
         services
             .AddOptions<StaticContentOptions>()
@@ -19,9 +57,12 @@ public static class DependencyInjection
             .Validate(o => o.Sources is not null, "StaticContent:Sources must not be null")
             .ValidateOnStart();
 
-        services.AddMemoryCache();
-        services.AddSingleton<IStaticContentIndexStore, StaticContentIndexStore>();
-        services.AddSingleton<IStaticContentFileStore, StaticContentFileStore>();
+        services.AddMemoryCache()
+            .AddSingleton<IStaticContentIndexStore, StaticContentIndexStore>()
+            .AddSingleton<IStaticContentFileStore, StaticContentFileStore>();
+        
+        if (addTools)
+            services.AddScoped<ScriptCacheTool>();
         return services;
     }
 
@@ -89,4 +130,5 @@ public static class DependencyInjection
 
         return app;
     }
+    
 }

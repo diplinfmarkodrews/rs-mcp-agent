@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationClient, LegacyAuthenticationClient>();
         services.AddScoped<IRsTerminalClient, RsTerminalClient>();
         services.AddScoped<ILegacyAuthenticationService, LegacyAuthenticationService>();
+        
         return services;
     
     }

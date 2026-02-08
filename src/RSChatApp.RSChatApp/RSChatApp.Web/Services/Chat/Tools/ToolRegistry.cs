@@ -15,7 +15,7 @@ public class ToolRegistry
             "Search", "SearchAsync", "search");
         
         RegisterDescriptor(new TerminalToolDescriptor(), 
-            "RsMcpServer_execute_command");
+            "TerminalTool_execute_command", "RsMcpServer_execute_command");
         
         RegisterDescriptor(new BrowserToolDescriptor(), 
             "BrowserTool", "BrowserTool_executejavascript", "executeScript", "browser");

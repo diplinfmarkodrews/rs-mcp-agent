@@ -38,17 +38,20 @@ public class PlayWrightBrowserInstanceFactory :  IBrowserInstanceFactory //Backg
         {
             "chromium" => await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                // ChromiumSandbox = true,
+                // ChromiumSandbox = config.Sandboxed,
+                Channel = config.UserAgent.Contains("msedg") ? "msedge": "chrome",
                 Headless = config.Headless,
                 Timeout = config.Timeout
             }),
             "firefox" => await playwright.Firefox.LaunchAsync(new BrowserTypeLaunchOptions
             {
+                // ChromiumSandbox =  config.Sandboxed,
                 Headless = config.Headless,
                 Timeout = config.Timeout
             }),
             "webkit" => await playwright.Webkit.LaunchAsync(new BrowserTypeLaunchOptions
             {
+                // ChromiumSandbox =  config.Sandboxed,
                 Headless = config.Headless,
                 Timeout = config.Timeout
             }),

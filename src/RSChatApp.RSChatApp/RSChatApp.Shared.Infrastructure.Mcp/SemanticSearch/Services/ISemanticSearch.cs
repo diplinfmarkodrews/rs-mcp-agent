@@ -1,6 +1,6 @@
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Models;
 
-namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch;
+namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Services;
 
 public interface ISemanticSearch
 {
