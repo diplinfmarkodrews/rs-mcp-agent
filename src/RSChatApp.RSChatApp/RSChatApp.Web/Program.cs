@@ -22,6 +22,7 @@ using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
+using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
@@ -30,6 +31,7 @@ using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
+using RsMcpServer.Identity.Models.Requests;
 using Serilog;
 using Serilog.Events;
 
@@ -49,12 +51,13 @@ builder.Services.AddLogging(logging =>
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
+            .Enrich.FromLogContext()
             .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
             .CreateLogger(),
         dispose: true);
 });
 builder.Services.AddOptions();
-// Configure global JSON serialization options for Blazor components (including ProtectedBrowserStorage)
+// Configure global JSON serialization options for Blazor components
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
     options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -226,6 +229,7 @@ builder.AddOllamaApiClient("embeddings")
 builder.AddQdrantClient("vectordb");
 
 // User interaction / confirmations (scoped per Blazor circuit)
+
 builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>, 
     WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
 builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
@@ -251,7 +255,6 @@ builder.Services.AddIngestionAndSemanticSearch();
 
 builder.Services.AddScoped<AuthenticationTool>();
 builder.Services.AddScoped<UserConfirmedTerminalTool>();
-
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();

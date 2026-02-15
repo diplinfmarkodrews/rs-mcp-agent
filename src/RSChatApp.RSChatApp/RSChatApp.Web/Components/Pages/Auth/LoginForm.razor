@@ -1,0 +1,89 @@
+@inject ILogger<LoginForm> Logger
+
+<div class="tty-login">
+    
+    <form @onsubmit="@HandleSubmit" @onsubmit:preventDefault="true" class="tty-form">
+        <div class="tty-field">
+            <label class="tty-label" for="tty-user">username:</label>
+            <input type="text"
+                   class="tty-input"
+                   id="tty-user"
+                   @ref="_usernameInput"
+                   @bind="Username"
+                   @bind:event="oninput"
+                   required
+                   autocomplete="username" />
+        </div>
+
+        <div class="tty-field">
+            <label class="tty-label" for="tty-pass">password:</label>
+            <input type="password"
+                   class="tty-input"
+                   id="tty-pass"
+                   @bind="Password"
+                   @bind:event="oninput"
+                   required
+                   autocomplete="current-password" />
+        </div>
+
+        <div class="tty-field tty-checkbox-row" disabled>
+            <label class="tty-check-label">
+                <input type="checkbox"
+                       class="tty-checkbox"
+                       @bind="LoginFrontend" 
+                       disabled/>
+                <span>[<span class="tty-check-mark">@(LoginFrontend ? "x" : " ")</span>]</span>
+                <span>Login Frontend</span>
+            </label>
+        </div>
+
+        <div class="tty-field">
+            <button type="submit" class="tty-btn" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>authenticating...</span>
+                }
+                else
+                {
+                    <span> Login </span>
+                }
+            </button>
+        </div>
+    </form>
+</div>
+
+@code {
+    [Parameter] public string Username { get; set; } = "";
+    [Parameter] public EventCallback<string> UsernameChanged { get; set; }
+    [Parameter] public string Password { get; set; } = "";
+    [Parameter] public EventCallback<string> PasswordChanged { get; set; }
+    [Parameter] public bool LoginFrontend { get; set; }
+    [Parameter] public EventCallback<bool> LoginFrontendChanged { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+
+    private ElementReference _usernameInput;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await _usernameInput.FocusAsync();
+            }
+            catch
+            {
+                // Ignore if element is not yet available
+            }
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        await UsernameChanged.InvokeAsync(Username);
+        await PasswordChanged.InvokeAsync(Password);
+        await LoginFrontendChanged.InvokeAsync(LoginFrontend);
+        await OnSubmit.InvokeAsync();
+    }
+}

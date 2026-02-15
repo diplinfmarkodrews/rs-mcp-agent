@@ -1,24 +1,23 @@
-@using RSChatApp.Web.Services.Authentication
+@using RSChatApp.Web.Models.Auth
 @inject NavigationManager Navigation
 @inject ILogger<LoginModal> Logger
-@inject IJSRuntime JSRuntime
-@inject IAuthenticationInfoService AuthInfoService
+@inject IJSRuntime JsRuntime
 
 @if (Show)
 {
-    <div class="modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1050; display: flex; justify-content: center; align-items: center;" @onclick="@CloseModal">
-        <div class="modal-content" style="background-color: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); max-width: 600px; width: 95%; max-height: 90vh; overflow: hidden;" @onclick:stopPropagation="true">
-            <div class="modal-header" style="padding: 1rem 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
-                <h5 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 500;">Login to ReportServer</h5>
-                <button type="button" class="btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c757d; padding: 0; width: 1.5rem; height: 1.5rem;" @onclick="@CloseModal" aria-label="Close">×</button>
+    <div class="modal-backdrop" @onclick="@CloseModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h5 class="modal-title">Login to ReportServer</h5>
+                <button type="button" class="btn-close" @onclick="@CloseModal" aria-label="Close">×</button>
             </div>
-            <div class="modal-body" style="padding: 0; height: 500px; position: relative;">
-                @if (hasError)
+            <div class="modal-body">
+                @if (_hasError)
                 {
                     <div class="text-center" style="padding: 2rem;">
                         <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠</div>
                         <h4 style="color: #dc3545; margin-bottom: 1rem;">Authentication Error</h4>
-                        <p style="margin-bottom: 1rem;">@errorMessage</p>
+                        <p style="margin-bottom: 1rem;">@_errorMessage</p>
                         <div style="margin-top: 1.5rem;">
                             <button class="btn-default" @onclick="@RetryAuthentication" style="margin-right: 1rem;">
                                 <i class="fas fa-redo me-2"></i>
@@ -29,65 +28,21 @@
                 }
                 else if (UseLegacyAuth)
                 {
-                    <!-- Legacy Login Form -->
-                    <div class="legacy-login-container">
-                        <div class="login-header">
-                            <h3>Welcome Back</h3>
-                            <p>Sign in to your ReportServer account</p>
-                        </div>
-                        
-                        <form @onsubmit="@HandleLegacyLogin" @onsubmit:preventDefault="true" class="login-form">
-                            <div class="form-group">
-                                <label for="username" class="form-label">Username</label>
-                                <input type="text" 
-                                       class="form-input" 
-                                       id="username" 
-                                       @bind="username" 
-                                       placeholder="Enter your username" 
-                                       required 
-                                       autocomplete="username" />
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" 
-                                       class="form-input" 
-                                       id="password" 
-                                       @bind="password" 
-                                       placeholder="Enter your password" 
-                                       required 
-                                       autocomplete="current-password" />
-                            </div>
-                            
-                            <div class="form-group">
-                                <button type="submit" class="btn-login" disabled="@isLoading">
-                                    @if (isLoading)
-                                    {
-                                        <div class="btn-spinner"></div>
-                                        <span>Signing in...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Sign In</span>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M5 12h14"></path>
-                                            <path d="M12 5l7 7-7 7"></path>
-                                        </svg>
-                                    }
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                    <LoginForm @bind-Username="_username"
+                               @bind-Password="_password"
+                               @bind-LoginFrontend="_loginFrontend"
+                               IsLoading="_isLoading"
+                               OnSubmit="HandleLegacyLogin" />
                 }
-                else if (showIframe)
+                else if (_showIframe)
                 {
                     <!-- Keycloak Authentication Iframe -->
-                    <iframe @ref="authIframe" 
-                            src="@authUrl" 
+                    <iframe @ref="_authIframe" 
+                            src="@_authUrl" 
                             style="width: 100%; height: 100%; border: none;"
                             @onload="OnIframeLoad">
                     </iframe>
-                    @if (isLoading)
+                    @if (_isLoading)
                     {
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); display: flex; justify-content: center; align-items: center;">
                             <div class="text-center">
@@ -119,24 +74,25 @@
     [Parameter] public EventCallback OnLoginSuccess { get; set; }
     [Parameter] public bool UseLegacyAuth { get; set; } = true; // Option to choose between legacy and Keycloak
 
-    private bool isLoading = false;
-    private bool showIframe = false;
-    private bool hasError = false;
-    private string errorMessage = "";
-    private string authUrl = "";
-    private ElementReference authIframe;
+    private bool _isLoading = false;
+    private bool _showIframe = false;
+    private bool _hasError = false;
+    private string _errorMessage = "";
+    private string _authUrl = "";
+    private ElementReference _authIframe;
 
     // Legacy login form fields
-    private string username = "";
-    private string password = "";
+    private string _username = "";
+    private string _password = "";
+    private bool _loginFrontend = false;
 
     private async Task CloseModal()
     {
         Show = false;
-        showIframe = false;
-        isLoading = false;
-        hasError = false;
-        errorMessage = "";
+        _showIframe = false;
+        _isLoading = false;
+        _hasError = false;
+        _errorMessage = "";
         await ShowChanged.InvokeAsync(Show);
     }
 
@@ -145,10 +101,10 @@
         // Reset state and auto-start authentication when modal is shown
         if (Show)
         {
-            isLoading = false;
-            showIframe = false;
-            hasError = false;
-            errorMessage = "";
+            _isLoading = false;
+            _showIframe = false;
+            _hasError = false;
+            _errorMessage = "";
             
             // Start appropriate authentication based on UseLegacyAuth setting
             if (!UseLegacyAuth)
@@ -167,7 +123,7 @@
         if (firstRender && Show)
         {
             // Add JavaScript to listen for authentication completion
-            await JSRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
+            await JsRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
         }
     }
 
@@ -175,19 +131,19 @@
     {
         try
         {
-            hasError = false;
-            errorMessage = "";
-            isLoading = true;
+            _hasError = false;
+            _errorMessage = "";
+            _isLoading = true;
             StateHasChanged();
             
             // Use the existing auth/challenge endpoint
             var baseUrl = Navigation.BaseUri.TrimEnd('/');
             var returnUrl = Uri.EscapeDataString($"{baseUrl}/auth/popup-auth-success");
-            authUrl = $"{baseUrl}/auth/challenge?returnUrl={returnUrl}";
+            _authUrl = $"{baseUrl}/auth/challenge?returnUrl={returnUrl}";
             
-            Logger.LogInformation("Loading authentication URL: {AuthUrl}", authUrl);
+            Logger.LogInformation("Loading authentication URL: {AuthUrl}", _authUrl);
             
-            showIframe = true;
+            _showIframe = true;
             StateHasChanged();
         }
         catch (Exception ex)
@@ -200,8 +156,8 @@
     private void RetryAuthentication()
     {
         // Clear any existing error state        
-        hasError = false;
-        errorMessage = "";
+        _hasError = false;
+        _errorMessage = "";
         StateHasChanged();
 
         // Reload the appropriate authentication type
@@ -220,70 +176,68 @@
     private async Task HandleLegacyLogin()
     {
         // This method will handle the legacy login form submission
-        isLoading = true;
+        _isLoading = true;
         StateHasChanged();
 
         try
         {
             // Call the JavaScript function to post the login request
-            var loginRequest = new { username = username, password = password };
-            var result = await JSRuntime.InvokeAsync<LoginResult>("postLoginRequest", loginRequest);
-            
+            var loginRequest = new { username = _username, password = _password };
+            var result = await JsRuntime.InvokeAsync<LoginResult>("postLoginRequest", loginRequest);
+
             if (result != null && result.Success)
             {
-                Logger.LogInformation("Legacy authentication successful for user {Username}", username);
-                
-                // Refresh the authentication state without reloading the page
-                
-                // await JSRuntime.InvokeVoidAsync("reconnectBlazorCircuit");
-                // await InvokeAsync(StateHasChanged);
-                // // Notify parent and close modal
-                // await OnLoginSuccess.InvokeAsync();
+                Logger.LogInformation("Legacy authentication successful for user {Username}", _username);
+
+                // Refresh the authentication state with reloading the page
+
                 await CloseModal();
                 Navigation.Refresh(forceReload: true);
             }
             else
             {
+                Logger.LogInformation("Legacy authentication failed for user {Username}. Error: {ErrorMessage}", _username, result?.ErrorMessage);
                 ShowError(result?.ErrorMessage ?? "Authentication failed. Please try again.");
-                isLoading = false;
+                _isLoading = false;
                 StateHasChanged();
             }
         }
-        catch (Exception ex)
+        catch (TaskCanceledException ex)
         {
             Logger.LogError(ex, "Error during legacy authentication");
-            ShowError("Authentication failed. Please try again.");
-            isLoading = false;
+            ShowError("The request timed out. Please check connection to report server or invalid url.");
+            _isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex) 
+        {
+            
+            Logger.LogError(ex, "Error during legacy authentication");
+            ShowError($"Authentication failed: {ex.Message}. Please try again");
+            _isLoading = false;
             StateHasChanged();
         }
     }
-
-    // Result class to match the JavaScript response
-    private class LoginResult
-    {
-        public bool Success { get; set; }
-        public string? ErrorMessage { get; set; }
-    }
-
+    
     private void ShowError(string message)
     {
-        hasError = true;
-        errorMessage = message;
-        isLoading = false;
-        showIframe = false;
+        _hasError = true;
+        _errorMessage = message;
+        _isLoading = false;
+        _showIframe = false;
         StateHasChanged();
     }
 
     private async Task OnIframeLoad()
     {
-        isLoading = false;
+        _isLoading = false;
         StateHasChanged();
         
         // Ensure authentication listener is set up
-        await JSRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
+        await JsRuntime.InvokeVoidAsync("setupAuthenticationListener", DotNetObjectReference.Create(this));
         
         // Start monitoring for authentication completion
-        await JSRuntime.InvokeVoidAsync("monitorAuthenticationIframe", authIframe);
+        await JsRuntime.InvokeVoidAsync("monitorAuthenticationIframe", _authIframe);
     }
 
     [JSInvokable]

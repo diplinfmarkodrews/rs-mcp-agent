@@ -1,5 +1,8 @@
 # MCP Server and AI Chat application for ReportServer
-**Experimental**
+
+  **--Experimental--**
+
+
 An **AI Chat application** plus a sophisticated **Model Context Protocol (MCP) Server** for enterprise **ReportServer** (Java-based BI platform). Built on **.NET 9**, the solution leverages Microsoft’s latest AI application development stack — **Microsoft.Extensions.AI (Extensions.AI)** and **Semantic Kernel** — to deliver tool-based automation, semantic search (RAG), and end-to-end integration across ReportServer’s UI and backend.
 
 ## 🏗️ Architecture Overview
@@ -40,7 +43,7 @@ The chat application provides an **innovative AI interface for legacy software i
   - **Visual UI Automation**: AI-powered browser automation for legacy applications like ReportServer
   - **Screenshot Analysis**: AI can capture and analyze visual interfaces to understand application state
   - **User Workflow Simulation**: Automate complex user interactions through natural language commands
-  - **Cross-Browser Compatibility**: Support for Chromium, Firefox, and WebKit browsers
+  - **Cross-Browser Compatibility**: Support for Chrome, MS Edge, Firefox, and WebKit browsers
   - **Element Inspection**: AI can identify and interact with web elements dynamically
 
 **🔧 MCP Server Backend Integration (RsMcpServer.Web)**

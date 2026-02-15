@@ -1,6 +1,8 @@
+@using RSChatApp.Infrastructure.UserInteraction
 @using RSChatApp.Web.Components.Pages.Auth
-@using RSChatApp.Web.Services.Authentication
-@inject ILoginModalService LoginModalService
+@using RSChatApp.Web.Models.Auth
+@using RsMcpServer.Identity.Models.Requests
+@inject IWaitForUserInteraction<LoginRequest, LoginResult> LoginModalService
 @inherits LayoutComponentBase
 @implements IDisposable
 <PageTitle>RS AI Chat App</PageTitle>
@@ -29,22 +31,22 @@
 
 @code {
     private bool showLoginModal = false;
-    private TaskCompletionSource<bool>? currentLoginRequest;
+    private TaskCompletionSource<LoginResult>? currentLoginRequest;
 
     protected override void OnInitialized()
     {
         // Subscribe to login requests from other components
-        LoginModalService.LoginRequested += OnLoginRequested;
+        LoginModalService.UserInteractionRequested += OnLoginRequested;
     }
 
     public void Dispose()
     {
-        LoginModalService.LoginRequested -= OnLoginRequested;
+        LoginModalService.UserInteractionRequested -= OnLoginRequested;
     }
 
-    private void OnLoginRequested(object? sender, TaskCompletionSource<bool> tcs)
+    private void OnLoginRequested(object? sender, (LoginRequest Request, TaskCompletionSource<LoginResult> TaskCompletionSource) valueTuple)
     {
-        currentLoginRequest = tcs;
+        currentLoginRequest = valueTuple.TaskCompletionSource;
         showLoginModal = true;
         InvokeAsync(StateHasChanged);
     }
@@ -62,7 +64,7 @@
         // If modal is being closed and we have a pending request, mark it as cancelled
         if (!show && currentLoginRequest != null && !currentLoginRequest.Task.IsCompleted)
         {
-            currentLoginRequest.SetResult(false);
+            currentLoginRequest.SetResult(new LoginResult(false, "Login cancelled"));
             currentLoginRequest = null;
         }
         
@@ -76,7 +78,7 @@
         // If we have a pending request, mark it as successful
         if (currentLoginRequest != null && !currentLoginRequest.Task.IsCompleted)
         {
-            currentLoginRequest.SetResult(true);
+            currentLoginRequest.SetResult(new LoginResult(true));
             currentLoginRequest = null;
         }
         

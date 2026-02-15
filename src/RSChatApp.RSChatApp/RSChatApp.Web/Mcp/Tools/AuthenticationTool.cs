@@ -2,7 +2,10 @@ using System.ComponentModel;
 using Microsoft.SemanticKernel;
 using System.Text;
 using ModelContextProtocol.Server;
+using RSChatApp.Infrastructure.UserInteraction;
+using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
+using RsMcpServer.Identity.Models.Requests;
 
 namespace RSChatApp.Web.Mcp.Tools;
 
@@ -10,11 +13,11 @@ public class AuthenticationTool
 {
     private readonly ILogger<AuthenticationTool> _logger;
     private readonly IAuthenticationInfoService _authenticationInfoService;
-    private readonly ILoginModalService _loginModalService;
+    private readonly IWaitForUserInteraction<LoginRequest, LoginResult> _loginModalService;
 
     public AuthenticationTool(ILogger<AuthenticationTool> logger, 
         IAuthenticationInfoService authenticationInfoService, 
-        ILoginModalService loginModalService)
+        IWaitForUserInteraction<LoginRequest, LoginResult> loginModalService)
     {
         _logger = logger;
         _authenticationInfoService = authenticationInfoService;
@@ -42,14 +45,14 @@ public class AuthenticationTool
         // Request login through the service and wait for the result
         try
         {
-            var loginSuccessful = await _loginModalService.RequestLoginAsync();
-            if (loginSuccessful)
+            var loginSuccessful = await _loginModalService.RequestUserInteractionAsync(new LoginRequest("", ""));
+            if (loginSuccessful.Success)
             {
                 // Re-check authentication status after successful login
                 return await IsAuthenticatedAsync();
             }
             
-            return "Login was cancelled or failed. Please try again to access ReportServer MCP tools.";
+            return "Login failed: " + loginSuccessful.ErrorMessage;
             
         }
         catch (Exception exc)

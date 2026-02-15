@@ -1,9 +1,6 @@
 @page "/auth/error"
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
-@using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
-@using System.Web
+@inject IJSRuntime JsRuntime
 
 <PageTitle>Authentication Error</PageTitle>
 
@@ -12,7 +9,7 @@
         <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠</div>
         <h3>Authentication Error</h3>
         <div style="max-height: 200px; overflow-y: auto; margin: 20px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px; text-align: left;">
-            <p style="margin: 0; word-break: break-word;">@errorMessage</p>
+            <p style="margin: 0; word-break: break-word;">@_errorMessage</p>
         </div>
         <p><small>Please try again or contact your administrator if the problem persists.</small></p>
         <button class="btn-default" style="margin-right: 10px;" @onclick="RetryAuthentication">Try Again</button>
@@ -20,14 +17,14 @@
 </div>
 
 @code {
-    private string errorMessage = "An error occurred during authentication";
+    private string _errorMessage = "An error occurred during authentication";
 
     protected override void OnInitialized()
     {
         // Get error message from query parameters
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
         var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        errorMessage = queryParams["message"] ?? "An error occurred during authentication";
+        _errorMessage = queryParams["message"] ?? "An error occurred during authentication";
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -35,18 +32,18 @@
         if (firstRender)
         {
             // Notify parent window of authentication error
-            await JSRuntime.InvokeVoidAsync("notifyAuthError", errorMessage);
+            await JsRuntime.InvokeVoidAsync("notifyAuthError", _errorMessage);
         }
     }
 
     private async Task RetryAuthentication()
     {
-        await JSRuntime.InvokeVoidAsync("notifyAuthRetry");
+        await JsRuntime.InvokeVoidAsync("notifyAuthRetry");
     }
 
     private async Task CloseWindow()
     {
-        await JSRuntime.InvokeVoidAsync("closeAuthWindow");
+        await JsRuntime.InvokeVoidAsync("closeAuthWindow");
     }
 }
 
