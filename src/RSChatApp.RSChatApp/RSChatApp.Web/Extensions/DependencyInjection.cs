@@ -36,7 +36,7 @@ public static class DependencyInjection
     }
 
     public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
-        OpenAISettings openAISettings, 
+        OpenAiSettings openAISettings, 
         string? serviceId = null,
         string? openTelemetrySourceName = null,
         Action<OpenTelemetryChatClient>? openTelemetryConfig = null)

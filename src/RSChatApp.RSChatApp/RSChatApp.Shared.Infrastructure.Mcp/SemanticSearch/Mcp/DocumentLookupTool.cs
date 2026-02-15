@@ -18,7 +18,7 @@ public class DocumentLookupTool
         _documentLookup = documentLookup;
     }
     [KernelFunction, McpServerTool,  Description("Retrieves a single page of a given document, optionally attaches all images on that page")]
-    public async Task<object> GetDocumentPage(
+    public object GetDocumentPage(
         [Description("Document name to reference the document")] string documentId, 
         [Description("Page of the document to retrieve")] int page, 
         [Description("Optionally add images")] bool addImages = false)
@@ -35,12 +35,3 @@ public class DocumentLookupTool
         }
     } 
 }
-
-public record DocumentLookupResult(
-    string DocumentId,
-    string Text,
-    DocumentLookupImageResult[]? Images,
-    DateTime Timestamp 
-);
-
-public record DocumentLookupImageResult(string ImageData);

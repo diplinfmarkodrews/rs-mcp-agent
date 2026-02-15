@@ -52,7 +52,7 @@ public class ToolCallProcessor
         _logger.LogDebug("[ToolCallProcessor] Created {groupCount} tool groups", groups.Count);
         foreach (var group in groups)
         {
-            _logger.LogDebug("[ToolCallProcessor]   Group: {groupType}, Invocations: {invocationCount}, Results: {resultCount}", group.Type, group.Invocations.Count, group.Results.Count);
+            _logger.LogDebug("[ToolCallProcessor] Group: {groupType}, Invocations: {invocationCount}, Results: {resultCount}", group.Type, group.Invocations.Count, group.Results.Count);
         }
 
         return new ProcessedMessage(
@@ -106,6 +106,12 @@ public class ToolCallProcessor
         if (invocation?.Type == ToolType.Search)
         {
             return ResultContentType.SearchCitations;
+        }
+
+        // Document lookup results
+        if (invocation?.Type == ToolType.DocumentLookup)
+        {
+            return ResultContentType.DocumentPage;
         }
 
         if (string.IsNullOrWhiteSpace(rawResult))
@@ -209,7 +215,8 @@ public class ToolCallProcessor
         if (contentType == ResultContentType.SearchCitations || 
             contentType == ResultContentType.Json ||
             contentType == ResultContentType.Image ||
-            contentType == ResultContentType.Terminal)
+            contentType == ResultContentType.Terminal ||
+            contentType == ResultContentType.DocumentPage)
         {
             return false;
         }

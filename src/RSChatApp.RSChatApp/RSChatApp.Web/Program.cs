@@ -73,8 +73,8 @@ builder.Services.Configure<OpenAIPromptExecutionSettings>(
         config.FunctionChoiceBehavior = FunctionChoiceBehavior.Auto();
     });
 builder.Services.AddOptions<OpenAIPromptExecutionSettings>();
-OpenAISettings openAiSettings = new();
-builder.Configuration.GetSection(nameof(OpenAISettings))
+OpenAiSettings openAiSettings = new();
+builder.Configuration.GetSection(nameof(OpenAiSettings))
     .Bind(openAiSettings);
 
 openAiSettings.SetApiKey();

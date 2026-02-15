@@ -1,0 +1,133 @@
+@using System.Text.Json
+@using RSChatApp.Web.Models.Chat.ToolCalls
+
+<div class="document-lookup-result">
+    @if (!string.IsNullOrWhiteSpace(DocumentText))
+    {
+        <div class="document-text">
+            <pre><code>@DocumentText</code></pre>
+        </div>
+    }
+
+    @if (Images is { Count: > 0 })
+    {
+        <div class="document-images">
+            <div class="document-images-header">
+                <span>@Images.Count image(s)</span>
+            </div>
+            <div class="document-images-grid">
+                @foreach (var imageSrc in Images)
+                {
+                    <div class="document-image-item">
+                        <img src="@imageSrc" alt="Document page image" loading="lazy" />
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (string.IsNullOrWhiteSpace(DocumentText) && (Images is null || Images.Count == 0))
+    {
+        <p class="document-empty">No content available for this page.</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ToolResult Result { get; set; }
+
+    private string? DocumentText { get; set; }
+    private List<string>? Images { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        DocumentText = null;
+        Images = null;
+
+        try
+        {
+            var rawText = Result.Data switch
+            {
+                string s => s,
+                JsonElement e => e.GetRawText(),
+                _ => Result.Data?.ToString()
+            };
+
+            if (string.IsNullOrWhiteSpace(rawText))
+            {
+                return;
+            }
+
+            using var doc = JsonDocument.Parse(rawText);
+            var root = doc.RootElement;
+
+            if (TryGetPropertyIgnoreCase(root, "Text", out var textProp) &&
+                textProp.ValueKind == JsonValueKind.String)
+            {
+                DocumentText = textProp.GetString();
+            }
+
+            if (TryGetPropertyIgnoreCase(root, "Images", out var imagesProp) &&
+                imagesProp.ValueKind == JsonValueKind.Array)
+            {
+                Images = new List<string>();
+                foreach (var imageElement in imagesProp.EnumerateArray())
+                {
+                    string? imageData = null;
+
+                    if (imageElement.ValueKind == JsonValueKind.String)
+                    {
+                        imageData = imageElement.GetString();
+                    }
+                    else if (imageElement.ValueKind == JsonValueKind.Object &&
+                             TryGetPropertyIgnoreCase(imageElement, "ImageData", out var imgDataProp) &&
+                             imgDataProp.ValueKind == JsonValueKind.String)
+                    {
+                        imageData = imgDataProp.GetString();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(imageData))
+                    {
+                        // If already a data URI, use as-is
+                        if (imageData.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Images.Add(imageData);
+                        }
+                        else
+                        {
+                            // Detect MIME type from the MimeType property or default to PNG
+                            string mimeType = "image/png";
+                            if (imageElement.ValueKind == JsonValueKind.Object &&
+                                TryGetPropertyIgnoreCase(imageElement, "MimeType", out var mimeProp) &&
+                                mimeProp.ValueKind == JsonValueKind.String)
+                            {
+                                mimeType = mimeProp.GetString() ?? "image/png";
+                            }
+
+                            Images.Add($"data:{mimeType};base64,{imageData}");
+                        }
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Failed to parse document lookup result
+        }
+    }
+
+    private static bool TryGetPropertyIgnoreCase(JsonElement element, string name, out JsonElement value)
+    {
+        foreach (var prop in element.EnumerateObject())
+        {
+            if (prop.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+}

@@ -103,25 +103,25 @@
 /* Submit */
 .tty-btn {
     margin-top: 0.75rem;
-    background: #0066b8;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
+    background-color: #D1D5DB;
+    border: 1px solid #9CA3AF;
+    border-radius: 0.25rem;
+    color: inherit;
     font-family: inherit;
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
     cursor: pointer;
     align-self: flex-start;
-    transition: background 0.15s;
+    transition: background-color 0.15s;
 }
 
 .tty-btn:hover:not(:disabled) {
-    background: #005299;
+    background-color: #E5E7EB;
 }
 
 .tty-btn:active:not(:disabled) {
-    background: #004080;
+    background-color: #C5C9D0;
 }
 
 .tty-btn:disabled {
