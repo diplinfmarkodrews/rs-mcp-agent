@@ -7,11 +7,11 @@ using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Services;
 namespace TestRsMcpServer;
 
 /// <summary>
-/// Integration tests for IDocumentLookup / DocumentLookup service.
+/// Unit tests for IDocumentLookup / DocumentLookup service.
 /// Uses a mock IWebHostEnvironment pointing to the real wwwroot/Data directory.
 /// </summary>
 [TestClass]
-public sealed class DocumentLookupIntegrationTests
+public sealed class DocumentLookupUnitTests
 {
     private static DocumentLookup _documentLookup = null!;
 

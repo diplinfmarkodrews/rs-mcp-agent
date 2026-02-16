@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Models;
 using SkiaSharp;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.DocumentLayoutAnalysis;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.ReadingOrderDetector;
 

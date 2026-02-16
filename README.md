@@ -53,7 +53,7 @@ The MCP server provides **backend integration capabilities** for ReportServer:
   - **Direct Java RPC Communication**: Low-level API access for programmatic operations
   - **GWT Protocol Support**: Native communication with ReportServer's GWT backend
   - **Session Management**: Efficient authentication and session handling
-  - **High-Performance Operations**: Bulk data operations and system administration
+  - **High-Performance Operations**: Bulk data operations, direct script execution and system administration
 
 - **🔄 Dual Integration Strategy**: AI agents can leverage both frontend and backend approaches:
   - **Frontend Tasks**: Use Playwright in the chat app for visual verification and user workflow testing
@@ -165,7 +165,7 @@ This will automatically:
 - **RSChatApp.AppHost/**: .NET Aspire orchestration for cloud-native deployment
 
 #### Key Features
-- ✅ Uses official Microsoft Extensions AI SDK
+- ✅ Uses official Microsoft Extensions AI, Playwright SDKs
 - ✅ Full .NET 9.0 integration with Aspire orchestration
 - ✅ Direct ReportServer RPC integration
 - ✅ Comprehensive logging and error handling
