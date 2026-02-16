@@ -71,7 +71,7 @@
                 imagesProp.ValueKind == JsonValueKind.Array)
             {
                 Images = new List<string>();
-                foreach (var imageElement in imagesProp.EnumerateArray())
+                foreach (var imageElement in imagesProp.EnumerateArray().Reverse())
                 {
                     string? imageData = null;
 

@@ -62,7 +62,7 @@ public static class DependencyInjection
             .AddSingleton<IStaticContentFileStore, StaticContentFileStore>();
         
         if (addTools)
-            services.AddScoped<ScriptCacheTool>();
+            services.AddScoped<ScriptStoreTool>();
         return services;
     }
 

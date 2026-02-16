@@ -23,7 +23,7 @@ public partial class Chat(
     IStorage<List<ChatMessage>> chatHistoryStorage,
     SemanticSearchTool semanticSearchTool, 
     DocumentLookupTool documentLookupTool,
-    ScriptCacheTool scriptCacheTool,
+    ScriptStoreTool scriptStoreTool,
     AuthenticationTool authenticationTool,
     UserConfirmedTerminalTool userConfirmedTerminalTool,
     IPromptService promptService,
@@ -66,8 +66,8 @@ public partial class Chat(
         {
             AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
             AIFunctionFactory.Create(documentLookupTool.GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
-            AIFunctionFactory.Create(scriptCacheTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
-            AIFunctionFactory.Create(scriptCacheTool.GetText, "GetTextFileFromPath","Get a text file of a given path. can be scripts or other text files")
+            AIFunctionFactory.Create(scriptStoreTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
+            AIFunctionFactory.Create(scriptStoreTool.GetText, "GetTextFileFromPath","Get a text file of a given path. can be scripts or other text files")
             // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
             // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
             // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")

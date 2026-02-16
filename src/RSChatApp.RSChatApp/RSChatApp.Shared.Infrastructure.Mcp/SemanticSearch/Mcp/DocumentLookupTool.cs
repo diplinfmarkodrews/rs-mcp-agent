@@ -1,9 +1,7 @@
 using System.ComponentModel;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Services;
-using UglyToad.PdfPig;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 /// <summary>
