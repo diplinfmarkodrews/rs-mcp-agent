@@ -1,5 +1,8 @@
 # MCP Server and AI Chat application for ReportServer
-**Experimental**
+
+  **--Experimental--**
+
+
 An **AI Chat application** plus a sophisticated **Model Context Protocol (MCP) Server** for enterprise **ReportServer** (Java-based BI platform). Built on **.NET 9**, the solution leverages Microsoft’s latest AI application development stack — **Microsoft.Extensions.AI (Extensions.AI)** and **Semantic Kernel** — to deliver tool-based automation, semantic search (RAG), and end-to-end integration across ReportServer’s UI and backend.
 
 ## 🏗️ Architecture Overview
@@ -40,7 +43,7 @@ The chat application provides an **innovative AI interface for legacy software i
   - **Visual UI Automation**: AI-powered browser automation for legacy applications like ReportServer
   - **Screenshot Analysis**: AI can capture and analyze visual interfaces to understand application state
   - **User Workflow Simulation**: Automate complex user interactions through natural language commands
-  - **Cross-Browser Compatibility**: Support for Chromium, Firefox, and WebKit browsers
+  - **Cross-Browser Compatibility**: Support for Chrome, MS Edge, Firefox, and WebKit browsers
   - **Element Inspection**: AI can identify and interact with web elements dynamically
 
 **🔧 MCP Server Backend Integration (RsMcpServer.Web)**
@@ -50,7 +53,7 @@ The MCP server provides **backend integration capabilities** for ReportServer:
   - **Direct Java RPC Communication**: Low-level API access for programmatic operations
   - **GWT Protocol Support**: Native communication with ReportServer's GWT backend
   - **Session Management**: Efficient authentication and session handling
-  - **High-Performance Operations**: Bulk data operations and system administration
+  - **High-Performance Operations**: Bulk data operations, direct script execution and system administration
 
 - **🔄 Dual Integration Strategy**: AI agents can leverage both frontend and backend approaches:
   - **Frontend Tasks**: Use Playwright in the chat app for visual verification and user workflow testing
@@ -162,7 +165,7 @@ This will automatically:
 - **RSChatApp.AppHost/**: .NET Aspire orchestration for cloud-native deployment
 
 #### Key Features
-- ✅ Uses official Microsoft Extensions AI SDK
+- ✅ Uses official Microsoft Extensions AI, Playwright SDKs
 - ✅ Full .NET 9.0 integration with Aspire orchestration
 - ✅ Direct ReportServer RPC integration
 - ✅ Comprehensive logging and error handling

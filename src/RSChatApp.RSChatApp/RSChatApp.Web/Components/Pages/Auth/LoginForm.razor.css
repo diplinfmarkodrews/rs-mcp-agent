@@ -1,0 +1,130 @@
+/* Minimalistic login form – light theme */
+.tty-login {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 2.5rem;
+    min-height: 320px;
+    height: 100%;
+    background: #f5f5f5;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.tty-hostname {
+    font-size: 0.95rem;
+    color: #0066b8;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+}
+
+.tty-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 360px;
+}
+
+/* Field row: label + input inline */
+.tty-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tty-label {
+    color: #555;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 90px;
+    font-weight: 500;
+}
+
+.tty-input {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.5rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+
+.tty-input:focus {
+    border-color: #0066b8;
+    box-shadow: 0 0 0 2px rgba(0, 102, 184, 0.15);
+}
+
+.tty-input::placeholder {
+    color: #aaa;
+}
+
+/* Checkbox row */
+.tty-checkbox-row {
+    margin-top: 0.5rem;
+}
+
+.tty-check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #555;
+    user-select: none;
+}
+
+.tty-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tty-check-mark {
+    display: inline-block;
+    width: 1ch;
+    text-align: center;
+    color: #0066b8;
+    font-weight: 600;
+}
+
+.tty-check-label:hover {
+    color: #333;
+}
+
+/* Submit */
+.tty-btn {
+    margin-top: 0.75rem;
+    background-color: #D1D5DB;
+    border: 1px solid #9CA3AF;
+    border-radius: 0.25rem;
+    color: inherit;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background-color 0.15s;
+}
+
+.tty-btn:hover:not(:disabled) {
+    background-color: #E5E7EB;
+}
+
+.tty-btn:active:not(:disabled) {
+    background-color: #C5C9D0;
+}
+
+.tty-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}

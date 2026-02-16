@@ -21,6 +21,8 @@
       <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
       <PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.3" />
       <PackageReference Include="PdfPig" Version="0.1.10" />
+      <PackageReference Include="SkiaSharp" Version="3.116.1" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
     </ItemGroup>
 
     <ItemGroup>

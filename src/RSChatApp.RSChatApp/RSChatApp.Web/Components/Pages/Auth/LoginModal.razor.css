@@ -13,19 +13,21 @@
 }
 
 .modal-content {
-    background-color: white;
+    background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     max-width: 500px;
     width: 90%;
     max-height: 90vh;
-    overflow-y: auto;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid #e0e0e0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -33,199 +35,32 @@
 
 .modal-title {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     font-weight: 500;
+    color: #333;
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 0;
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
 }
 
 .btn-close {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     cursor: pointer;
-    color: #6c757d;
+    color: #999;
     padding: 0;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .btn-close:hover {
-    color: #000;
+    color: #333;
 }
-
-.btn-close::before {
-    content: "×";
-}
-
-.btn-close::before {
-        display: none !important;
-    }
-
-    /* Legacy Login Form Styles */
-    .legacy-login-container {
-        padding: 2rem;
-        background: #f8f9fa;
-        min-height: 500px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .login-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .login-header h3 {
-        color: #333;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .login-header p {
-        color: #666;
-        margin: 0;
-        font-size: 1rem;
-    }
-
-    .login-form {
-        background: white;
-        border-radius: 8px;
-        padding: 2rem;
-        border: 1px solid #e0e0e0;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #333;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        background: white;
-        outline: none;
-        box-sizing: border-box;
-    }
-
-    .form-input:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-
-    .checkbox-group {
-        display: flex;
-        align-items: center;
-        margin: 1rem 0;
-    }
-
-    .checkbox-wrapper {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        font-size: 0.9rem;
-        color: #333;
-    }
-
-    .checkbox-input {
-        margin-right: 0.5rem;
-    }
-
-    .btn-login {
-        width: 100%;
-        padding: 0.75rem;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .btn-login:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top: 2px solid white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .legacy-login-container {
-            padding: 1.5rem 1rem;
-        }
-        
-        .login-form {
-            padding: 1.5rem;
-        }
-        
-        .login-header h3 {
-            font-size: 1.5rem;
-        }
-    }
-
-    /* Focus and hover animations */
-    .form-input:hover {
-        border-color: #9ca3af;
-    }
-
-    .checkbox-wrapper:hover .checkbox-custom {
-        border-color: #667eea;
-        transform: scale(1.05);
-    }
-
-    /* Additional visual enhancements */
-    .login-form::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        right: -1px;
-        bottom: -1px;
-        background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
-        border-radius: 16px;
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .login-form:hover::before {
-        opacity: 0.1;
-    }

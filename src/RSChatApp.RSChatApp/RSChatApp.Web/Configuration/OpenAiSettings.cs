@@ -1,6 +1,6 @@
-using Microsoft.IdentityModel.Protocols.Configuration;
+namespace RSChatApp.Web.Configuration;
 
-public class OpenAISettings
+public class OpenAiSettings
 {
     public string Model { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;

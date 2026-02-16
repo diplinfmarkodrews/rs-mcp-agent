@@ -35,6 +35,7 @@ window.postLoginRequest = async function(loginRequest) {
 
         if (!response.ok) {
             const errorText = await response.text();
+            console.error("Login error:", errorText);
             return {
                 success: false,
                 errorMessage: `Login failed: ${response.status} ${errorText}`

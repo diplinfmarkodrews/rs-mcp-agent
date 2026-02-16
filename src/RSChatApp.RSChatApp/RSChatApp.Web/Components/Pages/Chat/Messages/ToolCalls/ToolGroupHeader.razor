@@ -38,12 +38,15 @@
     
     private string GetGroupTitle()
     {
+        // refactor into ToolDescriptor
         var count = Group.Invocations.Count;
         return Group.Type switch
         {
             ToolType.Search => $"{count} Search{(count > 1 ? "es" : "")}",
             ToolType.TerminalExecute => $"{count} Terminal Command{(count > 1 ? "s" : "")}",
             ToolType.BrowserExecute => $"{count} Browser Action{(count > 1 ? "s" : "")}",
+            ToolType.DocumentLookup => $"{count} Document Lookup{(count > 1 ? "s" : "")}",
+            ToolType.BrowserNavigate => $"{count} Browser Navigation{(count > 1 ? "s" : "")}",
             _ => $"{count} Tool Call{(count > 1 ? "s" : "")}"
         };
     }

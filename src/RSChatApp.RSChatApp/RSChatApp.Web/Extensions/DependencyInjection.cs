@@ -5,11 +5,14 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.SemanticKernel;
 using OpenAI;
 using RSChatApp.Infrastructure.Prompt;
+using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Configuration;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 using RSChatApp.Web.Configuration;
+using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
 using RSChatApp.Web.Services.Prompt;
+using RsMcpServer.Identity.Models.Requests;
 
 namespace RSChatApp.Web.Extensions;
 
@@ -26,13 +29,14 @@ public static class DependencyInjection
     public static IServiceCollection AddCustomAuthenticationService(this IServiceCollection services)
     {
         services.AddScoped<IAuthenticationInfoService, AuthenticationInfoService>();
-        services.AddScoped<ILoginModalService, LoginModalService>();
+        services.AddScoped<IWaitForUserInteraction<LoginRequest, LoginResult>, 
+            WaitForUserInteraction<LoginRequest, LoginResult>>();
         
         return services;
     }
 
     public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
-        OpenAISettings openAISettings, 
+        OpenAiSettings openAISettings, 
         string? serviceId = null,
         string? openTelemetrySourceName = null,
         Action<OpenTelemetryChatClient>? openTelemetryConfig = null)

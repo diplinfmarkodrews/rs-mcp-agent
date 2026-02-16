@@ -11,5 +11,6 @@ public enum ToolType
     FileRead,
     FileWrite,
     FileList,
+    DocumentLookup,
     ApiRequest
 }

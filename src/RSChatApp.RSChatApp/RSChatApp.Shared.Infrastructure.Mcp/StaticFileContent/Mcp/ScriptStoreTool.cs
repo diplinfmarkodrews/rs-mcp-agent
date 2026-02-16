@@ -6,13 +6,13 @@ using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 
-public class ScriptCacheTool
+public class ScriptStoreTool
 {
     private readonly IStaticContentIndexStore _fileIndexStore;
     private readonly IStaticContentFileStore _fileStore;
     private const string ScriptSourcePath = "rs-scripts";
     
-    public ScriptCacheTool(IStaticContentIndexStore fileIndexStore,
+    public ScriptStoreTool(IStaticContentIndexStore fileIndexStore,
         IStaticContentFileStore fileStore) 
     {
         _fileIndexStore = fileIndexStore;

@@ -8,5 +8,6 @@ public enum ResultContentType
     Html,
     Error,
     SearchCitations,
-    Terminal
+    Terminal,
+    DocumentPage
 }

@@ -83,6 +83,7 @@
             ResultContentType.SearchCitations => $"Found {CountCitations()} result(s)",
             ResultContentType.Image => "Screenshot captured",
             ResultContentType.Json => "JSON response",
+            ResultContentType.DocumentPage => "Document page loaded",
             _ => "Result"
         };
     }
@@ -127,6 +128,12 @@
 
             case ResultContentType.Terminal:
                 builder.OpenComponent<TerminalResultRenderer>(seq++);
+                builder.AddAttribute(seq++, "Result", Result);
+                builder.CloseComponent();
+                break;
+
+            case ResultContentType.DocumentPage:
+                builder.OpenComponent<DocumentResultRenderer>(seq++);
                 builder.AddAttribute(seq++, "Result", Result);
                 builder.CloseComponent();
                 break;

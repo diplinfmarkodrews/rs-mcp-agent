@@ -18,7 +18,10 @@ public class ToolRegistry
             "TerminalTool_execute_command", "RsMcpServer_execute_command");
         
         RegisterDescriptor(new BrowserToolDescriptor(), 
-            "BrowserTool", "BrowserTool_executejavascript", "executeScript", "browser");
+            "BrowserTool_executejavascript", "executeScript");
+        
+        RegisterDescriptor(new DocumentLookupToolDescriptor(), 
+            "GetDocumentPage", "DocumentLookupTool_GetDocumentPage");
     }
 
     public void RegisterDescriptor(IToolDescriptor descriptor, params string[] toolNames)
