@@ -200,7 +200,8 @@ builder.Services.AddScoped<IEnumerable<KernelPlugin>>((serviceProvider) => {
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    .AddHubOptions(hub => hub.MaximumReceiveMessageSize = 100 * 1024 * 1024);
 
 // Add service defaults (OpenTelemetry, health checks, etc.) - commented out for explicit endpoint configuration
 builder.AddServiceDefaults();
