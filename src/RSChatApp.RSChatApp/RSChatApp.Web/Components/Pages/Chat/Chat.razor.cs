@@ -82,7 +82,7 @@ public partial class Chat(
             }
         }
         logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{allTools} ", allTools.Count, 
-            string.Join(", ", allTools.Select(p=> p.Name)));
+            string.Join(", \n", allTools.Select(p=> p.Name)));
         
         _chatOptions.Tools = allTools;              
         // Load chat history
@@ -123,7 +123,9 @@ public partial class Chat(
     private async Task InitChatHistoryAsync()
     {
         // Try loading chat history from browser storage
-        var chatHistory = await chatHistoryStorage.GetAsync();
+        var chatHistory = await chatHistoryStorage.GetAsync()
+            .ConfigureAwait(true);
+        
         _messages.Clear();
         
         if (chatHistory.Success && chatHistory.Value!.Count > 0)

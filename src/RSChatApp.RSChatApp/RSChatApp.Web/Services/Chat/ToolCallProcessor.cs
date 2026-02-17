@@ -21,39 +21,25 @@ public class ToolCallProcessor
         var textContents = new List<string>();
         var invocations = new List<ToolInvocation>();
         var results = new Dictionary<string, ToolResult>();
-
-        _logger.LogDebug("[ToolCallProcessor] Processing message with {contentCount} content items", message.Contents.Count);
         
         foreach (var content in message.Contents)
         {
-            _logger.LogDebug("[ToolCallProcessor] Content type: {contentType}", content.GetType().Name);
             
             if (content is TextContent tc && !string.IsNullOrWhiteSpace(tc.Text))
             {
                 textContents.Add(tc.Text);
-                _logger.LogDebug("[ToolCallProcessor] Added text content: {textPreview}...", tc.Text.Substring(0, Math.Min(50, tc.Text.Length)));
             }
             else if (content is FunctionCallContent fcc)
             {
                 invocations.Add(CreateInvocation(fcc));
-                _logger.LogDebug("[ToolCallProcessor] Added function call: {functionName}", fcc.Name);
             }
             else if (content is FunctionResultContent frc)
             {
                 results[frc.CallId] = CreateResult(frc, invocations);
-                _logger.LogDebug("[ToolCallProcessor] Added function result for: {callId}", frc.CallId);
             }
         }
-        
-        _logger.LogDebug("[ToolCallProcessor] Found {invocationCount} invocations and {resultCount} results", invocations.Count, results.Count);
 
         var groups = GroupConsecutiveTools(invocations, results);
-        
-        _logger.LogDebug("[ToolCallProcessor] Created {groupCount} tool groups", groups.Count);
-        foreach (var group in groups)
-        {
-            _logger.LogDebug("[ToolCallProcessor] Group: {groupType}, Invocations: {invocationCount}, Results: {resultCount}", group.Type, group.Invocations.Count, group.Results.Count);
-        }
 
         return new ProcessedMessage(
             OriginalMessage: message,
@@ -99,8 +85,6 @@ public class ToolCallProcessor
 
     private ResultContentType DetectContentType(ToolInvocation? invocation, string? rawResult)
     {
-        _logger.LogDebug("Detecting content type for tool: {ToolType}, RawName: {RawName}", 
-            invocation?.Type, invocation?.RawName);
 
         // Search results are always SearchCitations type (even if empty)
         if (invocation?.Type == ToolType.Search)
@@ -129,12 +113,8 @@ public class ToolCallProcessor
                 var hasSessionId = TryGetPropertyIgnoreCase(root, "SessionId", out _);
                 var hasCmdResult = TryGetPropertyIgnoreCase(root, "CmdResult", out _);
                 
-                _logger.LogDebug("Terminal detection: hasSessionId={HasSessionId}, hasCmdResult={HasCmdResult}", 
-                    hasSessionId, hasCmdResult);
-                
                 if (hasSessionId && hasCmdResult)
                 {
-                    _logger.LogDebug("Detected Terminal content type for tool: {ToolName}", invocation.RawName);
                     return ResultContentType.Terminal;
                 }
             }
