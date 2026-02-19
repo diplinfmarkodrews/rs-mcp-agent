@@ -1,10 +1,13 @@
 $ErrorActionPreference = 'Stop'
+
+# Ensure TLS 1.2 is used for HTTPS downloads
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 $url = 'https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi'
 
-$wc = New-Object net.webclient
 $msiInstaller = "$env:temp\google-chrome.msi"
 Write-Host "Downloading Google Chrome"
-$wc.Downloadfile($url, $msiInstaller)
+Invoke-WebRequest -Uri $url -OutFile $msiInstaller -UseBasicParsing
 
 Write-Host "Installing Google Chrome"
 $arguments = "/i `"$msiInstaller`" /quiet"

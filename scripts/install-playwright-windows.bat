@@ -132,7 +132,7 @@ if %errorLevel% == 0 (
 echo.
 
 :install_browsers
-echo [STEP] Installing Playwright browsers (Chromium, Firefox, WebKit)...
+echo [STEP] Installing Playwright browsers (Chrome, Firefox, WebKit, MsEdge)...
 echo.
 
 REM Install browsers for Node.js Playwright

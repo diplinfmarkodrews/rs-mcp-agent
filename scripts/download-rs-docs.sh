@@ -38,10 +38,10 @@ print_step() {
 # Predefined URLs for RS documentation
 # Add or modify URLs as needed
 declare -a DOCS_URLS=(
-    "https://reportserver.net/files/rs-documentation/config_RS5.0.pdf"
-    "https://reportserver.net/files/rs-documentation/user_en_RS5.0.pdf"
-    "https://reportserver.net/files/rs-documentation/admin_RS5.0.pdf"
-    "https://reportserver.net/files/rs-documentation/script_RS5.0.pdf"
+    "https://reportserver.net/files/rs-documentation/ConfigGuide6_0.pdf"
+    "https://reportserver.net/files/rs-documentation/UserManual6_0.pdf"
+    "https://reportserver.net/files/rs-documentation/AdminGuide6_0.pdf"
+    "https://reportserver.net/files/rs-documentation/ScriptGuide6_0.pdf"
 )
 
 # Alternative: Add documentation URLs here

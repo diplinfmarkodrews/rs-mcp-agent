@@ -11,7 +11,6 @@ using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
-using RSChatApp.Web.Services.Prompt;
 using RsMcpServer.Identity.Models.Requests;
 
 namespace RSChatApp.Web.Extensions;

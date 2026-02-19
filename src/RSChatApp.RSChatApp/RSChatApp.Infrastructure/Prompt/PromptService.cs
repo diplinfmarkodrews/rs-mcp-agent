@@ -1,8 +1,8 @@
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Options;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 
-namespace RSChatApp.Web.Services.Prompt;
+namespace RSChatApp.Infrastructure.Prompt;
 
 public interface IPromptService
 {
@@ -11,12 +11,12 @@ public interface IPromptService
 public class PromptService : IPromptService
 {
     private readonly IPromptFileStore _promptFileStore;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IWebRootFileNameProvider _fileNameProvider;
 
-    public PromptService(IPromptFileStore promptFileStore, IWebHostEnvironment environment)
+    public PromptService(IPromptFileStore promptFileStore, IWebRootFileNameProvider fileNameProvider)
     {
         _promptFileStore = promptFileStore;
-        _environment = environment;
+        _fileNameProvider = fileNameProvider;
     }
     public string GetPrompt(PromptRequest request)
     {
@@ -27,7 +27,7 @@ public class PromptService : IPromptService
                 result.Append(_promptFileStore.GetRequired(request.Name));
                 if (systemPromptRequest.AddFileNames)
                     result.AppendLine("Here are all document names as reference:")
-                        .AppendJoin(", ", ReadFileNames());
+                        .AppendJoin(", ", _fileNameProvider.GetFileNames("Data"));
                 return result.ToString();
             
             case SuggestionPromptRequest suggestionPromptRequest:
@@ -36,12 +36,6 @@ public class PromptService : IPromptService
                     return _promptFileStore.GetRequired(request.Name);
                 throw new ArgumentOutOfRangeException(nameof(request));
         }
-    }
-
-    private IEnumerable<string> ReadFileNames()
-    {
-        return Directory.EnumerateFiles(Path.Combine(_environment.WebRootPath, "Data"))
-            .Select(p => Path.GetFileName(p));
     }
 }
 

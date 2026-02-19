@@ -1,11 +1,18 @@
 $ErrorActionPreference = 'Stop'
 
-$url = $args[0]
+# Ensure TLS 1.2 is used for HTTPS downloads
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-Write-Host "Downloading Microsoft Edge"
-$wc = New-Object net.webclient
+$url = $args[0]
+if (-not $url) {
+    Write-Host "ERROR: No download URL provided."
+    Write-Host "Usage: .\install_msedge_stable_win.ps1 <download-url>"
+    exit 1
+}
+
 $msiInstaller = "$env:temp\microsoft-edge-stable.msi"
-$wc.Downloadfile($url, $msiInstaller)
+Write-Host "Downloading Microsoft Edge"
+Invoke-WebRequest -Uri $url -OutFile $msiInstaller -UseBasicParsing
 
 Write-Host "Installing Microsoft Edge"
 $arguments = "/i `"$msiInstaller`" /quiet"

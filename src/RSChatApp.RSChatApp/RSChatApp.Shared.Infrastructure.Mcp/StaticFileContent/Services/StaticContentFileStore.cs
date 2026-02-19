@@ -84,7 +84,8 @@ public sealed class StaticContentFileStore : IStaticContentFileStore, IDisposabl
 
             // Cache and invalidate when the underlying file changes.
             var token = provider.Watch(rel);
-            _cache.Set(cacheKey, bytes, new MemoryCacheEntryOptions().AddExpirationToken(token));
+            _cache.Set(cacheKey, bytes, new MemoryCacheEntryOptions()
+                .AddExpirationToken(token));
 
             return bytes;
         }

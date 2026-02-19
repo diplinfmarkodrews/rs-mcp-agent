@@ -43,7 +43,7 @@ function Write-Warning {
     Write-ColorText "[WARNING] $Message" $Colors.Warning
 }
 
-function Write-Error {
+function Write-ErrorMessage {
     param([string]$Message)
     Write-ColorText "[ERROR] $Message" $Colors.Error
 }
@@ -84,7 +84,7 @@ function Install-Chocolatey {
             return $false
         }
     } catch {
-        Write-Error "Failed to install Chocolatey: $($_.Exception.Message)"
+        Write-ErrorMessage "Failed to install Chocolatey: $($_.Exception.Message)"
         return $false
     }
 }
@@ -147,7 +147,7 @@ function Install-NodeJS {
         Write-Info "Node.js $nodeVersion and npm $npmVersion found!"
         return $true
     } else {
-        Write-Error "Node.js still not found. Please restart PowerShell and run this script again."
+        Write-ErrorMessage "Node.js still not found. Please restart PowerShell and run this script again."
         exit 1
     }
 }
@@ -187,7 +187,7 @@ function Install-Playwright {
         
         return $true
     } catch {
-        Write-Error "Failed to install Node.js Playwright: $($_.Exception.Message)"
+        Write-ErrorMessage "Failed to install Node.js Playwright: $($_.Exception.Message)"
         return $false
     }
 }
@@ -246,7 +246,7 @@ function Install-PlaywrightBrowsers {
         Write-Info "Playwright browsers installed successfully!"
         return $true
     } catch {
-        Write-Error "Failed to install Playwright browsers: $($_.Exception.Message)"
+        Write-ErrorMessage "Failed to install Playwright browsers: $($_.Exception.Message)"
         return $false
     }
 }
@@ -254,7 +254,7 @@ function Install-PlaywrightBrowsers {
 function Create-TestScript {
     Write-Step "Creating test script..."
     
-    $testScript = @"
+    $testScript = @'
 const { chromium, firefox, webkit } = require('playwright');
 
 async function testPlaywright() {
@@ -268,15 +268,15 @@ async function testPlaywright() {
     
     for (const browser of browsers) {
         try {
-            console.log(`🔍 Testing `${browser.name}...`);
+            console.log(`🔍 Testing ${browser.name}...`);
             const browserInstance = await browser.engine.launch({ headless: true });
             const page = await browserInstance.newPage();
             await page.goto('https://playwright.dev');
             const title = await page.title();
-            console.log(`✅ `${browser.name} test passed! Page title: `${title}`);
+            console.log(`✅ ${browser.name} test passed! Page title: ${title}`);
             await browserInstance.close();
         } catch (error) {
-            console.log(`❌ `${browser.name} test failed:`, error.message);
+            console.log(`❌ ${browser.name} test failed:`, error.message);
         }
     }
     
@@ -284,7 +284,7 @@ async function testPlaywright() {
 }
 
 testPlaywright();
-"@
+'@
 
     $testScript | Out-File -FilePath "playwright-test.js" -Encoding UTF8
     Write-Info "Node.js test script created as 'playwright-test.js'"
@@ -487,7 +487,7 @@ function Main {
         }
         
     } catch {
-        Write-Error "Installation failed: $($_.Exception.Message)"
+        Write-ErrorMessage "Installation failed: $($_.Exception.Message)"
         exit 1
     }
     

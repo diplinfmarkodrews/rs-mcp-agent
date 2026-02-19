@@ -4,7 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 
-namespace RSChatApp.Web.Services.Prompt;
+namespace RSChatApp.Infrastructure.Prompt;
 
 public sealed class PromptFileStore : IPromptFileStore, IDisposable
 {
