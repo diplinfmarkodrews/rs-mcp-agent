@@ -2,16 +2,16 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 
-public interface IWebRoolFileNameProvider
+public interface IWebRootFileNameProvider
 {
     IEnumerable<string> GetFileNames(string path);
 }
 
-public class WebRoolFileNameProvider : IWebRoolFileNameProvider
+public class WebRootFileNameProvider : IWebRootFileNameProvider
 {
     private readonly IWebHostEnvironment _environment;
 
-    public WebRoolFileNameProvider(IWebHostEnvironment environment)
+    public WebRootFileNameProvider(IWebHostEnvironment environment)
     {
         _environment = environment;
     }
@@ -25,6 +25,6 @@ public class WebRoolFileNameProvider : IWebRoolFileNameProvider
         }
 
         return Directory.EnumerateFiles(fullPath)
-            .Select(Path.GetFileName);
+            .Select(p => Path.GetFileName(p));
     }
 }

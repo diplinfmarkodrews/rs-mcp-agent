@@ -20,6 +20,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\RSChatApp.Common\RSChatApp.Common\RSChatApp.Common.csproj" />
       <ProjectReference Include="..\..\RSChatApp.ReportServer\ReportServer.Abstraction\ReportServer.Abstraction.csproj" />
+      <ProjectReference Include="..\RSChatApp.Shared.Infrastructure.Mcp\RSChatApp.Shared.Infrastructure.Mcp.csproj" />
     </ItemGroup>
 
 </Project>

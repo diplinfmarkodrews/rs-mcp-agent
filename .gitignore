@@ -1,5 +1,6 @@
 # Local editor settings
-.vscode/settings.json
+.vscode/
+.github/
 
 # Downloaded ReportServer scripts (large/external)
 scripts/rs-scripts/

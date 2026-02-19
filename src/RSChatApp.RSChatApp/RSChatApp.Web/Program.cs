@@ -22,7 +22,6 @@ using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
-using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
@@ -31,7 +30,6 @@ using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
-using RsMcpServer.Identity.Models.Requests;
 using Serilog;
 using Serilog.Events;
 

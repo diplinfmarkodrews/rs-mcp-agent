@@ -1,4 +1,4 @@
-namespace RSChatApp.Web.Services.Prompt;
+namespace RSChatApp.Infrastructure.Prompt;
 
 public interface IPromptFileStore
 {

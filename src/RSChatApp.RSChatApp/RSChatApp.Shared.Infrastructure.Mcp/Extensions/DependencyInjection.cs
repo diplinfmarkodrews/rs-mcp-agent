@@ -59,7 +59,8 @@ public static class DependencyInjection
 
         services.AddMemoryCache()
             .AddSingleton<IStaticContentIndexStore, StaticContentIndexStore>()
-            .AddSingleton<IStaticContentFileStore, StaticContentFileStore>();
+            .AddSingleton<IStaticContentFileStore, StaticContentFileStore>()
+            .AddSingleton<IWebRootFileNameProvider, WebRootFileNameProvider>();
         
         if (addTools)
             services.AddScoped<ScriptStoreTool>();

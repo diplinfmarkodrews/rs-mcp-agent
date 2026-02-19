@@ -1,4 +1,7 @@
+@using System.Text.RegularExpressions
 @using System.Web
+@using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services
+@inject IWebRootFileNameProvider FileNameProvider
 @if (!string.IsNullOrWhiteSpace(viewerUrl))
 {
     <a href="@viewerUrl" target="_blank" class="citation">
@@ -26,19 +29,29 @@
 
     protected override void OnParametersSet()
     {
+        File = FindHighestVersion(File);
         viewerUrl = null;
-
+        
         // If you ingest other types of content besides PDF files, construct a URL to an appropriate viewer here
         if (File.EndsWith(".pdf"))
         {
             var search = Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
             viewerUrl = $"lib/pdf_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}#page={PageNumber}&search={HttpUtility.UrlEncode(search)}&phrase=true";
         }
-        if (File.EndsWith(".txt"))
-        {
-            var search = Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
-            viewerUrl = $"lib/text_viewer/viewer.html?file=/Data/{HttpUtility.UrlEncode(File)}&search={HttpUtility.UrlEncode(search)}&phrase=true";
-        }
-
     }
+    
+    string FindHighestVersion(string keyword)
+    {
+        // can be simplified
+        var fileNames = FileNameProvider.GetFileNames("Data");
+        var regex = new Regex(@"(admin|config|user|script).*?([\d]+[._][\d]+(?:[._][\d]+)*)\.pdf$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
+        return fileNames
+            .Select(f => (FileName: f, Match: regex.Match(f)))
+            .Where(x => x.Match.Success && x.Match.Groups[1].Value.Equals(keyword, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(x => Version.Parse(x.Match.Groups[2].Value.Replace('_', '.')))
+            .FirstOrDefault().FileName ?? keyword;
+    }
+    
 }
