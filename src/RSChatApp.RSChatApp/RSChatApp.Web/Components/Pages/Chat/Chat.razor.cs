@@ -8,9 +8,11 @@ using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
+using RSChatApp.Web.Components.Pages.Chat.UserConfirmation;
 using RSChatApp.Web.Components.Pages.Terminal;
+using RSChatApp.Web.Filter.UserConfirmation;
 using RSChatApp.Web.Mcp.Tools;
-using RSChatApp.Web.Services.UserConfirmation;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
 using RSChatApp.Web.Storage;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 using TextContent = Microsoft.Extensions.AI.TextContent;
@@ -28,8 +30,8 @@ public partial class Chat(
     UserConfirmedTerminalTool userConfirmedTerminalTool,
     IPromptService promptService,
     ILogger<Chat> logger,
-    IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> terminalUserInteraction
-    ) : ComponentBase, IDisposable
+    IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> toolCallUserConfirmation,
+    IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
 
@@ -43,15 +45,20 @@ public partial class Chat(
     private bool _terminalVisible = false;
     private TerminalManager? _terminalManager;
     private int _terminalHeight = 200;
-
-    private TerminalConfirmRequest? _pendingTerminalRequest;
-    private TaskCompletionSource<UserConfirmationResult>? _pendingTerminalTcs;
+    
+    private ChatUserConfirmedToolCall? _currentToolCallConfirmation;
+    private UserConfirmToolCallRequest? _pendingToolCallRequest;
+    private TaskCompletionSource<UserConfirmationToolCall>? _pendingToolCallTcs;
+    
+    private ChatUserConfirmedToolResult? _currentToolResultConfirmation;
+    private UserConfirmToolResultRequest? _pendingToolResultRequest;
+    private TaskCompletionSource<UserConfirmationToolResult>? _pendingToolResultTcs;
     
     [Experimental("SKEXP0001")]
     protected override async Task OnInitializedAsync()
     {
-        terminalUserInteraction.UserInteractionRequested += OnTerminalUserInteractionRequested;
-
+        toolCallUserConfirmation.UserInteractionRequested += OnToolCallUserConfirmationRequested;
+        toolResultUserConfirmation.UserInteractionRequested += OnToolResultUserConfirmationRequested;
         // Since new ollama version supports stream & tool calls, will refactor to stream api only
         // TODO: Test first with ollama version that supports both streaming and tool calls
         _isOllama = false;
@@ -89,29 +96,48 @@ public partial class Chat(
         await InitChatHistoryAsync();
     }
 
-    private void OnTerminalUserInteractionRequested(object? sender,
-        (TerminalConfirmRequest Request, TaskCompletionSource<UserConfirmationResult> TaskCompletionSource) args)
+    private void OnToolResultUserConfirmationRequested(object? sender, 
+        (UserConfirmToolResultRequest Request, TaskCompletionSource<UserConfirmationToolResult> TaskCompletionSource) args)
     {
-        // Ensure only one pending interaction at a time.
-        _pendingTerminalTcs?.TrySetResult(
-            new UserConfirmationResult(
-                UserConfirmationResultEnum.Cancelled));
-
-        _pendingTerminalRequest = args.Request;
-        _pendingTerminalTcs = args.TaskCompletionSource;
+        _pendingToolResultTcs?.TrySetResult(UserConfirmationToolResult.Cancelled);
+        _pendingToolResultRequest = args.Request;
+        _pendingToolResultTcs = args.TaskCompletionSource;
         _ = InvokeAsync(StateHasChanged);
+        _currentToolResultConfirmation?.FocusAsync();
     }
 
-    private async Task ResolveTerminalConfirmationAsync(UserConfirmationResult result)
+    private void OnToolCallUserConfirmationRequested(object? sender,
+        (UserConfirmToolCallRequest Request, TaskCompletionSource<UserConfirmationToolCall> TaskCompletionSource) args)
     {
-        if (_pendingTerminalTcs is null)
+        // Ensure only one pending interaction at a time.
+        _pendingToolCallTcs?.TrySetResult(UserConfirmationToolCall.Cancelled);
+        _pendingToolCallRequest = args.Request;
+        _pendingToolCallTcs = args.TaskCompletionSource;
+        _ = InvokeAsync(StateHasChanged);
+        _currentToolCallConfirmation?.FocusAsync();
+    }
+    private async Task ResolveToolResultConfirmationAsync(UserConfirmationToolResult result)
+    {
+        if (_pendingToolResultTcs is null)
         {
             return;
         }
-        logger.LogInformation("Resolving terminal confirmation: {result}", result);
-        _pendingTerminalTcs.TrySetResult(result);
-        _pendingTerminalTcs = null;
-        _pendingTerminalRequest = null;
+        logger.LogInformation("Resolving tool result confirmation: {result}", result);
+        _pendingToolResultTcs?.TrySetResult(result);
+        _pendingToolResultTcs = null;
+        _pendingToolResultRequest = null;
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task ResolveTerminalConfirmationAsync(UserConfirmationToolCall toolCall)
+    {
+        if (_pendingToolCallTcs is null)
+        {
+            return;
+        }
+        logger.LogInformation("Resolving tool call confirmation: {toolCall}", toolCall);
+        _pendingToolCallTcs?.TrySetResult(toolCall);
+        _pendingToolCallTcs = null;
+        _pendingToolCallRequest = null;
         await InvokeAsync(StateHasChanged);
     }
     
@@ -319,7 +345,8 @@ public partial class Chat(
     
     public void Dispose()
     {
-        terminalUserInteraction.UserInteractionRequested -= OnTerminalUserInteractionRequested;
+        toolCallUserConfirmation.UserInteractionRequested -= OnToolCallUserConfirmationRequested;
+        toolResultUserConfirmation.UserInteractionRequested -= OnToolResultUserConfirmationRequested;
         _currentResponseCancellation?.Cancel();
     }
     /// <summary>

@@ -1,17 +1,18 @@
+using System.Text.Json;
 using Microsoft.SemanticKernel;
 using RSChatApp.Infrastructure.UserInteraction;
-using System.Diagnostics;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
 
-namespace RSChatApp.Web.Services.UserConfirmation;
+namespace RSChatApp.Web.Filter.UserConfirmation;
 
-public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
+public sealed class UserConfirmToolCallInvocationFilter : IFunctionInvocationFilter
 {
-    private readonly IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> _ui;
-    private readonly ILogger<UserConfirmInvocationFilter> _logger;
+    private readonly IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> _ui;
+    private readonly ILogger<UserConfirmToolCallInvocationFilter> _logger;
 
-    public UserConfirmInvocationFilter(
-        ILogger<UserConfirmInvocationFilter> logger,
-        IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> ui)
+    public UserConfirmToolCallInvocationFilter(
+        ILogger<UserConfirmToolCallInvocationFilter> logger,
+        IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> ui)
     {
         _logger = logger;
         _ui = ui;
@@ -34,7 +35,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                     "User confirmation requested for {ToolName}",
                     request.ToolName);
 
-                UserConfirmationResult decision;
+                UserConfirmationToolCall decision;
                 try
                 {
                     // Tie the wait to the invocation lifetime so we don't silently hang.
@@ -65,12 +66,11 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
                 }
 
                 // If the UI allowed editing, prefer the confirmed command (best-effort).
-                if (!string.IsNullOrWhiteSpace(decision.Command) && ctx.Arguments is not null)
+                if (decision.Arguments is not null && ctx.Arguments is not null)
                 {
                     // Common argument names.
-                    if (ctx.Arguments.TryGetValue("command", out _)) ctx.Arguments["command"] = decision.Command; // Rs
-                    if (ctx.Arguments.TryGetValue("cmd", out _)) ctx.Arguments["cmd"] = decision.Command;
-                    if (ctx.Arguments.TryGetValue("script", out _)) ctx.Arguments["script"] = decision.Command; //Js
+                    foreach (var arg in decision.Arguments)
+                        ctx.Arguments[arg.Key] = arg.Value;   
                 }
 
                 _logger.LogInformation(
@@ -96,7 +96,7 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
     }
 
     
-    private static bool TryCreateTerminalConfirmationRequest(FunctionInvocationContext ctx, out TerminalConfirmRequest request)
+    private static bool TryCreateTerminalConfirmationRequest(FunctionInvocationContext ctx, out UserConfirmToolCallRequest request)
     {
         request = default!;
 
@@ -120,40 +120,69 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
             return false;
         }
 
-        // Extract command argument (common spellings).
-        var command = TryGetArgAsString(ctx.Arguments, "command")
-                      ?? TryGetArgAsString(ctx.Arguments, "cmd")
-                      ?? TryGetArgAsString(ctx.Arguments, "script");
-        if (string.IsNullOrWhiteSpace(command))
+        if (isTerminalCommand && TryGetArgAsString(ctx.Arguments, "command", out var command))
         {
-            return false;
+            if (string.IsNullOrWhiteSpace(command))
+                return false;
+            
+            request = new UserConfirmToolCallRequest
+            {
+                ToolName = string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
+                Arguments = new Dictionary<string, object?>
+                {
+                    { "command", command }
+                }
+            };
+            return true;
+        }
+        if (isBrowserScript && TryGetArgAsString(ctx.Arguments, "script", out var script))
+        {
+            if (string.IsNullOrWhiteSpace(script))
+                return false;
+            
+            request = new UserConfirmToolCallRequest
+            {
+                ToolName = string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
+                Arguments = new Dictionary<string, object?>
+                {
+                    { "script", script }
+                }
+            };
+            return true;
         }
 
-        request = new TerminalConfirmRequest(
-            ToolName: string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
-            Command: command,
-            Language: isBrowserScript ? "javascript" : "bash");
-
-        return true;
+        return false;
     }
 
-    private static string? TryGetArgAsString(KernelArguments? args, string key)
+    private static bool TryGetArgAsString(KernelArguments? args, string key, out string? stringValue)
     {
+        stringValue = null;
+            
         if (args is null)
-        {
-            return null;
-        }
-
+            return false;
+        
         if (!args.TryGetValue(key, out var value) || value is null)
-        {
-            return null;
-        }
+            return false;
 
-        return value switch
+        switch (value)
         {
-            string s => s,
-            _ => value.ToString()
-        };
+            case string:
+                stringValue = (string)value;
+                return true;
+            case JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.String:
+                stringValue = jsonElement.GetString();
+                return true;
+            default:
+                try
+                {
+                    stringValue = JsonSerializer.Serialize(value, typeof(object));
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+        }
     }
 
     private static string NormalizeToolName(string? name)
@@ -183,14 +212,3 @@ public sealed class UserConfirmInvocationFilter : IFunctionInvocationFilter
         return new string(buffer[..idx]);
     }
 }
-public record TerminalConfirmRequest(string ToolName, string Command, string Language = "bash");
-
-public record UserConfirmationResult(UserConfirmationResultEnum Result, string? Command = null);
-
-public enum UserConfirmationResultEnum
-{
-    Confirmed = 1,
-    Skipped = 2,
-    Cancelled = 3
-}
-

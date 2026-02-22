@@ -1,0 +1,30 @@
+@using RSChatApp.Web.Components.Pages.Editor
+@if (IsVisible)
+{
+    <div class="uctc-card" role="region" aria-label="User confirmation required">
+        <div class="uctc-header">
+            <div class="uctc-title-row">
+                <div class="uctc-title">@Title</div>
+                @if (!string.IsNullOrWhiteSpace(ToolName))
+                {
+                    <div class="uctc-badge" title="Tool">@ToolName</div>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <div class="uctc-subtitle">@Subtitle</div>
+            }
+        </div>
+        <div class="uctc-body">
+            <ToolResultView
+                Result="@ToolResult"
+                Invocation="@ToolInvocation">
+            </ToolResultView>
+        </div>
+        <div class="uctc-actions">
+            <button @ref="@_elementReference" class="btn-default" @onclick="OnRunClicked">Run</button>
+            <button class="btn-default" @onclick="OnRedactClicked">Redact</button>
+            <button class="btn-subtle" @onclick="OnSkipClicked">Skip</button>
+        </div>
+    </div>
+}

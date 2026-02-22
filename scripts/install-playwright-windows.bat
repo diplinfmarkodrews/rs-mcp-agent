@@ -166,89 +166,6 @@ if %errorLevel% == 0 (
 
 echo.
 
-:create_test_script
-echo [STEP] Creating test script...
-echo.
-
-REM Create test script
-(
-echo const { chromium, firefox, webkit } = require^('playwright'^);
-echo.
-echo async function testPlaywright^(^) {
-echo     console.log^('🧪 Testing Playwright installation...\n'^);
-echo     
-echo     const browsers = [
-echo         { name: 'Chromium', engine: chromium },
-echo         { name: 'Firefox', engine: firefox },
-echo         { name: 'WebKit', engine: webkit }
-echo     ];
-echo     
-echo     for ^(const browser of browsers^) {
-echo         try {
-echo             console.log^(`🔍 Testing ${browser.name}...`^);
-echo             const browserInstance = await browser.engine.launch^({ headless: true }^);
-echo             const page = await browserInstance.newPage^(^);
-echo             await page.goto^('https://playwright.dev'^);
-echo             const title = await page.title^(^);
-echo             console.log^(`✅ ${browser.name} test passed! Page title: ${title}`^);
-echo             await browserInstance.close^(^);
-echo         } catch ^(error^) {
-echo             console.log^(`❌ ${browser.name} test failed:`, error.message^);
-echo         }
-echo     }
-echo     
-echo     console.log^('\n🎉 Playwright installation test completed!'^);
-echo }
-echo.
-echo testPlaywright^(^);
-) > playwright-test.js
-
-echo [INFO] Test script created as 'playwright-test.js'
-echo.
-
-:create_powershell_script
-echo [STEP] Creating PowerShell helper script...
-echo.
-
-REM Create PowerShell script for easier management
-(
-echo # Playwright Helper Script for PowerShell
-echo # Run with: .\playwright-helper.ps1
-echo.
-echo Write-Host "🎭 Playwright Helper Script" -ForegroundColor Cyan
-echo Write-Host "=========================" -ForegroundColor Cyan
-echo Write-Host ""
-echo.
-echo # Check if Playwright is available
-echo if ^(Get-Command "playwright" -ErrorAction SilentlyContinue^) {
-echo     Write-Host "✅ Playwright is available globally" -ForegroundColor Green
-echo     playwright --version
-echo } elseif ^(Get-Command "npx" -ErrorAction SilentlyContinue^) {
-echo     Write-Host "✅ Playwright is available via npx" -ForegroundColor Green
-echo     npx playwright --version
-echo } else {
-echo     Write-Host "❌ Playwright not found" -ForegroundColor Red
-echo     exit 1
-echo }
-echo.
-echo Write-Host ""
-echo Write-Host "Available commands:" -ForegroundColor Yellow
-echo Write-Host "1. Test installation: node playwright-test.js" -ForegroundColor White
-echo Write-Host "2. Install browsers: playwright install ^(or npx playwright install^)" -ForegroundColor White
-echo Write-Host "3. Run codegen: playwright codegen ^(or npx playwright codegen^)" -ForegroundColor White
-echo Write-Host "4. Show help: playwright --help ^(or npx playwright --help^)" -ForegroundColor White
-echo Write-Host ""
-echo.
-echo $choice = Read-Host "Would you like to run the test now? ^(Y/n^)"
-echo if ^($choice -eq "" -or $choice -eq "Y" -or $choice -eq "y"^) {
-echo     Write-Host "Running Playwright test..." -ForegroundColor Cyan
-echo     node playwright-test.js
-echo }
-) > playwright-helper.ps1
-
-echo [INFO] PowerShell helper script created as 'playwright-helper.ps1'
-echo.
-
 :installation_complete
 echo ✨ Installation completed successfully!
 echo.
@@ -257,43 +174,14 @@ echo 1. Verify Node.js installation: playwright --version ^(or npx playwright --
 
 where dotnet >nul 2>&1
 if %errorLevel% == 0 (
-    echo 2. Verify .NET installation: dotnet tool list -g ^| findstr playwright
-    echo 3. Test Node.js: node playwright-test.js
-    echo 4. Test .NET: Create a project and test with the generated script
-    echo 5. For .NET projects, install browsers with: pwsh bin/Debug/netX/playwright.ps1 install
-    echo 6. Use PowerShell helper: .\playwright-helper.ps1
-    echo 7. Start building automation scripts!
-) else (
-    echo 2. Test installation: node playwright-test.js
-    echo 3. Use PowerShell helper: .\playwright-helper.ps1
-    echo 4. Install .NET if you need .NET Playwright support
-    echo 5. Start building automation scripts!
-)
+    echo 1. Verify .NET installation: dotnet tool list -g ^| findstr playwright  
+    echo 2. For .NET projects, install browsers with: pwsh bin/Debug/netX/playwright.ps1 install    
+    echo 3. Start building automation scripts!
+) 
 echo.
 echo Documentation: https://playwright.dev/docs/intro
 echo Examples: https://github.com/microsoft/playwright
-echo.
 
-:run_test
-set /p choice="Would you like to run the test now? (Y/n): "
-if /i "%choice%"=="n" goto :end
-if /i "%choice%"=="no" goto :end
-
-echo.
-echo [STEP] Running Playwright test...
-echo.
-
-REM Run the test
-node playwright-test.js
-if %errorLevel% == 0 (
-    echo.
-    echo [INFO] Test completed successfully!
-) else (
-    echo.
-    echo [WARNING] Test completed with some issues. Check the output above.
-)
-
-:end
 echo.
 echo 🎉 Thank you for installing Playwright!
 echo.

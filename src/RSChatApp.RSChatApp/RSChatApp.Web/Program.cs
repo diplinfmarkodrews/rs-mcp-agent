@@ -20,16 +20,18 @@ using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
+using RSChatApp.Web.Filter.UserConfirmation;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
-using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
-using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
+using RSChatApp.Web.Storage.ChatHistory;
+using RSChatApp.Web.Storage.Terminal;
 using Serilog;
 using Serilog.Events;
 
@@ -228,10 +230,13 @@ builder.AddOllamaApiClient("embeddings")
 builder.AddQdrantClient("vectordb");
 
 // User interaction / confirmations (scoped per Blazor circuit)
+builder.Services.AddScoped<IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall>, 
+    WaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall>>();
+builder.Services.AddScoped<IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult>,
+    WaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult>>();
 
-builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>, 
-    WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
-builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
+builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolCallInvocationFilter>();
+builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolResultInvocationFilter>();
 
 builder.Services.AddScoped<Kernel>((serviceProvider)=> {
     // Create a per-scope plugin collection so BrowserTool is constructed within a valid
@@ -257,6 +262,8 @@ builder.Services.AddScoped<UserConfirmedTerminalTool>();
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();
+builder.Services.AddScoped<ToolInvocationFactory>();
+builder.Services.AddScoped<ToolResultFactory>();
 builder.Services.AddScoped<ToolCallProcessor>();
 
 // Browser storage abstraction - choose LocalStorage or SessionStorage

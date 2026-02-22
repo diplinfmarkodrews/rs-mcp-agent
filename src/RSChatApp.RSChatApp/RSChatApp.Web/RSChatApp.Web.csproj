@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Filter\" />
     <Folder Include="Logs\" />
     <Folder Include="wwwroot\Data\" />
     <Folder Include="Prompts\" />

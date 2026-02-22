@@ -1,7 +1,6 @@
 using RSChatApp.Web.Models.Terminal;
-using RSChatApp.Web.Storage;
 
-namespace RSChatApp.Web.Services.Terminal;
+namespace RSChatApp.Web.Storage.Terminal;
 
 public class TerminalInstanceStorage : AbstractStorage<List<TerminalInstance>>
 {

@@ -18,7 +18,13 @@ if (deployMainModel)
     chat = ollama.AddModel("chat",  
     builder.Configuration["Ollama:Model"]!);
 }
-
+bool deployHelperModel = string.IsNullOrEmpty(builder.Configuration["Ollama:HelperModel"]) == false;
+IResourceBuilder<OllamaModelResource>? helper = null;
+if (deployHelperModel)
+{
+    chat = ollama.AddModel("helper",  
+        builder.Configuration["Ollama:HelperModel"]!);
+}
 var embeddings = ollama.AddModel("embeddings", 
     builder.Configuration["Ollama:EmbeddingModel"] ?? "all-minilm");
 
