@@ -1,9 +1,8 @@
 using Microsoft.SemanticKernel;
 using RSChatApp.Web.Models.Chat.ToolCalls;
-using RSChatApp.Web.Services.Chat.Tools;
 using FunctionCallContent = Microsoft.Extensions.AI.FunctionCallContent;
 
-namespace RSChatApp.Web.Services.Chat;
+namespace RSChatApp.Web.Services.Chat.Tools;
 
 public class ToolInvocationFactory
 {

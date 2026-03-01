@@ -1,63 +1,28 @@
-using Microsoft.Extensions.Configuration;
+using Projects;
+using RSChatApp.AppHost.Factories;
 
 var builder = DistributedApplication.CreateBuilder(args);
-bool hasGpu = builder.Configuration.GetValue<bool>("Ollama:Gpu");
-var ollama = hasGpu 
-    ? builder.AddOllama("ollama")
-        .WithImageTag("latest")
-        .WithGPUSupport()
-        .WithDataVolume()
-    : builder.AddOllama("ollama")
-        .WithImageTag("latest")
-        .WithDataVolume();
 
-bool deployMainModel = string.IsNullOrEmpty(builder.Configuration["Ollama:Model"]) == false;
-IResourceBuilder<OllamaModelResource>? chat = null;
-if (deployMainModel)
-{
-    chat = ollama.AddModel("chat",  
-    builder.Configuration["Ollama:Model"]!);
-}
-bool deployHelperModel = string.IsNullOrEmpty(builder.Configuration["Ollama:HelperModel"]) == false;
-IResourceBuilder<OllamaModelResource>? helper = null;
-if (deployHelperModel)
-{
-    chat = ollama.AddModel("helper",  
-        builder.Configuration["Ollama:HelperModel"]!);
-}
-var embeddings = ollama.AddModel("embeddings", 
-    builder.Configuration["Ollama:EmbeddingModel"] ?? "all-minilm");
-
+var ollamaHost = builder.AddOllamaHost();
+var ollamaModels = builder.AddOllamaModels(ollamaHost);
 var vectorDb = builder.AddQdrant("vectordb")
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
     .PublishAsConnectionString();
 
-var mcpServer = builder.AddProject<Projects.RsMcpServer_Api>("rs-mcp-server");
+var mcpServer = builder.AddProject<RsMcpServer_Api>("rs-mcp-server");
+var webApp = builder.AddProject<RSChatApp_Web>("aichatweb-app");
 
-var webApp = builder.AddProject<Projects.RSChatApp_Web>("aichatweb-app");
+webApp.WithReference(mcpServer)
+    .WithReference(vectorDb)
+    .WaitFor(mcpServer)
+    .WaitFor(vectorDb);
 
-if (deployMainModel)
+foreach (var model in ollamaModels)
 {
-    webApp
-        .WithReference(chat!)
-        .WithReference(embeddings)
-        .WithReference(mcpServer)
-        .WithReference(vectorDb)        
-        .WaitFor(chat!)
-        .WaitFor(embeddings)
-        .WaitFor(mcpServer)
-        .WaitFor(vectorDb);
-}
-else
-{
-    webApp
-        .WithReference(embeddings)
-        .WithReference(mcpServer)
-        .WithReference(vectorDb)
-        .WaitFor(embeddings)
-        .WaitFor(mcpServer)
-        .WaitFor(vectorDb);
+    webApp.WithReference(model.Item1);
+    if(model.Item2)
+        webApp.WaitFor(model.Item1);
 }
 
 builder.Build().Run();

@@ -1,3 +1,5 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
+
 namespace RSChatApp.Web.Models.Chat.ToolCalls;
 
 public record ToolResult(

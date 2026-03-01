@@ -19,6 +19,8 @@ namespace RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 
 public static class DependencyInjection
 {
+    
+    
     public static IServiceCollection AddBrowserInstance(this IServiceCollection services, string reportServerUrl)
     {
         services.AddHttpContextAccessor();
@@ -64,6 +66,7 @@ public static class DependencyInjection
         
         if (addTools)
             services.AddScoped<ScriptStoreTool>();
+        
         return services;
     }
 

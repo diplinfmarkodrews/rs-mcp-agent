@@ -13,6 +13,7 @@ using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Middleware;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
@@ -61,6 +62,7 @@ builder.Services.AddOptions();
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
     options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.PropertyNameCaseInsensitive = true;
     options.Converters.Add(new ChatMessageConverter());
 });
 builder.Services.Configure<BrowserInstanceConfiguration>(
@@ -88,7 +90,6 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
 
 builder.Services.AddHealthChecks();
 
-// Add Keycloak authentication
 // Add custom authentication service
 builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
@@ -213,16 +214,29 @@ if (string.IsNullOrEmpty(openAiSettings.Model) == false)
     
     builder.Services.AddOpenAIChatClient(
         openAiSettings,
+        ChatClientServiceKeys.MainModel,
         openTelemetryConfig: f => f.EnableSensitiveData = false);
 }
 else
 {
     builder.AddOllamaApiClient("chat")
-        .AddChatClient()
+        .AddKeyedChatClient(ChatClientServiceKeys.MainModel)
         .UseFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());
 }
+
+builder.AddOllamaApiClient(ChatClientServiceKeys.HelperModel)
+    .AddKeyedChatClient(ChatClientServiceKeys.HelperModel)
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(configure: c =>
+        c.EnableSensitiveData = builder.Environment.IsDevelopment());
+    
+builder.AddOllamaApiClient(ChatClientServiceKeys.VisionLargeModel)
+    .AddKeyedChatClient(ChatClientServiceKeys.VisionLargeModel)
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(configure: c =>
+        c.EnableSensitiveData = builder.Environment.IsDevelopment());
 // Create local EmbeddingClient with Ollama
 builder.AddOllamaApiClient("embeddings")
     .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
@@ -239,17 +253,17 @@ builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolCallInvocat
 builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolResultInvocationFilter>();
 
 builder.Services.AddScoped<Kernel>((serviceProvider)=> {
-    // Create a per-scope plugin collection so BrowserTool is constructed within a valid
+    // Create a per-scope plugin collection so tools are constructed within a valid
     // request/circuit scope (HttpContext + Session available), while MCP tool functions
     // are shared via the singleton KernelPluginCollection.
     var sharedPlugins = serviceProvider.GetRequiredService<KernelPluginCollection>();
     KernelPluginCollection pluginCollection = [];
     foreach (var plugin in sharedPlugins)
+    {
         pluginCollection.Add(plugin);
+    }
     
     var kernel = new Kernel(serviceProvider, pluginCollection);
-    foreach (var filter in serviceProvider.GetServices<IFunctionInvocationFilter>())
-        kernel.FunctionInvocationFilters.Add(filter);
     
     return kernel;
 });
@@ -286,7 +300,6 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Add session middleware before browser middleware
 app.UseRouting();
 app.UseCors(); // Enable CORS middleware
 app.UseAuthentication();
@@ -297,6 +310,7 @@ app.UseConfiguredStaticContent();
 
 app.UseAntiforgery();
 
+// Add session middleware before browser middleware
 app.UseSession();
 app.UseMiddleware<BrowserSessionMiddleware>();
 

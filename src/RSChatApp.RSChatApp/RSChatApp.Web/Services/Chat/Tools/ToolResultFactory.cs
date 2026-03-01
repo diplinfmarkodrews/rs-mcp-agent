@@ -1,9 +1,10 @@
 using System.Text.Json;
 using Microsoft.SemanticKernel;
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 using FunctionResultContent = Microsoft.Extensions.AI.FunctionResultContent;
 
-namespace RSChatApp.Web.Services.Chat;
+namespace RSChatApp.Web.Services.Chat.Tools;
 
 public class ToolResultFactory
 {
@@ -32,7 +33,7 @@ public class ToolResultFactory
     }
     public ToolResult Create(FunctionResult frc, ToolInvocation invocation)
     {
-        var rawResult = frc.GetValue<string>();
+        var rawResult = GetResultAsString(frc);
         var contentType = DetectContentType(invocation, rawResult);
         var isError = IsErrorResult(rawResult, contentType);
 
@@ -74,8 +75,8 @@ public class ToolResultFactory
                 var root = json.RootElement;
                 var hasSessionId = TryGetPropertyIgnoreCase(root, "SessionId", out _);
                 var hasCmdResult = TryGetPropertyIgnoreCase(root, "CmdResult", out _);
-                
-                if (hasSessionId && hasCmdResult)
+                var hasErrorResult = TryGetPropertyIgnoreCase(root, "error", out _);
+                if (hasSessionId && hasCmdResult || hasErrorResult)
                 {
                     return ResultContentType.Terminal;
                 }
@@ -149,9 +150,9 @@ public class ToolResultFactory
 
         return false;
     }
-    private static string? GetResultAsString(FunctionResultContent frc)
+    private static string? GetResultAsString(FunctionResultContent functionResultContent)
     {
-        return frc.Result switch
+        return functionResultContent.Result switch
         {
             null => null,
             string s => s,
@@ -162,10 +163,31 @@ public class ToolResultFactory
                     item.ValueKind == JsonValueKind.String ? item.GetString() : item.GetRawText())),
             IEnumerable<string> enumerable => string.Join(",", enumerable),
             JsonElement e => e.GetRawText(),
-            _ => frc.Result.ToString()
+            _ => functionResultContent.Result.ToString()
         };
     }
+    private static string? GetResultAsString(FunctionResult functionResult){ // semantic kernel's FunctionResult, need to access contents array[0].text if it's a json element
+        string? result;
+        switch (functionResult.GetValue<object>())
+        {
+            case null: result = null; break; 
+            case string s: result = s; break;
+            case JsonElement e:
+                if (e.GetProperty("content")[0].TryGetProperty("text", out var value))
+                {
+                    result = value.GetString();
+                    break;
+                }
 
+                result = e.GetString();
+                break;
+            default:
+                result = functionResult.ToString() ?? string.Empty;
+                break;
+        }
+        return result;
+ 
+    }
     private static bool IsErrorResult(string? result, ResultContentType contentType)
     {
         if (string.IsNullOrWhiteSpace(result))
@@ -178,8 +200,7 @@ public class ToolResultFactory
         if (contentType == ResultContentType.SearchCitations || 
             contentType == ResultContentType.Json ||
             contentType == ResultContentType.Image ||
-            contentType == ResultContentType.Terminal ||
-            contentType == ResultContentType.DocumentPage)
+            contentType == ResultContentType.Terminal)
         {
             return false;
         }

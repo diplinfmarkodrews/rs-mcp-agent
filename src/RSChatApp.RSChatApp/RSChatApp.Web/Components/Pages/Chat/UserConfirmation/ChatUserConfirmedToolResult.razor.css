@@ -1,0 +1,72 @@
+.uctr-card {
+    background: white !important;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 1rem;
+    width: auto;
+    height: auto;
+    /*max-width: min(640px, 56vw);*/
+}
+
+.uctr-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.uctr-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uctr-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+.uctr-subtitle {
+    color: #6B7280;
+    font-size: 0.85rem;
+}
+
+.uctr-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.uctr-body {
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    overflow: auto;
+    margin-bottom: 0.75rem;
+    height: auto;  
+    /*clamp(240px, 28vh, 240px);*/
+    min-height: 25vh;
+    max-height: 50vh;
+    resize: vertical;
+    display: flex;
+}
+
+/* tool-result is a child component; use ::deep so it can size sub elements*/
+.uctr-body ::deep .tool-result,
+.uctr-body ::deep .tool-result .overflow-guard {
+    flex: 1;
+    min-height: 440px;
+    min-width: 340px;
+}
+
+.uctr-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}

@@ -1,10 +1,15 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using OllamaSharp;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
@@ -20,7 +25,7 @@ using TextContent = Microsoft.Extensions.AI.TextContent;
 namespace RSChatApp.Web.Components.Pages.Chat;
 
 public partial class Chat(
-    IChatClient chatClient,
+    IChatClientFactory chatClientFactory,
     Kernel kernel,
     IStorage<List<ChatMessage>> chatHistoryStorage,
     SemanticSearchTool semanticSearchTool, 
@@ -30,18 +35,19 @@ public partial class Chat(
     UserConfirmedTerminalTool userConfirmedTerminalTool,
     IPromptService promptService,
     ILogger<Chat> logger,
+    IOptions<OpenAIPromptExecutionSettings> promptExecutionSettings,
     IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> toolCallUserConfirmation,
     IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
-
+    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.HelperModel); 
     private readonly ChatOptions _chatOptions = new();
     private readonly List<ChatMessage> _messages = new();
     private CancellationTokenSource? _currentResponseCancellation;
+    
     private ChatMessage? _currentResponseMessage;
     private ChatInput? _chatInput;
     private ChatSuggestions? _chatSuggestions;
-    private bool _isOllama;
     private bool _terminalVisible = false;
     private TerminalManager? _terminalManager;
     private int _terminalHeight = 200;
@@ -59,22 +65,21 @@ public partial class Chat(
     {
         toolCallUserConfirmation.UserInteractionRequested += OnToolCallUserConfirmationRequested;
         toolResultUserConfirmation.UserInteractionRequested += OnToolResultUserConfirmationRequested;
-        // Since new ollama version supports stream & tool calls, will refactor to stream api only
-        // TODO: Test first with ollama version that supports both streaming and tool calls
-        _isOllama = false;
         
         // Debug logging to see what kernel plugins are available
         var kernelPlugins = kernel.Plugins.ToList();
         logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
             string.Join(", ", kernelPlugins.Select(p=> p.Name)));
-
+        logger.LogDebug("Prompt execution settings: {promptExecutionSettings}", JsonSerializer.Serialize(promptExecutionSettings.Value));
         // Create a list of all tools (local search + kernel MCP tools)
         var allTools = new List<AITool>
         {
             AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
             AIFunctionFactory.Create(documentLookupTool.GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
             AIFunctionFactory.Create(scriptStoreTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
-            AIFunctionFactory.Create(scriptStoreTool.GetText, "GetTextFileFromPath","Get a text file of a given path. can be scripts or other text files")
+            AIFunctionFactory.Create(scriptStoreTool.GetScriptText, "GetTextFromScriptsPath","Get a text file of a given path. can be scripts or other text files"),
+            AIFunctionFactory.Create(scriptStoreTool.GetAllSkillsPaths, "GetAllSkillsPath", "Retrieve a list of all skills path"),
+            AIFunctionFactory.Create(scriptStoreTool.GetSkillsText, "GetTextFromSkillsPath","Get a text file of a given skills path. can be scripts or other text files")
             // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
             // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
             // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
@@ -103,7 +108,7 @@ public partial class Chat(
         _pendingToolResultRequest = args.Request;
         _pendingToolResultTcs = args.TaskCompletionSource;
         _ = InvokeAsync(StateHasChanged);
-        _currentToolResultConfirmation?.FocusAsync();
+        // _currentToolResultConfirmation?.FocusAsync();
     }
 
     private void OnToolCallUserConfirmationRequested(object? sender,
@@ -177,17 +182,12 @@ public partial class Chat(
     }
     
     private Task AddUserMessageAsync(ChatMessage userMessage)
-    {
-        if (_isOllama)
-            return AddUserMessageSingleAsync(userMessage);
-        
-        return AddUserMessageStreamAsync(userMessage);
-
-    }
+        => AddUserMessageStreamAsync(userMessage);
     private async Task AddUserMessageStreamAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();
-
+        _chatOptions.AdditionalProperties = new (); 
+        _chatOptions.AdditionalProperties["IsLocalModel"] = true;
         // Add the user message to the conversation
         _messages.Add(userMessage);
         _chatSuggestions?.Clear();
@@ -206,7 +206,7 @@ public partial class Chat(
             var normalizedMessages = _messages.NormalizeMessagesForApi();
             
             // Use streaming API to get progressive responses
-            await foreach (var update in chatClient.GetStreamingResponseAsync(normalizedMessages, _chatOptions, _currentResponseCancellation.Token))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(normalizedMessages, _chatOptions, _currentResponseCancellation.Token))
             {
                 // Collect ALL content types from each update
                 foreach (var content in update.Contents)
@@ -367,7 +367,7 @@ public partial class Chat(
             // Display a new response from the IChatClient, streaming responses
             // aren't supported because Ollama will not support both streaming and using Tools
             _currentResponseCancellation = new();
-            var response = await chatClient.GetResponseAsync(_messages, _chatOptions, _currentResponseCancellation.Token);
+            var response = await _chatClient.GetResponseAsync(_messages, _chatOptions, _currentResponseCancellation.Token);
 
             // Store responses in the conversation, and begin getting suggestions
             var beforeCount = _messages.Count;
@@ -403,4 +403,5 @@ public partial class Chat(
             _chatInput?.SetProcessing(false);
         }
     }
+    
 }

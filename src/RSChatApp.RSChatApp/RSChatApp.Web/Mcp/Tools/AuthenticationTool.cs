@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Microsoft.SemanticKernel;
 using System.Text;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Web.Models.Auth;

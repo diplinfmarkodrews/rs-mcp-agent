@@ -1,3 +1,4 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 
 namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
@@ -43,6 +44,11 @@ public class DocumentLookupToolDescriptor : IToolDescriptor
     public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
     {
         return new ToolUiHints(DefaultExpanded: true);
+    }
+
+    public ToolUserConfirmation GetUserConfirmation(string? functionName = null)
+    {
+        return ToolUserConfirmation.None;
     }
 
     public string GetIconSvg()

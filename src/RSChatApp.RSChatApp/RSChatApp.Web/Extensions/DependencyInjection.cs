@@ -1,13 +1,9 @@
 using System.ClientModel;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.SemanticKernel;
 using OpenAI;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Configuration;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
@@ -36,7 +32,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
         OpenAiSettings openAISettings, 
-        string? serviceId = null,
+        string serviceKey,
         string? openTelemetrySourceName = null,
         Action<OpenTelemetryChatClient>? openTelemetryConfig = null)
     {
@@ -62,24 +58,9 @@ public static class DependencyInjection
             }
             return builder.Build();
         }
-
-        if (serviceId is null)
-        {
-            services.AddScoped<IChatClient>(sp => Factory(sp, null));
-        }
-        else
-        {
-            services.AddKeyedScoped<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
-        }
+        services.AddScoped<IChatClientFactory, ChatClientFactory>();
+        services.AddKeyedScoped<IChatClient>(serviceKey, (Func<IServiceProvider, object?, IChatClient>)Factory);
         
-        return services;
-    }
-
-    public static IServiceCollection AddPromptServices(this IServiceCollection services)
-    {
-        services.AddSingleton<IPromptFileStore, PromptFileStore>();
-        services.AddScoped<IPromptService, PromptService>();
-        services.AddHostedService<PromptStartupValidatorHostedService>();
         return services;
     }
   

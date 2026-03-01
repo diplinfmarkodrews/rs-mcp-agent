@@ -2,7 +2,6 @@
 @using Microsoft.AspNetCore.Authorization
 @using RSChatApp.Web.Components.Pages.Chat.UserConfirmation
 @using RSChatApp.Web.Components.Pages.Terminal
-@using RSChatApp.Web.Filter.UserConfirmation
 @using RSChatApp.Web.Models.Chat.UserConfirmation
 
 @attribute [AllowAnonymous]
@@ -54,13 +53,13 @@
         <div class="confirm-overlay" role="presentation">
             <ChatUserConfirmedToolResult
                 IsVisible="true"
-                Title="Confirm terminal command"
+                Title="Confirm tool call result"
                 ToolName="@_pendingToolResultRequest.ToolName"
+                ToolInvocation="@_pendingToolResultRequest.ToolInvocation"
+                ToolResult="@_pendingToolResultRequest.ToolResult"
                 Subtitle="Please confirm or redact the input before proceeding."
-                OnRun="@((toolResult) => ResolveToolResultConfirmationAsync(new UserConfirmationToolResult{ UserConfirmationResult = UserConfirmationResultEnum.Confirmed, ToolResult = toolResult}))"
+                OnRun="@((userConfirmation) => ResolveToolResultConfirmationAsync(userConfirmation))"
                 OnSkip="@(() => ResolveToolResultConfirmationAsync(UserConfirmationToolResult.Skipped))"
-                @* OnRedact="@(() => RedactAsync())" *@
-                @ref="@_currentToolResultConfirmation"
             />
         </div>
     }

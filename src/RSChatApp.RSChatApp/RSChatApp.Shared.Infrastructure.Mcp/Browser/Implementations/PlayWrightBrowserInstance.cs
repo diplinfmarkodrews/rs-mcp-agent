@@ -932,14 +932,14 @@ public class PlayWrightBrowserInstance : IBrowserInstance
         });
     }
 
-    public async Task<object?> ExecuteScriptAsync(string script)
+    public async Task<object?> ExecuteScriptAsync(string script, object? arg = null)
     {
         if (_page == null)
             throw new InvalidOperationException("Browser page not initialized. Call NewContextAsync first.");
 
         try
         {
-            var result = await _page.EvaluateAsync(script);
+            var result = await _page.EvaluateAsync(script, arg);
             _logger.LogDebug("Executed script: {Script}", script);
             return result;
         }

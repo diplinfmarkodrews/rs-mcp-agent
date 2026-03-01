@@ -9,14 +9,12 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorMonaco" Version="3.4.0" />
-    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.7.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="13.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
     <PackageReference Include="ModelContextProtocol-SemanticKernel" Version="0.3.0" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.3" />
     <PackageReference Include="ModelContextProtocolServer.Sse" Version="0.4.0" />
-    <PackageReference Include="OllamaSharp" Version="5.3.3" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="10.2.0" />
+    <PackageReference Include="OllamaSharp" Version="5.4.18" />
     <PackageReference Include="System.Linq.Async" Version="6.0.3" />
     <PackageReference Include="Aspire.Qdrant.Client" Version="9.4.0" />
   </ItemGroup>

@@ -16,7 +16,7 @@ public class SemanticSearchTool
     [KernelFunction, McpServerTool,  Description("Searches for information concerning the reportserver, using a phrase or keyword.")]
     public async Task<string> SearchAsync(
         [Description("The phrase to search for.")] string searchPhrase,
-        [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string? filenameFilter = null,
+        [Description("If possible, specify the filename to search that file only. If not provided or empty, the search includes all files.")] string filenameFilter = "",
         [Description("The maximum number of results to return. Default is 25.")] int maxResults = 25)
     {
         var results = await _semanticSearch.SearchAsync(searchPhrase, filenameFilter, maxResults);

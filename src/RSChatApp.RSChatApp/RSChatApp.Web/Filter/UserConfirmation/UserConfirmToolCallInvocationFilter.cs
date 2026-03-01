@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.SemanticKernel;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Web.Models.Chat.UserConfirmation;
+using RSChatApp.Web.Services.Chat.Tools;
 
 namespace RSChatApp.Web.Filter.UserConfirmation;
 
@@ -9,13 +10,16 @@ public sealed class UserConfirmToolCallInvocationFilter : IFunctionInvocationFil
 {
     private readonly IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> _ui;
     private readonly ILogger<UserConfirmToolCallInvocationFilter> _logger;
+    private readonly ToolRegistry _toolRegistry;
 
     public UserConfirmToolCallInvocationFilter(
         ILogger<UserConfirmToolCallInvocationFilter> logger,
+        ToolRegistry toolRegistry,
         IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> ui)
     {
         _logger = logger;
         _ui = ui;
+        _toolRegistry = toolRegistry;
     } 
 
     public async Task OnFunctionInvocationAsync(FunctionInvocationContext ctx, Func<FunctionInvocationContext, Task> next)
@@ -29,7 +33,7 @@ public sealed class UserConfirmToolCallInvocationFilter : IFunctionInvocationFil
             functionName);
         try
         {
-            if (TryCreateTerminalConfirmationRequest(ctx, out var request))
+            if (TryCreateUserConfirmToolCallRequest(ctx, out var request))
             {
                 _logger.LogInformation(
                     "User confirmation requested for {ToolName}",
@@ -96,119 +100,29 @@ public sealed class UserConfirmToolCallInvocationFilter : IFunctionInvocationFil
     }
 
     
-    private static bool TryCreateTerminalConfirmationRequest(FunctionInvocationContext ctx, out UserConfirmToolCallRequest request)
+    private bool TryCreateUserConfirmToolCallRequest(FunctionInvocationContext ctx, out UserConfirmToolCallRequest request)
     {
         request = default!;
-
-        // Default to allow-list style: only confirm clearly terminal command executions.
+        
         var plugin = ctx.Function.Metadata.PluginName ?? string.Empty;
         var function = ctx.Function.Metadata.Name ?? ctx.Function.Name ?? string.Empty;
-
-        var normalized = NormalizeToolName($"{plugin}.{function}");
+        var toolDescriptor = _toolRegistry.GetDescriptor($"{plugin}.{function}"); 
         
-        // Match RsMcpServer_execute_command or similar terminal execution functions
-        bool isTerminalCommand = normalized.Contains("executecommand", StringComparison.Ordinal) 
-                                 || (normalized.Contains("terminaltool", StringComparison.Ordinal) 
-                                     && normalized.Contains("execute", StringComparison.Ordinal));
+        var toolUserConfirmationRequire = toolDescriptor.GetUserConfirmation(function);
         
-        // Optionally match browser script execution
-        bool isBrowserScript = normalized.Contains("browsertool", StringComparison.Ordinal) 
-                               && normalized.Contains("executejavascript", StringComparison.Ordinal);
-        
-        if (!isTerminalCommand && !isBrowserScript)
+        if (toolUserConfirmationRequire.RequireToolCallUserConfirmation)
         {
-            return false;
-        }
-
-        if (isTerminalCommand && TryGetArgAsString(ctx.Arguments, "command", out var command))
-        {
-            if (string.IsNullOrWhiteSpace(command))
-                return false;
+            var arguments = ctx.Arguments?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value?.ToString()) ?? new Dictionary<string, object?>();
             
             request = new UserConfirmToolCallRequest
             {
                 ToolName = string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
-                Arguments = new Dictionary<string, object?>
-                {
-                    { "command", command }
-                }
+                Arguments = arguments
             };
             return true;
         }
-        if (isBrowserScript && TryGetArgAsString(ctx.Arguments, "script", out var script))
-        {
-            if (string.IsNullOrWhiteSpace(script))
-                return false;
-            
-            request = new UserConfirmToolCallRequest
-            {
-                ToolName = string.IsNullOrWhiteSpace(plugin) ? function : $"{plugin}.{function}",
-                Arguments = new Dictionary<string, object?>
-                {
-                    { "script", script }
-                }
-            };
-            return true;
-        }
-
+        
         return false;
     }
-
-    private static bool TryGetArgAsString(KernelArguments? args, string key, out string? stringValue)
-    {
-        stringValue = null;
-            
-        if (args is null)
-            return false;
-        
-        if (!args.TryGetValue(key, out var value) || value is null)
-            return false;
-
-        switch (value)
-        {
-            case string:
-                stringValue = (string)value;
-                return true;
-            case JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.String:
-                stringValue = jsonElement.GetString();
-                return true;
-            default:
-                try
-                {
-                    stringValue = JsonSerializer.Serialize(value, typeof(object));
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-        }
-    }
-
-    private static string NormalizeToolName(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return string.Empty;
-        }
-
-        // Lowercase alphanumerics only, strip "Async" suffix.
-        var canonical = name.Trim();
-        if (canonical.EndsWith("Async", StringComparison.Ordinal))
-        {
-            canonical = canonical[..^5];
-        }
-
-        Span<char> buffer = stackalloc char[canonical.Length];
-        var idx = 0;
-        foreach (var ch in canonical)
-        {
-            if (char.IsLetterOrDigit(ch))
-            {
-                buffer[idx++] = char.ToLowerInvariant(ch);
-            }
-        }
-
-        return new string(buffer[..idx]);
-    }
+    
 }

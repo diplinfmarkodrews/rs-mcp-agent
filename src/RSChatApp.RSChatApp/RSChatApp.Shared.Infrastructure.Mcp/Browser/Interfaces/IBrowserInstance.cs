@@ -58,7 +58,7 @@ public interface IBrowserInstance : IAsyncDisposable
     Task WaitForElementAsync(string selector, int timeoutMs = 30000);
     Task ScrollToElementAsync(string selector, int timeoutMs = 30000);
     Task SelectOptionAsync(string selector, string value, string method = "value", int timeoutMs = 30000);
-    Task<object?> ExecuteScriptAsync(string script);
+    Task<object?> ExecuteScriptAsync(string script, object? args = null);
     Task ScrollAsync(int deltaX, int deltaY);
     
     Task WaitForLoadAsync();
