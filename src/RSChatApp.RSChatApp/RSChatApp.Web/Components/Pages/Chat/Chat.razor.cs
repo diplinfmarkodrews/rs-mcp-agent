@@ -1,24 +1,20 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using OllamaSharp;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
-using RSChatApp.Web.Components.Pages.Chat.UserConfirmation;
 using RSChatApp.Web.Components.Pages.Terminal;
 using RSChatApp.Web.Filter.UserConfirmation;
-using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Chat.UserConfirmation;
+using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Storage;
+using RSChatApp.Web.Storage.Utility;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 using TextContent = Microsoft.Extensions.AI.TextContent;
 
@@ -28,11 +24,8 @@ public partial class Chat(
     IChatClientFactory chatClientFactory,
     Kernel kernel,
     IStorage<List<ChatMessage>> chatHistoryStorage,
-    SemanticSearchTool semanticSearchTool, 
-    DocumentLookupTool documentLookupTool,
-    ScriptStoreTool scriptStoreTool,
-    AuthenticationTool authenticationTool,
-    UserConfirmedTerminalTool userConfirmedTerminalTool,
+    ToolCollectionService toolCollectionService,
+    ToolSelectionStorage toolSelectionStorage,
     IPromptService promptService,
     ILogger<Chat> logger,
     IOptions<OpenAIPromptExecutionSettings> promptExecutionSettings,
@@ -40,8 +33,9 @@ public partial class Chat(
     IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
-    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.HelperModel); 
-    private readonly ChatOptions _chatOptions = new();
+    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.MainModel); 
+    private ChatOptions _chatOptions = new();
+    
     private readonly List<ChatMessage> _messages = new();
     private CancellationTokenSource? _currentResponseCancellation;
     
@@ -49,14 +43,13 @@ public partial class Chat(
     private ChatInput? _chatInput;
     private ChatSuggestions? _chatSuggestions;
     private bool _terminalVisible = false;
+    private bool _toolSelectorVisible = false;
     private TerminalManager? _terminalManager;
     private int _terminalHeight = 200;
     
-    private ChatUserConfirmedToolCall? _currentToolCallConfirmation;
     private UserConfirmToolCallRequest? _pendingToolCallRequest;
     private TaskCompletionSource<UserConfirmationToolCall>? _pendingToolCallTcs;
     
-    private ChatUserConfirmedToolResult? _currentToolResultConfirmation;
     private UserConfirmToolResultRequest? _pendingToolResultRequest;
     private TaskCompletionSource<UserConfirmationToolResult>? _pendingToolResultTcs;
     
@@ -66,49 +59,30 @@ public partial class Chat(
         toolCallUserConfirmation.UserInteractionRequested += OnToolCallUserConfirmationRequested;
         toolResultUserConfirmation.UserInteractionRequested += OnToolResultUserConfirmationRequested;
         
-        // Debug logging to see what kernel plugins are available
-        var kernelPlugins = kernel.Plugins.ToList();
-        logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
-            string.Join(", ", kernelPlugins.Select(p=> p.Name)));
-        logger.LogDebug("Prompt execution settings: {promptExecutionSettings}", JsonSerializer.Serialize(promptExecutionSettings.Value));
-        // Create a list of all tools (local search + kernel MCP tools)
-        var allTools = new List<AITool>
-        {
-            AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
-            AIFunctionFactory.Create(documentLookupTool.GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
-            AIFunctionFactory.Create(scriptStoreTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
-            AIFunctionFactory.Create(scriptStoreTool.GetScriptText, "GetTextFromScriptsPath","Get a text file of a given path. can be scripts or other text files"),
-            AIFunctionFactory.Create(scriptStoreTool.GetAllSkillsPaths, "GetAllSkillsPath", "Retrieve a list of all skills path"),
-            AIFunctionFactory.Create(scriptStoreTool.GetSkillsText, "GetTextFromSkillsPath","Get a text file of a given skills path. can be scripts or other text files")
-            // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
-            // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
-            // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
-        };
-        
-        // Add MCP tools
-        foreach (var plugin in kernelPlugins)
-        {
-            foreach (var aiFunction in plugin)
-            {
-                allTools.Add(aiFunction.AsAIFunction(kernel));
-            }
-        }
-        logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{allTools} ", allTools.Count, 
-            string.Join(", \n", allTools.Select(p=> p.Name)));
-        
-        _chatOptions.Tools = allTools;              
+        var allTools = toolCollectionService.AllTools;
+        kernel.Data[KernelDataConstants.IsResultConfirmDisabled] = true;
+        _chatOptions.Temperature = (float?)promptExecutionSettings.Value.Temperature;
+        _chatOptions.Tools = allTools; 
         // Load chat history
         await InitChatHistoryAsync();
+    }
+
+    private Task OnToolSelectionChangedAsync()
+    {
+        _chatOptions.Tools = toolCollectionService.AllTools
+            .Where(t => toolSelectionStorage.IsEnabled(t.Name))
+            .ToList<AITool>();
+        return Task.CompletedTask;
     }
 
     private void OnToolResultUserConfirmationRequested(object? sender, 
         (UserConfirmToolResultRequest Request, TaskCompletionSource<UserConfirmationToolResult> TaskCompletionSource) args)
     {
+        // Ensure only one pending interaction at a time.
         _pendingToolResultTcs?.TrySetResult(UserConfirmationToolResult.Cancelled);
         _pendingToolResultRequest = args.Request;
         _pendingToolResultTcs = args.TaskCompletionSource;
         _ = InvokeAsync(StateHasChanged);
-        // _currentToolResultConfirmation?.FocusAsync();
     }
 
     private void OnToolCallUserConfirmationRequested(object? sender,
@@ -119,16 +93,15 @@ public partial class Chat(
         _pendingToolCallRequest = args.Request;
         _pendingToolCallTcs = args.TaskCompletionSource;
         _ = InvokeAsync(StateHasChanged);
-        _currentToolCallConfirmation?.FocusAsync();
     }
-    private async Task ResolveToolResultConfirmationAsync(UserConfirmationToolResult result)
+    private async Task ResolveToolResultConfirmationAsync(UserConfirmationToolResult toolResult)
     {
         if (_pendingToolResultTcs is null)
         {
             return;
         }
-        logger.LogInformation("Resolving tool result confirmation: {result}", result);
-        _pendingToolResultTcs?.TrySetResult(result);
+        logger.LogInformation("Resolving tool result confirmation: {result}", toolResult);
+        _pendingToolResultTcs?.TrySetResult(toolResult);
         _pendingToolResultTcs = null;
         _pendingToolResultRequest = null;
         await InvokeAsync(StateHasChanged);
@@ -188,6 +161,7 @@ public partial class Chat(
         CancelAnyCurrentResponse();
         _chatOptions.AdditionalProperties = new (); 
         _chatOptions.AdditionalProperties["IsLocalModel"] = true;
+        
         // Add the user message to the conversation
         _messages.Add(userMessage);
         _chatSuggestions?.Clear();
@@ -341,6 +315,11 @@ public partial class Chat(
     private void ToggleTerminal()
     {
         _terminalVisible = !_terminalVisible;
+    }
+
+    private void ToggleToolSelector()
+    {
+        _toolSelectorVisible = !_toolSelectorVisible;
     }
     
     public void Dispose()

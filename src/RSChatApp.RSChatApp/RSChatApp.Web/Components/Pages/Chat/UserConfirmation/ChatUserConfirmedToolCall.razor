@@ -24,12 +24,8 @@
 		}
 
 		<div class="uctc-actions">
-			<button @ref="@_elementReference" class="btn-default" disabled="@IsBusy" @onclick="OnRunClicked">Run</button>
+			<button class="btn-default" disabled="@IsBusy" @onclick="OnRunClicked">Run</button>
 			<button class="btn-subtle" disabled="@IsBusy" @onclick="OnSkipClicked">Skip</button>
-			@* @if (ShowCancel) *@
-			@* { *@
-			@* 	<button class="btn-subtle" disabled="@IsBusy" @onclick="OnCancelClicked">Cancel</button> *@
-			@* } *@
 		</div>
 	</div>
 }

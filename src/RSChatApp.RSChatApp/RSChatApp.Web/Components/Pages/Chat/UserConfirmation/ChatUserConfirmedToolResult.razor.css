@@ -47,22 +47,25 @@
 .uctr-body {
     border: 1px solid #E5E7EB;
     border-radius: 6px;
-    overflow: auto;
+    overflow: hidden;
     margin-bottom: 0.75rem;
-    height: auto;  
     /*clamp(240px, 28vh, 240px);*/
     min-height: 25vh;
     max-height: 50vh;
+    max-width: 25vw;
     resize: vertical;
     display: flex;
+    flex-direction: column;
 }
 
 /* tool-result is a child component; use ::deep so it can size sub elements*/
 .uctr-body ::deep .tool-result,
+.uctr-body .tool-result,
 .uctr-body ::deep .tool-result .overflow-guard {
     flex: 1;
-    min-height: 440px;
     min-width: 340px;
+    overflow: auto;
+    min-height: 0;
 }
 
 .uctr-actions {

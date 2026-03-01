@@ -33,6 +33,13 @@
     z-index: 1100;
 }
 
+/* Tool selector panel shown below header */
+.tool-selector-panel {
+    flex-shrink: 0;
+    border-bottom: 1px solid #E5E7EB;
+    background-color: #F9FAFB;
+}
+
 /* Terminal container styling when integrated in chat */
 .chat-page ::deep .terminal-manager {
     position: fixed;

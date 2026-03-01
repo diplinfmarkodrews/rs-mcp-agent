@@ -1,14 +1,22 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
 @using RSChatApp.Web.Components.Pages.Chat.UserConfirmation
+@using RSChatApp.Web.Components.Pages.Chat.Utility
 @using RSChatApp.Web.Components.Pages.Terminal
 @using RSChatApp.Web.Models.Chat.UserConfirmation
 
 @attribute [AllowAnonymous]
 
 <div class="chat-page @(_terminalVisible ? "terminal-visible" : "")" style="@(_terminalVisible ? $"--terminal-height: {_terminalHeight}px" : "")">
-    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" />
-    
+    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" OnToggleTools="@ToggleToolSelector" />
+
+    @if (_toolSelectorVisible)
+    {
+        <div class="tool-selector-panel">
+            <ToolSelector OnSelectionChanged="@OnToolSelectionChangedAsync" />
+        </div>
+    }
+
     <div class="chat-messages-area">
         <ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
             <NoMessagesContent>
@@ -44,7 +52,6 @@
                 OnSkip="@(() => ResolveTerminalConfirmationAsync(UserConfirmationToolCall.Skipped))"
                 OnCancel="@(() => ResolveTerminalConfirmationAsync(UserConfirmationToolCall.Cancelled))"
                 ShowCancel="false"
-                @ref="@_currentToolCallConfirmation"
                 />
         </div>
     }

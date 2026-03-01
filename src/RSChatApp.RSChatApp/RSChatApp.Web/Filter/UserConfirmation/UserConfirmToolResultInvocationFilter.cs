@@ -30,7 +30,7 @@ public class UserConfirmToolResultInvocationFilter : IFunctionInvocationFilter
     public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
     {
         await next(context);
-        // next.Target
+        // var promptExecKeys = context.Function.ExecutionSettings.Keys;
         if (TryCreateToolResultConfirmationRequest(context, out var confirmToolResultRequest))
         {
             var userConfirmationResult = await _ui.RequestUserInteractionAsync(confirmToolResultRequest)
@@ -79,12 +79,20 @@ public class UserConfirmToolResultInvocationFilter : IFunctionInvocationFilter
     
     private bool IsUserConfirmationRequired(string plugin, string function, FunctionInvocationContext ctx)
     {
-        if(ctx.Arguments.TryGetValue("IsLocalModel", out var isLocalModel)
+        
+        if(ctx.Kernel.Data.TryGetValue(KernelDataConstants.IsLocalModel, out var isLocalModel)
            && isLocalModel is bool localModelFlag && localModelFlag)
         {
             // Local model tool calls don't require user confirmation for the result as they won't distribute sensitive data.
             return false;
         }
+        if(ctx.Kernel.Data.TryGetValue(KernelDataConstants.IsResultConfirmDisabled, out var isResultConfirmDisabled)
+           && isResultConfirmDisabled is bool isResultConfirmDisabledFlag && isResultConfirmDisabledFlag)
+        {
+            // when switched off via context, no user confirmation for tool results is required. 
+            return false;
+        }
+        
         var toolDescriptor = _toolRegistry.GetDescriptor($"{plugin}.{function}"); 
         var toolUserConfirmationRequire = toolDescriptor.GetUserConfirmation(function);
         if (toolUserConfirmationRequire.RequireToolResultUserConfirmation)
@@ -96,7 +104,11 @@ public class UserConfirmToolResultInvocationFilter : IFunctionInvocationFilter
         
     }
 }
-
+public static class KernelDataConstants
+{
+    public const string IsLocalModel = "IsLocalModel";
+    public const string IsResultConfirmDisabled = "IsResultConfirmDisabled";
+}
 
 
 

@@ -18,6 +18,8 @@ using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
 using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
@@ -33,6 +35,7 @@ using RSChatApp.Web.Services.Terminal.Drivers;
 using RSChatApp.Web.Storage;
 using RSChatApp.Web.Storage.ChatHistory;
 using RSChatApp.Web.Storage.Terminal;
+using RSChatApp.Web.Storage.Utility;
 using Serilog;
 using Serilog.Events;
 
@@ -168,7 +171,7 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
 
-builder.Services.AddScoped((serviceProvider) =>
+builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
@@ -197,7 +200,6 @@ builder.Services.AddScoped<IEnumerable<KernelPlugin>>((serviceProvider) => {
     var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return pluginCollection;
 });
-// 
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
@@ -267,6 +269,7 @@ builder.Services.AddScoped<Kernel>((serviceProvider)=> {
     
     return kernel;
 });
+builder.Services.AddToolCollectionService();
 
 builder.Services.AddPromptServices();
 builder.Services.AddIngestionAndSemanticSearch();
@@ -289,6 +292,8 @@ else // Use session storage in production, data is dropped after browser is clos
 // BrowserStorages
 builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>()
     .AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
+
+builder.Services.AddScoped<ToolSelectionStorage>();
 
 // Terminal services
 builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();

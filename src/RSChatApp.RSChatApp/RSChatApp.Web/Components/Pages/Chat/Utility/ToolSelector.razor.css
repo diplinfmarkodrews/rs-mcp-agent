@@ -1,0 +1,50 @@
+.tool-selector {
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tool-selector-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6B7280;
+}
+
+.tool-selector-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tool-selector-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    border: 1px solid #D1D5DB;
+    background-color: #fff;
+    font-size: 0.8rem;
+    color: #374151;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.tool-selector-item label:hover {
+    background-color: #F3F4F6;
+    border-color: #9CA3AF;
+}
+
+.tool-selector-item input[type="checkbox"] {
+    accent-color: #3B82F6;
+    width: 0.85rem;
+    height: 0.85rem;
+    cursor: pointer;
+}

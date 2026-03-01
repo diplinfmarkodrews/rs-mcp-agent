@@ -8,10 +8,16 @@
 }
 
 .header-buttons-row {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.header-buttons-left {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 h1 {
@@ -23,6 +29,23 @@ h1 {
     width: 1.25rem;
     height: 1.25rem;
     color: rgb(55, 65, 81);
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border-radius: 0.25rem;
+    border: 1px solid #9CA3AF;
+    background-color: #D1D5DB;
+    cursor: pointer;
+    color: rgb(55, 65, 81);
+    transition: background-color 0.15s;
+}
+
+.btn-icon:hover {
+    background-color: #E5E7EB;
 }
 
 @media (min-width: 768px) {

@@ -5,7 +5,6 @@ namespace RSChatApp.Web.Components.Pages.Chat.UserConfirmation;
 
 public partial class ChatUserConfirmedToolCall : ComponentBase
 {
-	private ElementReference _elementReference;
 	[Parameter]
 	public bool IsVisible { get; set; }
 
@@ -58,8 +57,6 @@ public partial class ChatUserConfirmedToolCall : ComponentBase
 	}
 	private Task OnSkipClicked() => OnSkip.InvokeAsync();
 	private Task OnCancelClicked() => OnCancel.InvokeAsync();
-	public ValueTask FocusAsync()
-		=> _elementReference.FocusAsync();
 
 	protected override async Task OnParametersSetAsync()
 	{
@@ -83,6 +80,5 @@ public partial class ChatUserConfirmedToolCall : ComponentBase
 	{
 		await base.OnAfterRenderAsync(firstRender);
 		await InvokeAsync(StateHasChanged);
-		await FocusAsync();
 	}
 }

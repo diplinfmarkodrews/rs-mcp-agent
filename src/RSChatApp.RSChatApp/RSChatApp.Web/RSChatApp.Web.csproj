@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <Folder Include="Filter\" />
+    <Folder Include="HostedServices\" />
     <Folder Include="Logs\" />
     <Folder Include="wwwroot\Data\" />
     <Folder Include="Prompts\" />
