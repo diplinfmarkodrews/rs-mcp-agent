@@ -31,7 +31,7 @@ public class ReportServerGwtRpcClientBase : IDisposable
     {
         var lines = new List<string>
         {
-            "7", // GWT RPC version
+            "7", // GWT RPC parameter
             "0", // flags
             (parameters.Length + 4).ToString(), // number of strings in string table
             _moduleBaseUrl,

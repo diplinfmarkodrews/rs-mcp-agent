@@ -4,9 +4,8 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
 using Polly;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
-using RSChatApp.Web.Storage;
 
-namespace RSChatApp.Web.Services.ChatHistory;
+namespace RSChatApp.Web.Storage.ChatHistory;
 
 /// <summary>
 /// Storage for chat history with custom JSON serialization to preserve AIContent polymorphism.

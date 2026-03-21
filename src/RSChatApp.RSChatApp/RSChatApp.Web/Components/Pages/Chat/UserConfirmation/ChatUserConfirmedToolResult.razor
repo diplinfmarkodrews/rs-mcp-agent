@@ -1,0 +1,38 @@
+@if (IsVisible)
+{
+
+    <div class="uctr-card" role="region" aria-label="User confirmation required">
+        <div class="uctr-header">
+            <div class="uctr-title-row">
+                <div class="uctr-title">@Title</div>
+                @if (!string.IsNullOrWhiteSpace(ToolName))
+                {
+                    <div class="uctr-badge" title="Tool">@ToolName</div>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <div class="uctr-subtitle">@Subtitle</div>
+            }
+        </div>
+        <div class="uctr-body">
+            @if (ToolResult != null && ToolInvocation != null)
+            {
+                <ToolResultView
+                    Result="@ToolResult"
+                    Invocation="@ToolInvocation"
+                    OnEditInEditor="@EditInEditor">
+                </ToolResultView>
+            }
+            else
+            {
+                <p>Loading tool details...</p>
+            }
+        </div>
+        <div class="uctr-actions">
+            <button class="btn-default" @onclick="OnRunClicked">Run</button>
+            <button class="btn-default" @onclick="OnRedactClicked">Redact</button>
+            <button class="btn-subtle" @onclick="OnSkipClicked">Skip</button>
+        </div>
+    </div>
+}

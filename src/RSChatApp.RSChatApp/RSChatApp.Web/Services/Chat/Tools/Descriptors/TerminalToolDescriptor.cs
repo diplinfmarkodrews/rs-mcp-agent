@@ -1,3 +1,4 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 
 namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
@@ -41,6 +42,11 @@ public class TerminalToolDescriptor : IToolDescriptor
     {
         // Terminal output is usually the primary thing users want to read.
         return new ToolUiHints(DefaultExpanded: true);
+    }
+
+    public ToolUserConfirmation GetUserConfirmation(string? functionName = null)
+    {
+        return ToolUserConfirmation.ToolCallAndResult;
     }
 
     public string GetIconSvg()

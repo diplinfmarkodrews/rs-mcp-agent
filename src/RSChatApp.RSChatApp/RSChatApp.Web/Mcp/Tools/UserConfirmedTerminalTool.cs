@@ -3,21 +3,22 @@ using System.Text.Json;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using RSChatApp.Infrastructure.UserInteraction;
+using RSChatApp.Web.Filter.UserConfirmation;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Terminal;
-using RSChatApp.Web.Services.UserConfirmation;
 
 namespace RSChatApp.Web.Mcp.Tools;
 
 public class UserConfirmedTerminalTool
 {
     private readonly ITerminalManager _terminalManager;
-    private readonly IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> _userConfirmation;
+    private readonly IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> _userConfirmation;
     private readonly ILogger<UserConfirmedTerminalTool> _logger;
 
     public UserConfirmedTerminalTool(ILogger<UserConfirmedTerminalTool> logger, 
         ITerminalManager terminalManager, 
-        IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> userConfirmation)
+        IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> userConfirmation)
     {
         _logger = logger;
         _terminalManager = terminalManager;
@@ -25,12 +26,20 @@ public class UserConfirmedTerminalTool
     }
 
     [KernelFunction, McpServerTool,  Description("Executes a terminal command on Reportserver.  User confirmation is required before execution.")]
-    public async Task<string> ExecuteCommandAsync([Description("reportserver terminal command")] string command, CancellationToken cancellationToken)
+    public async Task<string> ExecuteCommandAsync([Description("reportserver terminal command")] string command, 
+        CancellationToken cancellationToken)
     {
         _logger.LogDebug("Requesting user confirmation for terminal command: {Command}", command);
        
         var userConfirmationResult = await _userConfirmation.RequestUserInteractionAsync(
-            new TerminalConfirmRequest("Terminal_executecommand", command, "bash"));
+            new UserConfirmToolCallRequest
+            {
+                ToolName = "Terminal_executecommand",
+                Arguments =
+                {
+                    { "Command", command },
+                },
+            });
         
         _logger.LogDebug("UserConfirmation result: {Result}", userConfirmationResult.Result);
         if (userConfirmationResult.Result == UserConfirmationResultEnum.Confirmed)
@@ -44,7 +53,7 @@ public class UserConfirmedTerminalTool
             return JsonSerializer.Serialize(new
             {
                 TerminalId = executingTerminalId,
-                SessionId = _terminalManager.ActiveTerminal?.RsSessionId,
+                SessionId = _terminalManager.ActiveTerminal?.SessionId,
                 //Command = command,
                 CommandResult = result
             });

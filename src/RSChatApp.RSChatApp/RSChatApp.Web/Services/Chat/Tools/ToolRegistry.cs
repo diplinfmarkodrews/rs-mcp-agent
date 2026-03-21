@@ -1,3 +1,4 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 using RSChatApp.Web.Services.Chat.Tools.Descriptors;
 
@@ -15,9 +16,9 @@ public class ToolRegistry
             "Search", "SearchAsync", "search");
         
         RegisterDescriptor(new TerminalToolDescriptor(), 
-            "TerminalTool_execute_command", "RsMcpServer_execute_command");
+            "TerminalTool_execute_command", "RsMcpServer_execute_command", "execute_command");
         
-        RegisterDescriptor(new BrowserToolDescriptor(), 
+        RegisterDescriptor(new BrowserExecuteToolDescriptor(), 
             "BrowserTool_executejavascript", "executeScript");
         
         RegisterDescriptor(new DocumentLookupToolDescriptor(), 

@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace ReportServer.Abstraction.Contracts.Terminal;
 
 public class CommandResult
 {
     public string Result { get; set; }
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] 
     public CommandResultType Type { get; set; }
     public string Error { get; set; }
     public object Data { get; set; }

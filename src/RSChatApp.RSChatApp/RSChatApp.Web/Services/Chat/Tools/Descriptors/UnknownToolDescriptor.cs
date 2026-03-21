@@ -1,3 +1,4 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 
 namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
@@ -28,6 +29,11 @@ public class UnknownToolDescriptor : IToolDescriptor
     public ToolUiHints GetUiHints(IReadOnlyDictionary<string, object?> parameters)
     {
         return ToolUiHints.Default;
+    }
+
+    public ToolUserConfirmation GetUserConfirmation(string? funtionName = null)
+    {
+        return ToolUserConfirmation.None;
     }
 
     public string GetIconSvg()

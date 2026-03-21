@@ -4,6 +4,7 @@
 
 # Downloaded ReportServer scripts (large/external)
 scripts/rs-scripts/
+scripts/skills/
 # .NET Core / .NET Framework
 bin/
 obj/

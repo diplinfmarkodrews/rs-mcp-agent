@@ -124,12 +124,12 @@
             var filePath = citation.File.Contains('/') ? citation.File : $"Data/{citation.File}";
             return $"lib/pdf_viewer/viewer.html?file=/{HttpUtility.UrlEncode(filePath)}#page={citation.Page}&search={HttpUtility.UrlEncode(search)}&phrase=true";
         }
-        if (citation.File.EndsWith(".txt"))
-        {
-            var search = citation.Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
-            var filePath = citation.File.Contains('/') ? citation.File : $"Data/{citation.File}";
-            return $"lib/text_viewer/viewer.html?file=/{HttpUtility.UrlEncode(filePath)}&search={HttpUtility.UrlEncode(search)}&phrase=true";
-        }
+        // if (citation.File.EndsWith(".txt"))
+        // {
+        //     var search = citation.Quote?.Trim('.', ',', ' ', '\n', '\r', '\t', '"', '\'');
+        //     var filePath = citation.File.Contains('/') ? citation.File : $"Data/{citation.File}";
+        //     return $"lib/text_viewer/viewer.html?file=/{HttpUtility.UrlEncode(filePath)}&search={HttpUtility.UrlEncode(search)}&phrase=true";
+        // }
         return null;
     }
     

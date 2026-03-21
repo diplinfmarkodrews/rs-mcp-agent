@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Interfaces;
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData.Attributes;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
 
@@ -176,7 +177,10 @@ public class BrowserTool
     /// <summary>
     /// Take a screenshot of the current page
     /// </summary>
-    [KernelFunction, McpServerTool, Description("Take a screenshot of the current page")]
+    [KernelFunction, 
+     McpServerTool, 
+     Description("Take a screenshot of the current page")
+    ]
     public async Task<string> TakeScreenshotAsync(
         [Description("Screenshot format (png, jpeg) - default: png")] string format = "png",
         [Description("Full page screenshot (default: true)")] bool fullPage = true,
@@ -213,7 +217,10 @@ public class BrowserTool
     /// <summary>
     /// Get the current page content as HTML
     /// </summary>
-    [KernelFunction, McpServerTool, Description("Get the current page content as HTML")]
+    [KernelFunction, 
+     McpServerTool, 
+     Description("Get the current page content as HTML")
+    ]
     public async Task<string> GetPageContentAsync()
     {
         _logger.LogInformation("GetPageContentAsync called");
@@ -400,8 +407,10 @@ public class BrowserTool
     /// <summary>
     /// Execute JavaScript on the page
     /// </summary>
-    [KernelFunction, Description("Execute JavaScript code on the page. " +
-                                 "Before you execute scripts, print it to the user and ask for permission to execute.")]
+    [KernelFunction, 
+     Description("Execute JavaScript code on the page. " +
+                 "The script can return a value which will be included in the result. ")
+    ]
     public async Task<string> ExecuteJavaScriptAsync(
         [Description("JavaScript code to execute")] string script)
     {
@@ -410,7 +419,7 @@ public class BrowserTool
         
         try
         {
-            var result = await _browserInstance.ExecuteScriptAsync(script ?? "");
+            var result = await _browserInstance.ExecuteScriptAsync(script!);
 
             _logger.LogInformation("Successfully executed JavaScript. Result type: {ResultType}", result?.GetType().Name ?? "null");
             _logger.LogDebug("JavaScript execution result: {Result}", result);

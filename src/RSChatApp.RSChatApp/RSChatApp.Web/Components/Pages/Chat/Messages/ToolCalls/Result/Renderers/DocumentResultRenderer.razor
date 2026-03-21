@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Models
 @using RSChatApp.Web.Models.Chat.ToolCalls
 
 <div class="document-lookup-result">
@@ -26,9 +27,9 @@
         </div>
     }
 
-    @if (string.IsNullOrWhiteSpace(DocumentText) && (Images is null || Images.Count == 0))
+    @if (string.IsNullOrWhiteSpace(DocumentText) && (Images is null || Images.Count == 0) && string.IsNullOrWhiteSpace(ErrorMessage) == false)
     {
-        <p class="document-empty">No content available for this page.</p>
+        <p class="document-empty">@ErrorMessage</p>
     }
 </div>
 
@@ -38,7 +39,7 @@
 
     private string? DocumentText { get; set; }
     private List<string>? Images { get; set; }
-
+    private string? ErrorMessage { get; set; }
     protected override void OnParametersSet()
     {
         DocumentText = null;
@@ -52,82 +53,41 @@
                 JsonElement e => e.GetRawText(),
                 _ => Result.Data?.ToString()
             };
-
+         
             if (string.IsNullOrWhiteSpace(rawText))
             {
+                ErrorMessage = "No content available for this page.";
                 return;
             }
-
-            using var doc = JsonDocument.Parse(rawText);
-            var root = doc.RootElement;
-
-            if (TryGetPropertyIgnoreCase(root, "Text", out var textProp) &&
-                textProp.ValueKind == JsonValueKind.String)
+            
+            if (rawText.StartsWith("Error:", StringComparison.OrdinalIgnoreCase))
             {
-                DocumentText = textProp.GetString();
+                ErrorMessage = rawText;
+                return;
             }
-
-            if (TryGetPropertyIgnoreCase(root, "Images", out var imagesProp) &&
-                imagesProp.ValueKind == JsonValueKind.Array)
+            
+            var documentObject = JsonSerializer.Deserialize<DocumentLookupResult>(rawText, new JsonSerializerOptions
             {
-                Images = new List<string>();
-                foreach (var imageElement in imagesProp.EnumerateArray().Reverse())
-                {
-                    string? imageData = null;
-
-                    if (imageElement.ValueKind == JsonValueKind.String)
-                    {
-                        imageData = imageElement.GetString();
-                    }
-                    else if (imageElement.ValueKind == JsonValueKind.Object &&
-                             TryGetPropertyIgnoreCase(imageElement, "ImageData", out var imgDataProp) &&
-                             imgDataProp.ValueKind == JsonValueKind.String)
-                    {
-                        imageData = imgDataProp.GetString();
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(imageData))
-                    {
-                        // If already a data URI, use as-is
-                        if (imageData.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Images.Add(imageData);
-                        }
-                        else
-                        {
-                            // Detect MIME type from the MimeType property or default to PNG
-                            string mimeType = "image/png";
-                            if (imageElement.ValueKind == JsonValueKind.Object &&
-                                TryGetPropertyIgnoreCase(imageElement, "MimeType", out var mimeProp) &&
-                                mimeProp.ValueKind == JsonValueKind.String)
-                            {
-                                mimeType = mimeProp.GetString() ?? "image/png";
-                            }
-
-                            Images.Add($"data:{mimeType};base64,{imageData}");
-                        }
-                    }
-                }
+                PropertyNameCaseInsensitive = true,
+            });
+            if (documentObject is null)
+            {
+                ErrorMessage = "Error deserialzing document content.";
+                return;
             }
+            DocumentText = documentObject.Text;
+            if (documentObject.Images is null)
+                return;
+            
+            Images = documentObject.Images
+                .Select(d => d.ImageData.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ? d.ImageData : $"data:image/png;base64,{d.ImageData}")
+                .ToList();
+          
         }
-        catch
+        catch (Exception ex)
         {
-            // Failed to parse document lookup result
+            ErrorMessage = ex.Message;
         }
     }
 
-    private static bool TryGetPropertyIgnoreCase(JsonElement element, string name, out JsonElement value)
-    {
-        foreach (var prop in element.EnumerateObject())
-        {
-            if (prop.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-            {
-                value = prop.Value;
-                return true;
-            }
-        }
-
-        value = default;
-        return false;
-    }
 }

@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using ReportServer.Abstraction;
+using ReportServer.Abstraction.Contracts.Terminal;
+using RSChatApp.Common;
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData.Attributes;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 
@@ -28,9 +31,9 @@ public class TerminalTool
     /// Executes a terminal command on the report server
     /// </summary>
     [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. ")]
-    public async Task<object> ExecuteCommandAsync(
-        [Description("session id to identify terminal session. Leave empty to start a new session!")]string? sessionId,
+    public async Task<TerminalCommandResult> ExecuteCommandAsync(
         [Description("command to be executed in ReportServer terminal")]string command,
+        [Description("session id to identify terminal session. Leave empty to start a new session!")]string sessionId = "",
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(sessionId) == false 
@@ -40,20 +43,18 @@ public class TerminalTool
         {
             _logger.LogDebug("[TerminalTool]No sessionId provided. Initializing new terminal session.");
             var sessionInfo =  await _reportServer.InitSessionAsync();
-            if (sessionInfo.IsSuccess && sessionInfo.Data != null)
+            if (sessionInfo.IsSuccess && sessionInfo.Data != null
+                && !string.IsNullOrEmpty(sessionInfo.Data.SessionId))
             {
                 sessionId = sessionInfo.Data.SessionId;
             }
             else
             {
-                return new
-                {
-                    SessionId = sessionId ?? string.Empty,
-                    Command = command,
-                    Error = new StringBuilder("Error fetching SessionId.")
-                        .Append(sessionInfo.Error?.Message)
-                        .ToString()
-                };
+                return new TerminalCommandResult(
+                    sessionId ?? string.Empty,
+                    command,
+                    Result<CommandResult>.Fail(sessionInfo.Error)
+                );
             }
         }
         
@@ -62,13 +63,10 @@ public class TerminalTool
         // Execute the command with the session ID
 
         var cmdResult = await _reportServer.ExecuteAsync(sessionId, command, cancellationToken);
-        
-        return new
-        {
-            SessionId = sessionId,
-            Command = command,
-            CmdResult = cmdResult,
-        };
+        return new TerminalCommandResult(
+            sessionId,
+            command,
+            cmdResult);
         
     }
     
@@ -88,4 +86,4 @@ public class TerminalTool
     //     return serializedSessionInfo;
     // }
 }
-public record TerminalCommandResult(string SessionId, string Command, string CmdResult);
+public record TerminalCommandResult(string SessionId, string Command, Result<CommandResult> CmdResult);

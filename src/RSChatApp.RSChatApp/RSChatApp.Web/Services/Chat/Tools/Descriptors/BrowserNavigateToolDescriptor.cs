@@ -1,17 +1,16 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 
 namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
 
-public class BrowserToolDescriptor : IToolDescriptor
+public class BrowserNavigateToolDescriptor : IToolDescriptor
 {
-    public ToolType Type => ToolType.BrowserExecute;
-
-    public string GetDisplayName(IReadOnlyDictionary<string, object?> parameters)
+    public ToolType Type { get => ToolType.BrowserNavigate; }
+     public string GetDisplayName(IReadOnlyDictionary<string, object?> parameters)
     {
-        var script = FormatValue(parameters.GetValueOrDefault("script"))
-                  ?? FormatValue(parameters.GetValueOrDefault("code"));
+        var functionName = FormatValue(parameters.GetValueOrDefault("functionName"));
         
-        return $"Browser: {Truncate(script, 50)}";
+        return $"Browser: {Truncate(functionName, 50)}";
     }
 
     public ToolPermissions GetPermissions(IReadOnlyDictionary<string, object?> parameters)
@@ -41,6 +40,11 @@ public class BrowserToolDescriptor : IToolDescriptor
     {
         // Browser execute JavaScript results are typically immediately relevant.
         return new ToolUiHints(DefaultExpanded: true);
+    }
+
+    public ToolUserConfirmation GetUserConfirmation(string? functionName = null)
+    {
+        return ToolUserConfirmation.ToolResultOnly;
     }
 
     public string GetIconSvg()

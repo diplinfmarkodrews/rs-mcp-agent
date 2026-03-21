@@ -2,116 +2,125 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Components.Pages.Terminal;
-using RSChatApp.Web.Mcp.Tools;
-using RSChatApp.Web.Services.UserConfirmation;
+using RSChatApp.Web.Filter.UserConfirmation;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
+using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Storage;
+using RSChatApp.Web.Storage.Utility;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 using TextContent = Microsoft.Extensions.AI.TextContent;
 
 namespace RSChatApp.Web.Components.Pages.Chat;
 
 public partial class Chat(
-    IChatClient chatClient,
+    IChatClientFactory chatClientFactory,
     Kernel kernel,
     IStorage<List<ChatMessage>> chatHistoryStorage,
-    SemanticSearchTool semanticSearchTool, 
-    DocumentLookupTool documentLookupTool,
-    ScriptStoreTool scriptStoreTool,
-    AuthenticationTool authenticationTool,
-    UserConfirmedTerminalTool userConfirmedTerminalTool,
+    ToolCollectionService toolCollectionService,
+    ToolSelectionStorage toolSelectionStorage,
     IPromptService promptService,
     ILogger<Chat> logger,
-    IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult> terminalUserInteraction
-    ) : ComponentBase, IDisposable
+    IOptions<OpenAIPromptExecutionSettings> promptExecutionSettings,
+    IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall> toolCallUserConfirmation,
+    IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
-
-    private readonly ChatOptions _chatOptions = new();
+    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.HelperModel); 
+    private ChatOptions _chatOptions = new();
+    
     private readonly List<ChatMessage> _messages = new();
     private CancellationTokenSource? _currentResponseCancellation;
+    
     private ChatMessage? _currentResponseMessage;
     private ChatInput? _chatInput;
     private ChatSuggestions? _chatSuggestions;
-    private bool _isOllama;
     private bool _terminalVisible = false;
+    private bool _toolSelectorVisible = false;
     private TerminalManager? _terminalManager;
     private int _terminalHeight = 200;
-
-    private TerminalConfirmRequest? _pendingTerminalRequest;
-    private TaskCompletionSource<UserConfirmationResult>? _pendingTerminalTcs;
+    
+    private UserConfirmToolCallRequest? _pendingToolCallRequest;
+    private TaskCompletionSource<UserConfirmationToolCall>? _pendingToolCallTcs;
+    
+    private UserConfirmToolResultRequest? _pendingToolResultRequest;
+    private TaskCompletionSource<UserConfirmationToolResult>? _pendingToolResultTcs;
     
     [Experimental("SKEXP0001")]
     protected override async Task OnInitializedAsync()
     {
-        terminalUserInteraction.UserInteractionRequested += OnTerminalUserInteractionRequested;
-
-        // Since new ollama version supports stream & tool calls, will refactor to stream api only
-        // TODO: Test first with ollama version that supports both streaming and tool calls
-        _isOllama = false;
+        toolCallUserConfirmation.UserInteractionRequested += OnToolCallUserConfirmationRequested;
+        toolResultUserConfirmation.UserInteractionRequested += OnToolResultUserConfirmationRequested;
         
-        // Debug logging to see what kernel plugins are available
-        var kernelPlugins = kernel.Plugins.ToList();
-        logger.LogDebug("Total kernel plugins available: {kernelPluginsCount}: \n{kernelPluginsNames} ", kernelPlugins.Count, 
-            string.Join(", ", kernelPlugins.Select(p=> p.Name)));
-
-        // Create a list of all tools (local search + kernel MCP tools)
-        var allTools = new List<AITool>
-        {
-            AIFunctionFactory.Create(semanticSearchTool.SearchAsync,  "Search", "Search for information using a phrase or keyword"),
-            AIFunctionFactory.Create(documentLookupTool.GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
-            AIFunctionFactory.Create(scriptStoreTool.GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
-            AIFunctionFactory.Create(scriptStoreTool.GetText, "GetTextFileFromPath","Get a text file of a given path. can be scripts or other text files")
-            // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
-            // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
-            // AIFunctionFactory.Create(UserConfirmedTerminalTool.ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
-        };
+        kernel.Data[KernelDataConstants.IsResultConfirmDisabled] = true;
+        kernel.Data[KernelDataConstants.IsLocalModel] = false;
+        // _chatOptions.Temperature = (float?)promptExecutionSettings.Value.Temperature;
+        // _chatOptions.FrequencyPenalty = (float?)promptExecutionSettings.Value.FrequencyPenalty;
+        // _chatOptions.TopP = (float?)promptExecutionSettings.Value.TopP;
+        // _chatOptions.Seed = promptExecutionSettings.Value.Seed;
         
-        // Add MCP tools
-        foreach (var plugin in kernelPlugins)
-        {
-            foreach (var aiFunction in plugin)
-            {
-                allTools.Add(aiFunction.AsAIFunction(kernel));
-            }
-        }
-        logger.LogInformation("Total tools registered for chat: {allToolsCount}: \n{allTools} ", allTools.Count, 
-            string.Join(", \n", allTools.Select(p=> p.Name)));
         
-        _chatOptions.Tools = allTools;              
         // Load chat history
         await InitChatHistoryAsync();
+        await OnToolSelectionChangedAsync();
     }
 
-    private void OnTerminalUserInteractionRequested(object? sender,
-        (TerminalConfirmRequest Request, TaskCompletionSource<UserConfirmationResult> TaskCompletionSource) args)
+    private Task OnToolSelectionChangedAsync()
+    {
+        _chatOptions.Tools = toolCollectionService.AllTools
+            .Where(t => toolSelectionStorage.IsEnabled(t.Name))
+            .ToList<AITool>();
+        return Task.CompletedTask;
+    }
+
+    private void OnToolResultUserConfirmationRequested(object? sender, 
+        (UserConfirmToolResultRequest Request, TaskCompletionSource<UserConfirmationToolResult> TaskCompletionSource) args)
     {
         // Ensure only one pending interaction at a time.
-        _pendingTerminalTcs?.TrySetResult(
-            new UserConfirmationResult(
-                UserConfirmationResultEnum.Cancelled));
-
-        _pendingTerminalRequest = args.Request;
-        _pendingTerminalTcs = args.TaskCompletionSource;
+        _pendingToolResultTcs?.TrySetResult(UserConfirmationToolResult.Cancelled);
+        _pendingToolResultRequest = args.Request;
+        _pendingToolResultTcs = args.TaskCompletionSource;
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private async Task ResolveTerminalConfirmationAsync(UserConfirmationResult result)
+    private void OnToolCallUserConfirmationRequested(object? sender,
+        (UserConfirmToolCallRequest Request, TaskCompletionSource<UserConfirmationToolCall> TaskCompletionSource) args)
     {
-        if (_pendingTerminalTcs is null)
+        // Ensure only one pending interaction at a time.
+        _pendingToolCallTcs?.TrySetResult(UserConfirmationToolCall.Cancelled);
+        _pendingToolCallRequest = args.Request;
+        _pendingToolCallTcs = args.TaskCompletionSource;
+        _ = InvokeAsync(StateHasChanged);
+    }
+    private async Task ResolveToolResultConfirmationAsync(UserConfirmationToolResult toolResult)
+    {
+        if (_pendingToolResultTcs is null)
         {
             return;
         }
-        logger.LogInformation("Resolving terminal confirmation: {result}", result);
-        _pendingTerminalTcs.TrySetResult(result);
-        _pendingTerminalTcs = null;
-        _pendingTerminalRequest = null;
+        logger.LogInformation("Resolving tool result confirmation: {result}", toolResult);
+        _pendingToolResultTcs?.TrySetResult(toolResult);
+        _pendingToolResultTcs = null;
+        _pendingToolResultRequest = null;
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task ResolveTerminalConfirmationAsync(UserConfirmationToolCall toolCall)
+    {
+        if (_pendingToolCallTcs is null)
+        {
+            return;
+        }
+        logger.LogInformation("Resolving tool call confirmation: {toolCall}", toolCall);
+        _pendingToolCallTcs?.TrySetResult(toolCall);
+        _pendingToolCallTcs = null;
+        _pendingToolCallRequest = null;
         await InvokeAsync(StateHasChanged);
     }
     
@@ -151,20 +160,15 @@ public partial class Chat(
     }
     
     private Task AddUserMessageAsync(ChatMessage userMessage)
-    {
-        if (_isOllama)
-            return AddUserMessageSingleAsync(userMessage);
-        
-        return AddUserMessageStreamAsync(userMessage);
-
-    }
+        => AddUserMessageStreamAsync(userMessage);
     private async Task AddUserMessageStreamAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();
-
+        
         // Add the user message to the conversation
         _messages.Add(userMessage);
         _chatSuggestions?.Clear();
+        _chatInput!.SetProcessing(true);
         await _chatInput!.FocusAsync();
 
         // Display a new response from the IChatClient with streaming
@@ -180,7 +184,7 @@ public partial class Chat(
             var normalizedMessages = _messages.NormalizeMessagesForApi();
             
             // Use streaming API to get progressive responses
-            await foreach (var update in chatClient.GetStreamingResponseAsync(normalizedMessages, _chatOptions, _currentResponseCancellation.Token))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(normalizedMessages, _chatOptions, _currentResponseCancellation.Token))
             {
                 // Collect ALL content types from each update
                 foreach (var content in update.Contents)
@@ -316,10 +320,16 @@ public partial class Chat(
     {
         _terminalVisible = !_terminalVisible;
     }
+
+    private void ToggleToolSelector()
+    {
+        _toolSelectorVisible = !_toolSelectorVisible;
+    }
     
     public void Dispose()
     {
-        terminalUserInteraction.UserInteractionRequested -= OnTerminalUserInteractionRequested;
+        toolCallUserConfirmation.UserInteractionRequested -= OnToolCallUserConfirmationRequested;
+        toolResultUserConfirmation.UserInteractionRequested -= OnToolResultUserConfirmationRequested;
         _currentResponseCancellation?.Cancel();
     }
     /// <summary>
@@ -340,7 +350,7 @@ public partial class Chat(
             // Display a new response from the IChatClient, streaming responses
             // aren't supported because Ollama will not support both streaming and using Tools
             _currentResponseCancellation = new();
-            var response = await chatClient.GetResponseAsync(_messages, _chatOptions, _currentResponseCancellation.Token);
+            var response = await _chatClient.GetResponseAsync(_messages, _chatOptions, _currentResponseCancellation.Token);
 
             // Store responses in the conversation, and begin getting suggestions
             var beforeCount = _messages.Count;
@@ -376,4 +386,5 @@ public partial class Chat(
             _chatInput?.SetProcessing(false);
         }
     }
+    
 }

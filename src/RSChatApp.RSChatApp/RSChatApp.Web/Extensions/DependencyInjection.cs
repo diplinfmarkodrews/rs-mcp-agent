@@ -1,16 +1,20 @@
 using System.ClientModel;
-using Microsoft.AspNetCore.StaticFiles;
+using System.Diagnostics;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.SemanticKernel;
+using ModelContextProtocol.Client;
 using OpenAI;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Configuration;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Configuration;
+using RSChatApp.Web.HostedServices.McpTool;
+using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
+using RSChatApp.Web.Services.Chat.Tools;
 using RsMcpServer.Identity.Models.Requests;
 
 namespace RSChatApp.Web.Extensions;
@@ -36,7 +40,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
         OpenAiSettings openAISettings, 
-        string? serviceId = null,
+        string serviceKey,
         string? openTelemetrySourceName = null,
         Action<OpenTelemetryChatClient>? openTelemetryConfig = null)
     {
@@ -62,25 +66,52 @@ public static class DependencyInjection
             }
             return builder.Build();
         }
-
-        if (serviceId is null)
-        {
-            services.AddScoped<IChatClient>(sp => Factory(sp, null));
-        }
-        else
-        {
-            services.AddKeyedScoped<IChatClient>(serviceId, (Func<IServiceProvider, object?, IChatClient>)Factory);
-        }
+        services.AddScoped<IChatClientFactory, ChatClientFactory>();
+        services.AddKeyedScoped<IChatClient>(serviceKey, (Func<IServiceProvider, object?, IChatClient>)Factory);
         
         return services;
     }
 
-    public static IServiceCollection AddPromptServices(this IServiceCollection services)
+    
+    internal static IServiceCollection AddToolCollectionService(this IServiceCollection services)
     {
-        services.AddSingleton<IPromptFileStore, PromptFileStore>();
-        services.AddScoped<IPromptService, PromptService>();
-        services.AddHostedService<PromptStartupValidatorHostedService>();
+        // services.AddSingleton<ToolCollectionService>();
+        // services.AddHostedService<McpToolCollectionRegistrationHostedService>();
+        services.AddScoped<ToolCollectionService>(provider =>
+        {
+            var grouped = new Dictionary<string, List<AITool>>
+            {
+                ["Knowledge Base"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<SemanticSearchTool>().SearchAsync, "Search", "Search for information using a phrase or keyword"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<DocumentLookupTool>().GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
+                ],
+                ["File Store"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetScriptText, "GetTextFromScriptsPath", "Get a text file of a given path. can be scripts or other text files"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllSkillsPaths, "GetAllSkillsPath", "Retrieve a list of all skills path"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetSkillsText, "GetTextFromSkillsPath", "Get a text file of a given skills path. can be scripts or other text files"),
+                ],
+                ["TerminalTool"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<UserConfirmedTerminalTool>().ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation."),
+                ]
+            };
+
+            var kernel = provider.GetRequiredService<Kernel>();
+            foreach (var plugin in kernel.Plugins)
+            {
+                grouped[plugin.Name] = plugin.Select(f => (AITool)f.AsAIFunction(kernel)).ToList();
+            }
+
+            provider.GetRequiredService<ILogger<Kernel>>()
+                .LogInformation("Total tools available: {count}: \n{names}",
+                    grouped.Values.Sum(t => t.Count),
+                    string.Join(",\n", grouped.Values.SelectMany(t => t).Select(t => t.Name)));
+
+            return new ToolCollectionService(grouped);
+        });
         return services;
     }
-  
 }

@@ -11,6 +11,7 @@ public class ScriptStoreTool
     private readonly IStaticContentIndexStore _fileIndexStore;
     private readonly IStaticContentFileStore _fileStore;
     private const string ScriptSourcePath = "rs-scripts";
+    private const string SkillsSourcePath = "skills";
     
     public ScriptStoreTool(IStaticContentIndexStore fileIndexStore,
         IStaticContentFileStore fileStore) 
@@ -30,11 +31,31 @@ public class ScriptStoreTool
     }
     
     [KernelFunction, McpServerTool,  Description("Use a scriptPath to retrieve the full script in textform.")]
-    public async Task<string> GetText(string scriptPath, CancellationToken ct)
+    public async Task<string> GetScriptText(string scriptPath, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(scriptPath)) return "Error: Invalid script path.";
         
         var fileResult = await _fileStore.GetTextAsync(ScriptSourcePath, scriptPath, ct);
+        
+        if (string.IsNullOrWhiteSpace(fileResult)) return "Error: File not found.";
+        return fileResult;
+    } 
+    [KernelFunction, McpServerTool,  Description("List all skills source pathes.")]
+    public string GetAllSkillsPaths()
+    {
+        var allResults = _fileIndexStore.GetAll(SkillsSourcePath)
+            .Where(x => x.ContentType == ContentType.Script || x.ContentType == ContentType.Html || x.ContentType == ContentType.Text)
+            .Select(x => x.RelativePath);
+        
+        return string.Join("\n", allResults);
+    }
+    
+    [KernelFunction, McpServerTool,  Description("Use a skillsPath to retrieve the full skill in textform.")]
+    public async Task<string> GetSkillsText(string skillsPath, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(skillsPath)) return "Error: Invalid script path.";
+        
+        var fileResult = await _fileStore.GetTextAsync(SkillsSourcePath, skillsPath, ct);
         
         if (string.IsNullOrWhiteSpace(fileResult)) return "Error: File not found.";
         return fileResult;

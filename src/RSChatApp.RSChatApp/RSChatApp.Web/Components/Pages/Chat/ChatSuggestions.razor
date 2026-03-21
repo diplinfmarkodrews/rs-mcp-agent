@@ -1,7 +1,8 @@
 @using RSChatApp.Infrastructure.Prompt
-@inject IChatClient ChatClient
+@using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient
 @inject ILogger<ChatSuggestions> Logger
 @inject IPromptService PromptService
+@inject IChatClientFactory ChatClientFactory
 @if (suggestions is not null)
 {
     <div class="page-width suggestions">
@@ -16,7 +17,7 @@
 
 @code {
     private string Prompt => PromptService.GetPrompt(new SuggestionPromptRequest());
-
+    private IChatClient ChatClient;
     private string[]? suggestions;
     private CancellationTokenSource? cancellation;
 
@@ -27,6 +28,12 @@
     {
         suggestions = null;
         cancellation?.Cancel();
+    }
+
+    protected override void OnInitialized()
+    {
+        ChatClient = ChatClientFactory.Create(ChatClientServiceKeys.HelperModel);
+        base.OnInitialized(); 
     }
 
     public void Update(IReadOnlyList<ChatMessage> messages)
@@ -55,27 +62,27 @@
             var response = await ChatClient.GetResponseAsync(
                 [.. reducedMessages, new(ChatRole.User, Prompt)],
                 cancellationToken: cancellation.Token);
-                
-            if (response is not null)
+            
+            if (response is null || cancellation.Token.IsCancellationRequested)
             {
-                var responseMessages = new List<ChatMessage>();
-                responseMessages.AddMessages(response);
-                
-                var responseText = responseMessages.LastOrDefault()?.Text?.Trim();
-                if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
-                {
-                    suggestions = ParseLinesFromResponse(responseText);
-                }
-                else
-                {
-                    suggestions = null;
-                }
+                suggestions = null;
+                StateHasChanged();
+                return;
+            }
+            
+            var responseMessages = new List<ChatMessage>();
+            responseMessages.AddMessages(response);
+            
+            var responseText = responseMessages.LastOrDefault()?.Text?.Trim();
+            if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
+            {
+                suggestions = ParseLinesFromResponse(responseText);
             }
             else
             {
                 suggestions = null;
             }
-
+       
             StateHasChanged();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -108,7 +115,7 @@
         
         // Get safe user/assistant messages (text-only, no tool calls)
         var safeMessages = messages
-            .Skip(systemMessages.Count())
+            .Skip(systemMessages?.Count() ?? 0)
             .Where(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) &&
                        !string.IsNullOrWhiteSpace(m.Text) && 
                        m.Contents?.Count == 1 && 

@@ -1,3 +1,4 @@
+@using System.Text
 @using System.Text.RegularExpressions
 @using System.Web
 @using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services
@@ -18,6 +19,8 @@
 @code {
     [Parameter]
     public required string File { get; set; }
+    [Parameter]
+    public string? Keyword { get; set; }
 
     [Parameter]
     public int? PageNumber { get; set; }
@@ -29,7 +32,12 @@
 
     protected override void OnParametersSet()
     {
-        File = FindHighestVersion(File);
+        if (string.IsNullOrWhiteSpace(File) 
+            && string.IsNullOrWhiteSpace(Keyword) == false)
+        {
+         
+            File = FindHighestVersion(Keyword);
+        }
         viewerUrl = null;
         
         // If you ingest other types of content besides PDF files, construct a URL to an appropriate viewer here
@@ -44,12 +52,16 @@
     {
         // can be simplified
         var fileNames = FileNameProvider.GetFileNames("Data");
-        var regex = new Regex(@"(admin|config|user|script).*?([\d]+[._][\d]+(?:[._][\d]+)*)\.pdf$",
+        var regExString = new StringBuilder("(")
+            .Append(keyword)
+            .Append(@").*?([\d]+[._][\d]+(?:[._][\d]+)*)\.pdf$")
+            .ToString(); 
+        var regex = new Regex(regExString, //@"(admin|config|user|script).*?([\d]+[._][\d]+(?:[._][\d]+)*)\.pdf$"
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
         
         return fileNames
             .Select(f => (FileName: f, Match: regex.Match(f)))
-            .Where(x => x.Match.Success && x.Match.Groups[1].Value.Equals(keyword, StringComparison.OrdinalIgnoreCase))
+            .Where(x => x.Match.Success) //&& x.Match.Groups[1].Value.Equals(keyword, StringComparison.OrdinalIgnoreCase)
             .OrderByDescending(x => Version.Parse(x.Match.Groups[2].Value.Replace('_', '.')))
             .FirstOrDefault().FileName ?? keyword;
     }

@@ -3,7 +3,7 @@ using Microsoft.SemanticKernel;
 using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 
-namespace RSChatApp.Web.Mcp.McpClient;
+namespace RSChatApp.Web.HostedServices.McpTool;
 
 public sealed class RsMcpToolRegistrationHostedService : IHostedService
 {

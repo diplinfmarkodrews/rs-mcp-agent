@@ -2,7 +2,7 @@
 
 <EditForm Model="@this" OnValidSubmit="@SendMessageAsync">
     <label class="input-box page-width">
-        <textarea @ref="@_textArea" @bind="@_messageText" placeholder="Type your message..." rows="1"></textarea>
+        <textarea @ref="@_textArea" @bind="@_messageText" placeholder="Type your message..." rows="2"></textarea>
 
         <div class="tools">
             @if (_isProcessing)

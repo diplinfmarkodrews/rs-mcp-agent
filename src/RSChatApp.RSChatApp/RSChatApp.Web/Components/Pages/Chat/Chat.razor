@@ -1,21 +1,30 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
+@using RSChatApp.Web.Components.Pages.Chat.UserConfirmation
+@using RSChatApp.Web.Components.Pages.Chat.Utility
 @using RSChatApp.Web.Components.Pages.Terminal
-@using RSChatApp.Web.Services.UserConfirmation
+@using RSChatApp.Web.Models.Chat.UserConfirmation
 
 @attribute [AllowAnonymous]
 
 <div class="chat-page @(_terminalVisible ? "terminal-visible" : "")" style="@(_terminalVisible ? $"--terminal-height: {_terminalHeight}px" : "")">
-    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" />
-    
+    <ChatHeader OnNewChat="@ResetConversationAsync" OnToggleTerminal="@ToggleTerminal" OnToggleTools="@ToggleToolSelector" />
+
+    @if (_toolSelectorVisible)
+    {
+        <div class="tool-selector-panel">
+            <ToolSelector OnSelectionChanged="@OnToolSelectionChangedAsync" />
+        </div>
+    }
+
     <div class="chat-messages-area">
         <ChatMessageList Messages="@_messages" InProgressMessage="@_currentResponseMessage">
             <NoMessagesContent>
                 <div>Welcome to the ReportServer Agent.</div>
-                <ChatCitation File="admin"/>
-                <ChatCitation File="config"/>
-                <ChatCitation File="user"/>
-                <ChatCitation File="script"/>
+                <ChatCitation Keyword="admin"/>
+                <ChatCitation Keyword="config"/>
+                <ChatCitation Keyword="user"/>
+                <ChatCitation Keyword="script"/>
             </NoMessagesContent>
         </ChatMessageList>
     </div>
@@ -31,19 +40,34 @@
     
     <TerminalManager @ref="_terminalManager" IsVisible="@_terminalVisible" Height="@_terminalHeight" OnHeightChanged="@((h) => { _terminalHeight = h; StateHasChanged(); })" />
 
-    @if (_pendingTerminalRequest is not null)
+    @if (_pendingToolCallRequest is not null)
     {
         <div class="confirm-overlay" role="presentation">
             <ChatUserConfirmedToolCall
                 IsVisible="true"
                 Title="Confirm terminal command"
-                ToolName="@_pendingTerminalRequest.ToolName"
-                Subtitle="This command will run on the ReportServer terminal."
-                CommandOrPayload="@_pendingTerminalRequest.Command"
-                Language="@_pendingTerminalRequest.Language"
-                OnRun="@((command) => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Confirmed, command)))"
-                OnSkip="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Skipped)))"
-                OnCancel="@(() => ResolveTerminalConfirmationAsync(new UserConfirmationResult(UserConfirmationResultEnum.Cancelled)))" />
+                ToolName="@_pendingToolCallRequest.ToolName"
+                Arguments="@_pendingToolCallRequest.Arguments"
+                OnRun="@((confirmationToolCall) => ResolveTerminalConfirmationAsync(confirmationToolCall))"
+                OnSkip="@(() => ResolveTerminalConfirmationAsync(UserConfirmationToolCall.Skipped))"
+                OnCancel="@(() => ResolveTerminalConfirmationAsync(UserConfirmationToolCall.Cancelled))"
+                ShowCancel="false"
+                />
+        </div>
+    }
+    @if (_pendingToolResultRequest is not null)
+    {
+        <div class="confirm-overlay" role="presentation">
+            <ChatUserConfirmedToolResult
+                IsVisible="true"
+                Title="Confirm tool call result"
+                ToolName="@_pendingToolResultRequest.ToolName"
+                ToolInvocation="@_pendingToolResultRequest.ToolInvocation"
+                ToolResult="@_pendingToolResultRequest.ToolResult"
+                Subtitle="Please confirm or redact the input before proceeding."
+                OnRun="@((userConfirmation) => ResolveToolResultConfirmationAsync(userConfirmation))"
+                OnSkip="@(() => ResolveToolResultConfirmationAsync(UserConfirmationToolResult.Skipped))"
+            />
         </div>
     }
 </div>

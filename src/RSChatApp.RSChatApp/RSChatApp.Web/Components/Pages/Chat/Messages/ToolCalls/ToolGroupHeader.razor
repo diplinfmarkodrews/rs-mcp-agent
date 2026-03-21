@@ -1,3 +1,4 @@
+@using RSChatApp.Shared.Infrastructure.Mcp.MetaData
 @using RSChatApp.Web.Models.Chat.ToolCalls
 @using RSChatApp.Web.Services.Chat.Tools
 
@@ -40,6 +41,8 @@
     {
         // refactor into ToolDescriptor
         var count = Group.Invocations.Count;
+        string displayName = Group.Invocations.FirstOrDefault()?.RawName ?? "Tool Call";
+    
         return Group.Type switch
         {
             ToolType.Search => $"{count} Search{(count > 1 ? "es" : "")}",
@@ -47,7 +50,7 @@
             ToolType.BrowserExecute => $"{count} Browser Action{(count > 1 ? "s" : "")}",
             ToolType.DocumentLookup => $"{count} Document Lookup{(count > 1 ? "s" : "")}",
             ToolType.BrowserNavigate => $"{count} Browser Navigation{(count > 1 ? "s" : "")}",
-            _ => $"{count} Tool Call{(count > 1 ? "s" : "")}"
+            _ => $"{count} {displayName}{(count > 1 ? "s" : "")}"
         };
     }
 

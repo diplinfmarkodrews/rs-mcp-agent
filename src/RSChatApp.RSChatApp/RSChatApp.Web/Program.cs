@@ -7,31 +7,39 @@ using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
+using ModelContextProtocol.SemanticKernel.Extensions;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Middleware;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
 using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
+using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
+using RSChatApp.Web.Filter.UserConfirmation;
 using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
+using RSChatApp.Web.Models.Chat.UserConfirmation;
 using RSChatApp.Web.Models.Terminal;
 using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
-using RSChatApp.Web.Services.ChatHistory;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
-using RSChatApp.Web.Services.UserConfirmation;
 using RSChatApp.Web.Storage;
+using RSChatApp.Web.Storage.ChatHistory;
+using RSChatApp.Web.Storage.Terminal;
+using RSChatApp.Web.Storage.Utility;
 using Serilog;
 using Serilog.Events;
+using DependencyInjection = RSChatApp.Web.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure logging
@@ -59,6 +67,7 @@ builder.Services.AddOptions();
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
     options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.PropertyNameCaseInsensitive = true;
     options.Converters.Add(new ChatMessageConverter());
 });
 builder.Services.Configure<BrowserInstanceConfiguration>(
@@ -86,7 +95,6 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
 
 builder.Services.AddHealthChecks();
 
-// Add Keycloak authentication
 // Add custom authentication service
 builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
@@ -120,6 +128,7 @@ builder.Services.AddCors(setup =>
         }
         else
         {
+            // restrict browser access to configured origins in production
             var allowedOrigins = builder.Configuration
                                      .GetSection("AllowedCorsOrigins")
                                      .Get<string[]>() ?? Array.Empty<string>();
@@ -165,10 +174,10 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
 
-builder.Services.AddScoped((serviceProvider) =>
+var configuredClientTools = await mcpClientSettings.CreateMcpClientsFromConfig();
+builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
-
     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
@@ -177,6 +186,13 @@ builder.Services.AddScoped((serviceProvider) =>
     pluginCollection.AddFromFunctions("TerminalTool",
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
     pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
+    // pluginCollection.AddFromType<UserConfirmedTerminalTool>("TerminalTool", serviceProvider);
+    foreach (var (name, tools) in configuredClientTools)
+    {
+        startupLogger.LogInformation("Register McpClient '{Name}' with toolCalls: {toolCalls}",
+            name, new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
+        pluginCollection.AddFromFunctions(name, tools.Select(t => t.AsKernelFunction()));
+    }
     return pluginCollection;
 });
 
@@ -194,7 +210,6 @@ builder.Services.AddScoped<IEnumerable<KernelPlugin>>((serviceProvider) => {
     var pluginCollection = serviceProvider.GetRequiredService<KernelPluginCollection>();
     return pluginCollection;
 });
-// 
 
 // Add Blazor services
 builder.Services.AddRazorComponents()
@@ -211,16 +226,29 @@ if (string.IsNullOrEmpty(openAiSettings.Model) == false)
     
     builder.Services.AddOpenAIChatClient(
         openAiSettings,
+        ChatClientServiceKeys.MainModel,
         openTelemetryConfig: f => f.EnableSensitiveData = false);
 }
 else
 {
     builder.AddOllamaApiClient("chat")
-        .AddChatClient()
+        .AddKeyedChatClient(ChatClientServiceKeys.MainModel)
         .UseFunctionInvocation()
         .UseOpenTelemetry(configure: c =>
             c.EnableSensitiveData = builder.Environment.IsDevelopment());
 }
+
+builder.AddOllamaApiClient(ChatClientServiceKeys.HelperModel)
+    .AddKeyedChatClient(ChatClientServiceKeys.HelperModel)
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(configure: c =>
+        c.EnableSensitiveData = builder.Environment.IsDevelopment());
+    
+builder.AddOllamaApiClient(ChatClientServiceKeys.VisionLargeModel)
+    .AddKeyedChatClient(ChatClientServiceKeys.VisionLargeModel)
+    .UseFunctionInvocation()
+    .UseOpenTelemetry(configure: c =>
+        c.EnableSensitiveData = builder.Environment.IsDevelopment());
 // Create local EmbeddingClient with Ollama
 builder.AddOllamaApiClient("embeddings")
     .AddEmbeddingGenerator(); // Used internally by IEmbeddingGenerator
@@ -228,26 +256,30 @@ builder.AddOllamaApiClient("embeddings")
 builder.AddQdrantClient("vectordb");
 
 // User interaction / confirmations (scoped per Blazor circuit)
+builder.Services.AddScoped<IWaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall>, 
+    WaitForUserInteraction<UserConfirmToolCallRequest, UserConfirmationToolCall>>();
+builder.Services.AddScoped<IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult>,
+    WaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult>>();
 
-builder.Services.AddScoped<IWaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>, 
-    WaitForUserInteraction<TerminalConfirmRequest, UserConfirmationResult>>();
-builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmInvocationFilter>();
+builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolCallInvocationFilter>();
+builder.Services.AddScoped<IFunctionInvocationFilter, UserConfirmToolResultInvocationFilter>();
 
 builder.Services.AddScoped<Kernel>((serviceProvider)=> {
-    // Create a per-scope plugin collection so BrowserTool is constructed within a valid
+    // Create a per-scope plugin collection so tools are constructed within a valid
     // request/circuit scope (HttpContext + Session available), while MCP tool functions
     // are shared via the singleton KernelPluginCollection.
     var sharedPlugins = serviceProvider.GetRequiredService<KernelPluginCollection>();
     KernelPluginCollection pluginCollection = [];
     foreach (var plugin in sharedPlugins)
+    {
         pluginCollection.Add(plugin);
+    }
     
     var kernel = new Kernel(serviceProvider, pluginCollection);
-    foreach (var filter in serviceProvider.GetServices<IFunctionInvocationFilter>())
-        kernel.FunctionInvocationFilters.Add(filter);
     
     return kernel;
 });
+builder.Services.AddToolCollectionService();
 
 builder.Services.AddPromptServices();
 builder.Services.AddIngestionAndSemanticSearch();
@@ -257,6 +289,8 @@ builder.Services.AddScoped<UserConfirmedTerminalTool>();
 
 // Tool call processing services
 builder.Services.AddSingleton<ToolRegistry>();
+builder.Services.AddScoped<ToolInvocationFactory>();
+builder.Services.AddScoped<ToolResultFactory>();
 builder.Services.AddScoped<ToolCallProcessor>();
 
 // Browser storage abstraction - choose LocalStorage or SessionStorage
@@ -269,6 +303,8 @@ else // Use session storage in production, data is dropped after browser is clos
 builder.Services.AddScoped<IStorage<List<ChatMessage>>, ChatHistoryStorage>()
     .AddScoped<IStorage<List<TerminalInstance>>, TerminalInstanceStorage>();
 
+builder.Services.AddScoped<ToolSelectionStorage>();
+
 // Terminal services
 builder.Services.AddScoped<ITerminalManager, TerminalManagerService>();
 builder.Services.AddScoped<RsTerminalDriver>();
@@ -279,7 +315,6 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Add session middleware before browser middleware
 app.UseRouting();
 app.UseCors(); // Enable CORS middleware
 app.UseAuthentication();
@@ -290,6 +325,7 @@ app.UseConfiguredStaticContent();
 
 app.UseAntiforgery();
 
+// Add session middleware before browser middleware
 app.UseSession();
 app.UseMiddleware<BrowserSessionMiddleware>();
 

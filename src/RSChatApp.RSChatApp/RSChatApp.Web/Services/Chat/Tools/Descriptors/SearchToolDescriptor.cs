@@ -1,3 +1,4 @@
+using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 using RSChatApp.Web.Models.Chat.ToolCalls;
 
 namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
@@ -44,6 +45,11 @@ public class SearchToolDescriptor : IToolDescriptor
     {
         // Search results can be long/noisy; keep collapsed unless the user expands.
         return ToolUiHints.Default;
+    }
+
+    public ToolUserConfirmation GetUserConfirmation(string? functionName = null)
+    {
+        return ToolUserConfirmation.None;
     }
 
     public string GetIconSvg()
