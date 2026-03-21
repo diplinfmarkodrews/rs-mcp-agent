@@ -3,19 +3,24 @@
 @using RSChatApp.Web.Storage.Utility
 
 <div class="tool-selector">
-    <div class="tool-selector-title">Active Tools</div>
-    <ul class="tool-selector-list">
-        @foreach (var tool in ToolCollectionService.AllTools)
-        {
-            var name = tool.Name;
-            <li class="tool-selector-item">
-                <label>
-                    <input type="checkbox"
-                           checked="@ToolSelectionStorage.IsEnabled(name)"
-                           @onchange="@(e => OnToggleAsync(tool, (bool)e.Value!))" />
-                    <span>@name</span>
-                </label>
-            </li>
-        }
-    </ul>
+    @foreach (var group in ToolCollectionService.GroupedTools)
+    {
+        <div class="tool-selector-group">
+            <div class="tool-selector-group-name">@group.Key</div>
+            <ul class="tool-selector-list">
+                @foreach (var tool in group.Value)
+                {
+                    var name = tool.Name;
+                    <li class="tool-selector-item">
+                        <label>
+                            <input type="checkbox"
+                                   checked="@ToolSelectionStorage.IsEnabled(name)"
+                                   @onchange="@(e => OnToggleAsync(tool, (bool)e.Value!))" />
+                            <span>@name</span>
+                        </label>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
 </div>

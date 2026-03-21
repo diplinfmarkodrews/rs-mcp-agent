@@ -33,7 +33,7 @@ public partial class Chat(
     IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
-    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.MainModel); 
+    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.HelperModel); 
     private ChatOptions _chatOptions = new();
     
     private readonly List<ChatMessage> _messages = new();
@@ -59,12 +59,17 @@ public partial class Chat(
         toolCallUserConfirmation.UserInteractionRequested += OnToolCallUserConfirmationRequested;
         toolResultUserConfirmation.UserInteractionRequested += OnToolResultUserConfirmationRequested;
         
-        var allTools = toolCollectionService.AllTools;
         kernel.Data[KernelDataConstants.IsResultConfirmDisabled] = true;
-        _chatOptions.Temperature = (float?)promptExecutionSettings.Value.Temperature;
-        _chatOptions.Tools = allTools; 
+        kernel.Data[KernelDataConstants.IsLocalModel] = false;
+        // _chatOptions.Temperature = (float?)promptExecutionSettings.Value.Temperature;
+        // _chatOptions.FrequencyPenalty = (float?)promptExecutionSettings.Value.FrequencyPenalty;
+        // _chatOptions.TopP = (float?)promptExecutionSettings.Value.TopP;
+        // _chatOptions.Seed = promptExecutionSettings.Value.Seed;
+        
+        
         // Load chat history
         await InitChatHistoryAsync();
+        await OnToolSelectionChangedAsync();
     }
 
     private Task OnToolSelectionChangedAsync()
@@ -159,12 +164,11 @@ public partial class Chat(
     private async Task AddUserMessageStreamAsync(ChatMessage userMessage)
     {
         CancelAnyCurrentResponse();
-        _chatOptions.AdditionalProperties = new (); 
-        _chatOptions.AdditionalProperties["IsLocalModel"] = true;
         
         // Add the user message to the conversation
         _messages.Add(userMessage);
         _chatSuggestions?.Clear();
+        _chatInput!.SetProcessing(true);
         await _chatInput!.FocusAsync();
 
         // Display a new response from the IChatClient with streaming

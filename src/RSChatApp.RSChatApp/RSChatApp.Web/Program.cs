@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
+using ModelContextProtocol.SemanticKernel.Extensions;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
@@ -38,6 +39,7 @@ using RSChatApp.Web.Storage.Terminal;
 using RSChatApp.Web.Storage.Utility;
 using Serilog;
 using Serilog.Events;
+using DependencyInjection = RSChatApp.Web.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure logging
@@ -126,6 +128,7 @@ builder.Services.AddCors(setup =>
         }
         else
         {
+            // restrict browser access to configured origins in production
             var allowedOrigins = builder.Configuration
                                      .GetSection("AllowedCorsOrigins")
                                      .Get<string[]>() ?? Array.Empty<string>();
@@ -171,10 +174,10 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
 
+var configuredClientTools = await mcpClientSettings.CreateMcpClientsFromConfig();
 builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
 {
     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
-
     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
@@ -183,6 +186,13 @@ builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
     pluginCollection.AddFromFunctions("TerminalTool",
         toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
     pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
+    // pluginCollection.AddFromType<UserConfirmedTerminalTool>("TerminalTool", serviceProvider);
+    foreach (var (name, tools) in configuredClientTools)
+    {
+        startupLogger.LogInformation("Register McpClient '{Name}' with toolCalls: {toolCalls}",
+            name, new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
+        pluginCollection.AddFromFunctions(name, tools.Select(t => t.AsKernelFunction()));
+    }
     return pluginCollection;
 });
 

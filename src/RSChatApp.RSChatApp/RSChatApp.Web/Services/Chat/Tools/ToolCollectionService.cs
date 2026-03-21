@@ -4,15 +4,13 @@ namespace RSChatApp.Web.Services.Chat.Tools;
 
 public class ToolCollectionService
 {
-    private readonly List<AITool> _aiTools;
-    public ToolCollectionService(IEnumerable<AITool> aiTools)
+    private readonly Dictionary<string, List<AITool>> _grouped;
+
+    public ToolCollectionService(Dictionary<string, List<AITool>> grouped)
     {
-        _aiTools = aiTools.ToList();
+        _grouped = grouped;
     }
 
-    public ToolCollectionService()
-    {
-        _aiTools = new List<AITool>();
-    }
-    public List<AITool> AllTools => _aiTools;    
+    public IReadOnlyDictionary<string, List<AITool>> GroupedTools => _grouped;
+    public List<AITool> AllTools => _grouped.Values.SelectMany(t => t).ToList();
 }

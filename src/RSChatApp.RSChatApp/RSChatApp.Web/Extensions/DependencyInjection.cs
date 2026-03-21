@@ -2,6 +2,7 @@ using System.ClientModel;
 using System.Diagnostics;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
+using ModelContextProtocol.Client;
 using OpenAI;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
@@ -70,6 +71,7 @@ public static class DependencyInjection
         
         return services;
     }
+
     
     internal static IServiceCollection AddToolCollectionService(this IServiceCollection services)
     {
@@ -77,32 +79,38 @@ public static class DependencyInjection
         // services.AddHostedService<McpToolCollectionRegistrationHostedService>();
         services.AddScoped<ToolCollectionService>(provider =>
         {
-            var allTools = new List<AITool>
+            var grouped = new Dictionary<string, List<AITool>>
             {
-                AIFunctionFactory.Create(provider.GetRequiredService<SemanticSearchTool>().SearchAsync,  "Search", "Search for information using a phrase or keyword"),
-                AIFunctionFactory.Create(provider.GetRequiredService<DocumentLookupTool>().GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
-                AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
-                AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetScriptText, "GetTextFromScriptsPath","Get a text file of a given path. can be scripts or other text files"),
-                AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllSkillsPaths, "GetAllSkillsPath", "Retrieve a list of all skills path"),
-                AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetSkillsText, "GetTextFromSkillsPath","Get a text file of a given skills path. can be scripts or other text files"),
-                // AIFunctionFactory.Create(AuthenticationTool.IsAuthenticatedAsync, "IsAuthenticated", "Checks whether the user is authenticated against the ReportServer and can execute ReportServerMcp tools or not"),
-                // AIFunctionFactory.Create(AuthenticationTool.LoginUserRequestedAsync, "RequestLogin", "Requests the user to login when they need to access ReportServer MCP tools but are not authenticated"),
-                // AIFunctionFactory.Create(provider.GetRequiredService<UserConfirmedTerminalTool>().ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation. Valid terminal types are ")
+                ["Knowledge Base"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<SemanticSearchTool>().SearchAsync, "Search", "Search for information using a phrase or keyword"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<DocumentLookupTool>().GetDocumentPage, "GetDocumentPage", "Lookup a page of a given document, optionally with all images."),
+                ],
+                ["File Store"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllScriptPaths, "GetAllScriptsPath", "Retrieve a list of all scripts path"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetScriptText, "GetTextFromScriptsPath", "Get a text file of a given path. can be scripts or other text files"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetAllSkillsPaths, "GetAllSkillsPath", "Retrieve a list of all skills path"),
+                    AIFunctionFactory.Create(provider.GetRequiredService<ScriptStoreTool>().GetSkillsText, "GetTextFromSkillsPath", "Get a text file of a given skills path. can be scripts or other text files"),
+                ],
+                ["TerminalTool"] =
+                [
+                    AIFunctionFactory.Create(provider.GetRequiredService<UserConfirmedTerminalTool>().ExecuteCommandAsync, "MultiTerminalTool", "Executes commands in the terminal with user confirmation."),
+                ]
             };
+
             var kernel = provider.GetRequiredService<Kernel>();
-            var kernelPlugins = kernel.Plugins;
-            foreach (var plugin in kernelPlugins)
+            foreach (var plugin in kernel.Plugins)
             {
-                foreach (var aiFunction in plugin)
-                {
-                    allTools.Add(aiFunction.AsAIFunction(kernel));
-                }
+                grouped[plugin.Name] = plugin.Select(f => (AITool)f.AsAIFunction(kernel)).ToList();
             }
+
             provider.GetRequiredService<ILogger<Kernel>>()
-                .LogInformation("Total tools available: {kernelToolCount}: \n{kernelToolsNames} ", allTools.Count, 
-                    string.Join(",\n", allTools.Select(p=> p.Name)));
-            
-            return new ToolCollectionService(allTools);
+                .LogInformation("Total tools available: {count}: \n{names}",
+                    grouped.Values.Sum(t => t.Count),
+                    string.Join(",\n", grouped.Values.SelectMany(t => t).Select(t => t.Name)));
+
+            return new ToolCollectionService(grouped);
         });
         return services;
     }
