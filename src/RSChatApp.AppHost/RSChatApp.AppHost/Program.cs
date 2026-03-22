@@ -10,13 +10,20 @@ var vectorDb = builder.AddQdrant("vectordb")
     .WithLifetime(ContainerLifetime.Persistent)
     .PublishAsConnectionString();
 
+var postGreSql = builder.AddPostgres("postgres")
+    .WithDataVolume()
+    .WithLifetime(ContainerLifetime.Persistent)
+    .PublishAsConnectionString();
+
 var mcpServer = builder.AddProject<RsMcpServer_Api>("rs-mcp-server");
 var webApp = builder.AddProject<RSChatApp_Web>("aichatweb-app");
 
 webApp.WithReference(mcpServer)
     .WithReference(vectorDb)
+    .WithReference(postGreSql)
     .WaitFor(mcpServer)
-    .WaitFor(vectorDb);
+    .WaitFor(vectorDb)
+    .WaitFor(postGreSql);
 
 foreach (var model in ollamaModels)
 {

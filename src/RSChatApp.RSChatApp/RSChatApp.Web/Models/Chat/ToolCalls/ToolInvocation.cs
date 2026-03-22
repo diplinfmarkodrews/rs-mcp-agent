@@ -5,6 +5,7 @@ namespace RSChatApp.Web.Models.Chat.ToolCalls;
 public record ToolInvocation(
     string CallId,
     ToolType Type,
+    ResultContentType ResultContentType,
     string RawName,
     string DisplayName,
     IReadOnlyDictionary<string, object?> Parameters,

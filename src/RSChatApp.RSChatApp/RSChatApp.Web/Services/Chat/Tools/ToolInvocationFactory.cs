@@ -12,6 +12,7 @@ public class ToolInvocationFactory
     {
         _registry = registry;
     }
+    // Extensions.AI
     public ToolInvocation Create(FunctionCallContent fcc)
     {
         var descriptor = _registry.GetDescriptor(fcc.Name);
@@ -20,6 +21,7 @@ public class ToolInvocationFactory
         var result = new ToolInvocation(
             CallId: fcc.CallId,
             Type: descriptor.Type,
+            ResultContentType: descriptor.ResultContentType,
             RawName: fcc.Name,
             DisplayName: descriptor.GetDisplayName(parameters),
             Parameters: parameters,
@@ -29,7 +31,7 @@ public class ToolInvocationFactory
         );
         return result;
     }
-
+    // Semantic Kernel 
     public ToolInvocation Create(KernelFunction kernelFunction)
     {
         var descriptor = _registry.GetDescriptor(kernelFunction.Name);
@@ -37,6 +39,7 @@ public class ToolInvocationFactory
         var result = new ToolInvocation(
             CallId: Guid.NewGuid().ToString(), // Generate a new CallId since we don't have one in this context
             Type: descriptor.Type,
+            ResultContentType: descriptor.ResultContentType,
             RawName: kernelFunction.Name,
             DisplayName: descriptor.GetDisplayName(parameters),
             Parameters: parameters,

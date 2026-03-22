@@ -9,21 +9,21 @@ public record MessageCreatedEvent : BaseEvent
 
     public DateTime CreatedAt { get; set; }
 
-    public Guid SenderId { get; private set; }
+    public UserId SenderId { get; private set; }
 
     public Guid SessionId { get; private set; }
 
     public string Content { get; private set; } = string.Empty;
 
-    public MessageRole Role { get; private set; }
+    public ChatRole Role { get; private set; }
 
     public DateTime SentAt { get; private set; }
 
-    public static MessageCreatedEvent Create(Guid id, Guid sessionId, Guid senderId, string content, MessageRole role)
+    public static MessageCreatedEvent Create(Guid id, Guid sessionId, UserId senderId, string content, ChatRole role)
     {
         if (id == Guid.Empty) throw new DomainException("Message id cannot be empty.");
         if (sessionId == Guid.Empty) throw new DomainException("Session id cannot be empty.");
-        if (senderId == Guid.Empty) throw new DomainException("Sender id cannot be empty.");
+        if (senderId.IsInitialized() == false) throw new DomainException("Sender id cannot be empty.");
         if (string.IsNullOrWhiteSpace(content)) throw new DomainException("Content cannot be empty.");
         return new MessageCreatedEvent
         {

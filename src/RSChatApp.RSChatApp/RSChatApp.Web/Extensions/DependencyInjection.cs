@@ -16,6 +16,7 @@ using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
 using RSChatApp.Web.Services.Chat.Tools;
 using RsMcpServer.Identity.Models.Requests;
+using Serilog;
 
 namespace RSChatApp.Web.Extensions;
 
@@ -37,8 +38,8 @@ public static class DependencyInjection
         
         return services;
     }
-
-    public static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
+    
+    internal static IServiceCollection AddOpenAIChatClient(this IServiceCollection services, 
         OpenAiSettings openAISettings, 
         string serviceKey,
         string? openTelemetrySourceName = null,
@@ -113,5 +114,20 @@ public static class DependencyInjection
             return new ToolCollectionService(grouped);
         });
         return services;
+    }
+    
+    internal static WebApplicationBuilder AddLoggerConfigs(this WebApplicationBuilder builder)
+    {
+        // Add Serilog as an additional logging provider alongside OpenTelemetry
+        // This allows both Serilog (for console/file) and OpenTelemetry (for Aspire) to work together
+        builder.Logging.AddSerilog(new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .Enrich.FromLogContext()
+            .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
+            .Enrich.WithProperty("Application", builder.Environment.ApplicationName)
+            .WriteTo.Console()
+            .CreateLogger(), dispose: true);
+
+        return builder;
     }
 }

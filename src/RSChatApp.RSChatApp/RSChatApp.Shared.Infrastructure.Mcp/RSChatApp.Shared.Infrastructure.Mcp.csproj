@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>14</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -18,10 +19,7 @@
       <PackageReference Include="Microsoft.SemanticKernel" Version="1.72.0" />
       <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.72.0-preview" />
       <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.72.0" />
-        <!-- Align MCP related packages with available versions and RSChatApp.Web -->
-        <!-- Removed base ModelContextProtocol package (not needed directly) -->
-      <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.3" />
-      <PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.3" />
+      <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
       <PackageReference Include="PdfPig" Version="0.1.10" />
       <PackageReference Include="SkiaSharp" Version="3.116.1" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />

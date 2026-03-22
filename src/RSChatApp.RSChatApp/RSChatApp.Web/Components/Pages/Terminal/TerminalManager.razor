@@ -51,8 +51,9 @@
             var activeTerminal = TerminalManagerService.ActiveTerminal;
             if (activeTerminal != null && !activeTerminal.IsMinimized)
             {
-                <TerminalViewer @ref="_terminalViewer" Terminal="activeTerminal" 
-                               OnCommandExecuted="HandleCommandExecuted" />
+                <TerminalViewer @ref="_terminalViewer" 
+                    Terminal="activeTerminal" 
+                    OnCommandExecuted="HandleCommandExecuted" />
             }
             else if (activeTerminal == null && TerminalManagerService.Terminals.Any())
             {

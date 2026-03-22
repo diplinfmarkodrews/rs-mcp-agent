@@ -1,13 +1,13 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JasperFx.Core.IoC;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.AI;
 using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.SemanticKernel.Extensions;
 using RSChatApp.Infrastructure.Extensions;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
@@ -19,8 +19,6 @@ using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 using RSChatApp.Shared.Infrastructure.Mcp.Extensions;
 using RSChatApp.Shared.Infrastructure.Mcp.Ingestion.Services;
 using RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
-using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
-using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Components;
 using RSChatApp.Web.Configuration;
 using RSChatApp.Web.Extensions;
@@ -29,7 +27,6 @@ using RSChatApp.Web.Hubs;
 using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Chat.UserConfirmation;
 using RSChatApp.Web.Models.Terminal;
-using RSChatApp.Web.Services.Chat;
 using RSChatApp.Web.Services.Chat.Tools;
 using RSChatApp.Web.Services.Terminal;
 using RSChatApp.Web.Services.Terminal.Drivers;
@@ -37,31 +34,11 @@ using RSChatApp.Web.Storage;
 using RSChatApp.Web.Storage.ChatHistory;
 using RSChatApp.Web.Storage.Terminal;
 using RSChatApp.Web.Storage.Utility;
-using Serilog;
-using Serilog.Events;
-using DependencyInjection = RSChatApp.Web.Extensions.DependencyInjection;
+using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 // Configure logging
-builder.Services.AddLogging(logging =>
-{
-    logging.ClearProviders();
-    logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-    logging.AddConsole();
-    logging.AddDebug();
-
-    // Serilog has its own minimum level; set it to Debug so file logging can capture Debug events.
-    // The effective filtering is still controlled by the Microsoft "Logging" configuration above.
-    logging.AddSerilog(
-        new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Information)
-            .Enrich.FromLogContext()
-            .WriteTo.File("Logs/rschatapp-.log", rollingInterval: RollingInterval.Day)
-            .CreateLogger(),
-        dispose: true);
-});
+builder.AddLoggerConfigs();
 builder.Services.AddOptions();
 // Configure global JSON serialization options for Blazor components
 builder.Services.Configure<JsonSerializerOptions>(options =>
@@ -95,8 +72,9 @@ builder.Configuration.GetSection(nameof(McpClientSettings))
 
 builder.Services.AddHealthChecks();
 
+builder.Services.AddInfrastructureServices(builder.Configuration);
+
 // Add custom authentication service
-builder.Services.AddInfrastructureServices();
 builder.Services.AddCustomAuthenticationService();
 // builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: false);
 var sessionTimeoutMinutes = builder.Configuration.GetValue<int?>("SessionCookieSettings:IdleTimeout") ?? 15;
@@ -156,11 +134,11 @@ builder.Services.AddStaticContentServices(builder.Configuration);
 
 // create the MCP client at startup via BuildServiceProvider
 // and register tool functions into KernelPluginCollection.
-// This is ugly, but works! Couldnt make the Pluginregistration work in HostedService
+// This is ugly, but works! Couldn't make the plugin registration work in HostedService
 using var scopedServiceProvider = builder.Services.BuildServiceProvider();
-await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
-    new SseClientTransport(
-        new SseClientTransportOptions
+await using McpClient mcpClientRS = await McpClient.CreateAsync(
+    new HttpClientTransport(
+        new HttpClientTransportOptions
         {
             Name = RsMcpServerHttpClientName.ClientName,
             Endpoint = new Uri(builder.Configuration["RsMcpServer:Url"]
@@ -173,29 +151,41 @@ await using IMcpClient mcpClientRS = await McpClientFactory.CreateAsync(
             .GetRequiredService<ILoggerFactory>()
     ));
 var toolsRs = await mcpClientRS.ListToolsAsync();
+var toolsAux = await mcpClientSettings.CreateMcpClientsFromConfigAsync();
 
-var configuredClientTools = await mcpClientSettings.CreateMcpClientsFromConfig();
-builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
+builder.Services.AddSingleton<KernelPluginCollection>(serviceProvider =>
 {
-    var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
-    startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
-        new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
+     var startupLogger = serviceProvider.GetRequiredService<ILogger<Program>>();
+     startupLogger.LogInformation("Register RsMcpClient with toolCalls: {toolCalls}",
+         new StringBuilder().AppendJoin(", ", toolsRs.Select(t => t.Name)));
 
-    KernelPluginCollection pluginCollection = [];
-    pluginCollection.AddFromType<BrowserTool>("BrowserTool", serviceProvider);
-    pluginCollection.AddFromFunctions("TerminalTool",
-        toolsRs.Select(aiFunction => aiFunction.AsKernelFunction()));
-    pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
-    // pluginCollection.AddFromType<UserConfirmedTerminalTool>("TerminalTool", serviceProvider);
-    foreach (var (name, tools) in configuredClientTools)
-    {
-        startupLogger.LogInformation("Register McpClient '{Name}' with toolCalls: {toolCalls}",
-            name, new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
-        pluginCollection.AddFromFunctions(name, tools.Select(t => t.AsKernelFunction()));
-    }
-    return pluginCollection;
+     KernelPluginCollection pluginCollection = [];
+     pluginCollection.AddFromType<BrowserTool>(nameof(BrowserTool), serviceProvider);
+     pluginCollection.AddFromFunctions(nameof(TerminalTool),
+            toolsRs.Select(t => t.AsKernelFunction()));
+
+     pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
+     
+     if (mcpClientSettings.Clients is null)
+         return pluginCollection;
+    
+     foreach (var (name, tools) in toolsAux)
+     {              
+         startupLogger.LogInformation("Register MCP client {ClientName} with toolCalls: {toolCalls}",
+              name,
+              new StringBuilder().AppendJoin(", ", tools.Select(t => t.Name)));
+         
+         pluginCollection.AddFromFunctions(
+             name,
+             tools.Select(t => t.AsKernelFunction()));
+     }
+     return pluginCollection;
 });
-
+builder.Services.Scan(scan =>
+{
+    scan.AssemblyContainingType<IToolDescriptor>();
+    scan.AddAllTypesOf<IToolDescriptor>();
+});
 // register a base KernelPluginCollection, then let a hosted service
 // connect to RsMcpServer and insert the MCP tool KernelFunctions into this collection.
 // builder.Services.AddSingleton<KernelPluginCollection>((serviceProvider) =>
@@ -312,7 +302,7 @@ builder.Services.AddScoped<JsTerminalDriver>();
 builder.Services.AddScoped<TerminalDriverFactory>();
 
 builder.Services.AddControllers();
-
+builder.Host.UseWolverine();
 var app = builder.Build();
 
 app.UseRouting();

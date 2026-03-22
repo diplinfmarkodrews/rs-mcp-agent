@@ -1,3 +1,4 @@
+
 using ModelContextProtocol.Client;
 
 namespace RSChatApp.Web.Configuration;
@@ -5,15 +6,15 @@ namespace RSChatApp.Web.Configuration;
 public class McpClientSettings
 {
     public IEnumerable<McpClientConfiguration>? Clients { get; set; }
-    internal async Task<List<(string Name, IList<McpClientTool>)>> CreateMcpClientsFromConfig()
+    internal async Task<List<(string Name, IList<McpClientTool>)>> CreateMcpClientsFromConfigAsync()
     {
         var configuredClientTools = new List<(string Name, IList<McpClientTool> Tools)>();
-
+    
         if (Clients is not null)
         {
             foreach (var clientConfig in Clients)
             {
-                var mcpClient = await McpClientFactory.CreateAsync(
+                var mcpClient = await McpClient.CreateAsync(
                     new StdioClientTransport(new StdioClientTransportOptions
                     {
                         Name = clientConfig.Name,

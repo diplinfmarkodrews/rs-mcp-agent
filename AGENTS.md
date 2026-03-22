@@ -1,0 +1,92 @@
+# AGENTS.md
+
+## Architecture Overview
+
+.NET 9 / Aspire solution: a **Blazor Server AI chat app** (`RSChatApp.Web`) backed by a **Model Context Protocol server** (`RsMcpServer.Api`) that exposes ReportServer (Java/GWT BI platform) capabilities as AI tools.
+
+```
+RSChatApp.AppHost        ← .NET Aspire orchestrator (Qdrant, RabbitMQ, Ollama, both services)
+├── RSChatApp.Web        ← Blazor Server UI, Semantic Kernel, MCP client, chat/terminal/browser UI
+├── RsMcpServer.Api      ← MCP server: exposes TerminalTool + TerminalResource over SSE/HTTP
+├── RSChatApp.Common     ← BaseAggregate, BaseEvent, Result<T>, IEventStoreRepository<T>
+├── RSChatApp.ReportServer  ← IReportServerClient abstraction + GWT RPC client impl
+└── RSChatApp.RSChatApp
+    ├── Application      ← CQRS handlers (static), Saga (Wolverine), feature folders
+    ├── Domain           ← Aggregates + domain events
+    ├── Infrastructure   ← Marten event store, Wolverine/RabbitMQ config, projections, prompts
+    └── Shared.Infrastructure.Mcp ← BrowserTool (Playwright), SemanticSearchTool, ingestion, chat clients
+```
+
+## Running the Solution
+
+```bash
+# Full stack via Aspire (preferred)
+dotnet run --project src/RSChatApp.AppHost/RSChatApp.AppHost
+
+# Individual services (requires Qdrant + ReportServer running separately)
+dotnet run --project src/RSChatApp.RsMcpServer/RsMcpServer.Api        # :5002
+dotnet run --project src/RSChatApp.RSChatApp/RSChatApp.Web             # :5008
+```
+
+API keys are referenced by name in `appsettings.json` (e.g. `"ApiKey": "ANTHROPIC_KEY"`) and resolved from environment variables via `openAiSettings.SetApiKey()` — set `ANTHROPIC_KEY` (or equivalent) in the environment.
+
+## Key Patterns
+
+### MCP Tool Registration
+Tools are decorated with `[KernelFunction, McpServerTool, Description("...")]`. Two registration paths:
+- **RsMcpServer.Api**: registers via `.AddMcpServer().WithTools<TerminalTool>().WithHttpTransport()`
+- **RSChatApp.Web**: at startup, connects to RsMcpServer over SSE, fetches tools with `mcpClient.ListToolsAsync()`, and registers them as `KernelFunction`s into a singleton `KernelPluginCollection`. Web-local tools (`BrowserTool`, `AuthenticationTool`, `SemanticSearchTool`) are added directly. The `Kernel` is **scoped** (per Blazor circuit), wrapping the singleton plugin collection.
+
+### Event Sourcing (Marten + Wolverine)
+Aggregates extend `BaseAggregate`; use `ApplyAndEnqueue(event, applyAction)`:
+```csharp
+var @event = MessageCreatedEvent.Create(...);
+message.ApplyAndEnqueue(@event, e => message.Apply((MessageCreatedEvent)e));
+```
+Command handlers are static methods; Wolverine discovers them via assembly scanning. Sagas (e.g. `ConversationSaga`) react to domain events and coordinate async LLM calls over RabbitMQ queues (`llm-requests` / `llm-completed.chatservice`).
+
+### AI Client Keys
+Three keyed `IChatClient` instances resolved via `IChatClientFactory.Create(key)`:
+- `ChatClientServiceKeys.MainModel` (`"main"`) — OpenAI/Anthropic or Ollama, used for primary chat
+- `ChatClientServiceKeys.HelperModel` (`"helper"`) — Ollama, used for suggestions (`ChatSuggestions`)
+- `ChatClientServiceKeys.VisionLargeModel` (`"vision-large"`) — Ollama, vision tasks
+
+The `OpenAISettings.Model` field determines provider: if set (e.g. `"claude-sonnet-4-5"`), uses OpenAI-compatible API with Anthropic base URL; otherwise falls back to Ollama `"chat"` model.
+
+### Result Pattern
+All ReportServer client operations return `Result<T>` (from `RSChatApp.Common`):
+```csharp
+var result = await _reportServer.AuthenticateAsync(user, pass);
+if (result.IsSuccess) { /* result.Data */ } else { /* result.Error / result.Message */ }
+```
+
+### Prompts (Hot-Reloadable)
+System and suggestion prompts live in `RSChatApp.Web/Prompts/SystemPrompt.md` and `SuggestionPrompt.md`. `PromptFileStore` watches them via `IFileProvider` change tokens — edits are picked up without restart. Accessed via `IPromptService.GetPrompt(new SystemPromptRequest(...))`.
+
+### Browser Storage
+Chat history is persisted to browser protected storage (LocalStorage in dev, SessionStorage in prod). `ChatHistoryStorage` manually serializes with `ChatMessageConverter` because `ProtectedBrowserStorage` bypasses global `JsonSerializerOptions`.
+
+### Data Ingestion
+`DataIngestor` runs at startup, ingesting PDFs and `.txt` files from `wwwroot/Data` into Qdrant collections (`data-rschatapp-chunks`, `data-rschatapp-documents`). RS scripts are served as static files via the `StaticContent:Sources` configuration (path: `scripts/rs-scripts`).
+
+## Tests
+
+```bash
+dotnet test tests/TestRsMcpServer
+```
+
+Uses MSTest + xUnit hybrid. `DistributedServicesFixture` starts both `RSChatApp.Web` and `RsMcpServer.Api` in-process via `WebApplicationFactory` for integration tests. The `RsMcpServer.Api` `Program` is made accessible via `[assembly: InternalsVisibleTo("TestRsMcpServer")]`.
+
+## Key Files
+
+| Path | Purpose |
+|------|---------|
+| `src/RSChatApp.AppHost/.../Program.cs` | Aspire wiring: Qdrant, RabbitMQ, Ollama models, service references |
+| `src/RSChatApp.RSChatApp/RSChatApp.Web/Program.cs` | Full DI setup for the chat app, MCP client bootstrap |
+| `src/RSChatApp.RsMcpServer/RsMcpServer.Api/Program.cs` | MCP server setup, Keycloak + legacy auth |
+| `src/.../RSChatApp.Shared.Infrastructure.Mcp/Browser/Mcp/BrowserTool.cs` | Playwright tool (~585 lines) |
+| `src/.../RSChatApp.Shared.Infrastructure.Mcp/ReportServer/Mcp/TerminalTool.cs` | RS terminal MCP tool |
+| `src/.../RSChatApp.Infrastructure/Extensions/DependencyInjection.cs` | Marten/Wolverine/RabbitMQ config |
+| `src/.../RSChatApp.Web/Prompts/SystemPrompt.md` | Editable system prompt (hot-reload) |
+| `src/RSChatApp.Common/RSChatApp.Common.Kernel/BaseAggregate.cs` | Event sourcing base class |
+

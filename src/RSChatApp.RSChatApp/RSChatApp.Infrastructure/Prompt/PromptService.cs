@@ -1,13 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
+using RSChatApp.Application.Services;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Services;
 
 namespace RSChatApp.Infrastructure.Prompt;
 
-public interface IPromptService
-{
-    string GetPrompt(PromptRequest request);
-}
+
 public class PromptService : IPromptService
 {
     private readonly IPromptFileStore _promptFileStore;
@@ -38,11 +36,3 @@ public class PromptService : IPromptService
         }
     }
 }
-
-public record PromptRequest(string Name);
-
-public record SystemPromptRequest(bool AddFileNames) 
-    : PromptRequest("SystemPrompt");
-
-public record SuggestionPromptRequest()
-    : PromptRequest("SuggestionPrompt");

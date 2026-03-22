@@ -6,11 +6,10 @@ namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
 public class TerminalToolDescriptor : IToolDescriptor
 {
     public ToolType Type => ToolType.TerminalExecute;
-
+    public ResultContentType ResultContentType => ResultContentType.Terminal;
     public string GetDisplayName(IReadOnlyDictionary<string, object?> parameters)
     {
-        var cmd = FormatValue(parameters.GetValueOrDefault("command")) 
-               ?? FormatValue(parameters.GetValueOrDefault("cmd"));
+        var cmd = FormatValue(parameters.GetValueOrDefault("command"));
         
         return $"Terminal: {Truncate(cmd, 50)}";
     }
@@ -28,8 +27,7 @@ public class TerminalToolDescriptor : IToolDescriptor
     public ToolMetadata ExtractMetadata(IReadOnlyDictionary<string, object?> parameters)
     {
         var sessionId = FormatValue(parameters.GetValueOrDefault("sessionId"));
-        var command = FormatValue(parameters.GetValueOrDefault("command"))
-                   ?? FormatValue(parameters.GetValueOrDefault("cmd"));
+        var command = FormatValue(parameters.GetValueOrDefault("command"));
         
         return new ToolMetadata(
             SessionId: sessionId,
@@ -57,6 +55,8 @@ public class TerminalToolDescriptor : IToolDescriptor
             </svg>
         """;
     }
+
+    public IEnumerable<string> ToolNames { get => [ "TerminalTool_execute_command", "RsMcpServer_execute_command", "execute_command" ]; }
 
     public string GetColorClass() => "tool-terminal";
 

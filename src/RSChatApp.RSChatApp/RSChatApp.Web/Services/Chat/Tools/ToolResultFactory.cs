@@ -19,13 +19,13 @@ public class ToolResultFactory
     {
         var invocation = invocations.FirstOrDefault(i => i.CallId == frc.CallId);
         var rawResult = GetResultAsString(frc);
-        var contentType = DetectContentType(invocation, rawResult);
-        var isError = IsErrorResult(rawResult, contentType);
-
+        bool isError = invocation is null 
+                       || IsErrorResult(rawResult, invocation.ResultContentType);
+        
         return new ToolResult(
             CallId: frc.CallId,
             IsSuccess: !isError,
-            ContentType: isError ? ResultContentType.Error : contentType,
+            ContentType: isError ? ResultContentType.Error : invocation!.ResultContentType,
             Data: rawResult,  // Use the string version, not the raw object
             ErrorMessage: isError ? rawResult : null,
             CompletedAt: DateTime.UtcNow
@@ -34,122 +34,19 @@ public class ToolResultFactory
     public ToolResult Create(FunctionResult frc, ToolInvocation invocation)
     {
         var rawResult = GetResultAsString(frc);
-        var contentType = DetectContentType(invocation, rawResult);
-        var isError = IsErrorResult(rawResult, contentType);
+        var isError = IsErrorResult(rawResult, invocation.ResultContentType);
 
         return new ToolResult(
             CallId: invocation.CallId,
             IsSuccess: !isError,
-            ContentType: isError ? ResultContentType.Error : contentType,
+            ContentType: isError ? ResultContentType.Error : invocation.ResultContentType,
             Data: rawResult,  // Use the string version, not the raw object
             ErrorMessage: isError ? rawResult : null,
             CompletedAt: DateTime.UtcNow
         );
     }
-    private ResultContentType DetectContentType(ToolInvocation? invocation, string? rawResult)
-    {
-
-        // Search results are always SearchCitations type (even if empty)
-        if (invocation?.Type == ToolType.Search)
-        {
-            return ResultContentType.SearchCitations;
-        }
-
-        // Document lookup results
-        if (invocation?.Type == ToolType.DocumentLookup)
-        {
-            return ResultContentType.DocumentPage;
-        }
-
-        if (string.IsNullOrWhiteSpace(rawResult))
-        {
-            return ResultContentType.Text;
-        }
-
-        // Terminal command results
-        if (invocation?.Type == ToolType.TerminalExecute 
-            || invocation?.Type == ToolType.BrowserExecute)
-        {
-            if (TryParseJson(rawResult, out var json))
-            {
-                var root = json.RootElement;
-                var hasSessionId = TryGetPropertyIgnoreCase(root, "SessionId", out _);
-                var hasCmdResult = TryGetPropertyIgnoreCase(root, "CmdResult", out _);
-                var hasErrorResult = TryGetPropertyIgnoreCase(root, "error", out _);
-                if (hasSessionId && hasCmdResult || hasErrorResult)
-                {
-                    return ResultContentType.Terminal;
-                }
-            }
-            else
-            {
-                _logger.LogDebug("Failed to parse JSON for terminal detection. First 100 chars: {Preview}", 
-                    rawResult?.Length > 100 ? rawResult[..100] : rawResult);
-            }
-        }
-
-        // Browser screenshot results
-        if (invocation?.Type == ToolType.BrowserScreenshot)
-        {
-            if (TryParseJson(rawResult, out var json) && 
-                json.RootElement.TryGetProperty("image", out _))
-            {
-                return ResultContentType.Image;
-            }
-        }
-
-        // JSON detection
-        if (TryParseJson(rawResult, out _))
-        {
-            return ResultContentType.Json;
-        }
-
-        return ResultContentType.Text;
-    }
-    private static bool TryParseJson(string? text, out JsonDocument? document)
-    {
-        document = null;
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return false;
-        }
-
-        try
-        {
-            document = JsonDocument.Parse(text);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
-    {
-        value = default;
-
-        if (element.ValueKind != JsonValueKind.Object)
-        {
-            return false;
-        }
-
-        if (element.TryGetProperty(propertyName, out value))
-        {
-            return true;
-        }
-
-        foreach (var prop in element.EnumerateObject())
-        {
-            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
-            {
-                value = prop.Value;
-                return true;
-            }
-        }
-
-        return false;
-    }
+    
+    
     private static string? GetResultAsString(FunctionResultContent functionResultContent)
     {
         return functionResultContent.Result switch
@@ -166,7 +63,14 @@ public class ToolResultFactory
             _ => functionResultContent.Result.ToString()
         };
     }
-    private static string? GetResultAsString(FunctionResult functionResult){ // semantic kernel's FunctionResult, need to access contents array[0].text if it's a json element
+    
+    /// <summary>
+    /// semantic kernel's FunctionResult, need to access contents array[0].text if it's a json element
+    /// </summary>
+    /// <param name="functionResult"></param>
+    /// <returns></returns>
+    private static string? GetResultAsString(FunctionResult functionResult)
+    { 
         string? result;
         switch (functionResult.GetValue<object>())
         {
@@ -197,6 +101,7 @@ public class ToolResultFactory
 
         // Don't apply error keyword detection to search results or other structured content
         // as they may contain these words in their actual content
+        // Todo: refine error detection and resolve these dependencies on content type (openclosed p.)
         if (contentType == ResultContentType.SearchCitations || 
             contentType == ResultContentType.Json ||
             contentType == ResultContentType.Image ||

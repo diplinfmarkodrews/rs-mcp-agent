@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using RSChatApp.Application.Services;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
@@ -33,7 +34,7 @@ public partial class Chat(
     IWaitForUserInteraction<UserConfirmToolResultRequest, UserConfirmationToolResult> toolResultUserConfirmation) : ComponentBase, IDisposable
 {
     private string SystemPrompt => promptService.GetPrompt(new SystemPromptRequest(AddFileNames: true));
-    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.HelperModel); 
+    private IChatClient _chatClient = chatClientFactory.Create(ChatClientServiceKeys.MainModel); 
     private ChatOptions _chatOptions = new();
     
     private readonly List<ChatMessage> _messages = new();

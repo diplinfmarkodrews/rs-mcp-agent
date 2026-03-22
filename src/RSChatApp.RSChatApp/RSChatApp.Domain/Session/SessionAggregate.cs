@@ -1,11 +1,12 @@
 using RSChatApp.Common.Kernel;
 using RSChatApp.Domain.Session.Events;
+using RSChatApp.Domain.ValueObjects;
 
 namespace RSChatApp.Domain.Session;
 
 public class SessionAggregate : BaseAggregate
 {
-    public Guid UserId { get; private set; }
+    public UserId UserId { get; private set; }
 
     public string Title { get; private set; } = string.Empty;
 
@@ -19,10 +20,10 @@ public class SessionAggregate : BaseAggregate
     {
     }
 
-    public static SessionAggregate Create(Guid id, Guid userId, string title)
+    public static SessionAggregate Create(Guid id, UserId userId, string title)
     {
         if (id == Guid.Empty) throw new DomainException("Session id cannot be empty.");
-        if (userId == Guid.Empty) throw new DomainException("User id cannot be empty.");
+        if (!userId.IsInitialized()) throw new DomainException("User id cannot be empty.");
 
         var aggregate = new SessionAggregate();
 

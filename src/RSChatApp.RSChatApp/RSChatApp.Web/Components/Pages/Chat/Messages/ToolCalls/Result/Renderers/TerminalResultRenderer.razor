@@ -35,9 +35,14 @@
 
     private string? _error;
     private TerminalViewData? _terminalData;
+    private string? _lastCallId;
 
     protected override void OnParametersSet()
     {
+        if (_lastCallId == Result.CallId)
+            return;
+        
+        _lastCallId = Result.CallId;
         _error = null;
         _terminalData = null;
 
@@ -45,12 +50,12 @@
         {
             var rawText = Result.Data switch
             {
-                string s => s,
-                JsonElement e => e.GetRawText(),
+                JsonElement e => e.GetProperty("text").GetRawText(),
+                string s => JsonElement.Parse(s)
+                    .GetProperty("text").GetString(),
                 _ => Result.Data?.ToString()
             };
             
-           
             if (string.IsNullOrEmpty(rawText))
             {
                 _error = "No terminal output";

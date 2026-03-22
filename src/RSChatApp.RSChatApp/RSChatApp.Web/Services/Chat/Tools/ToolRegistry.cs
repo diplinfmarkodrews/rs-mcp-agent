@@ -1,5 +1,4 @@
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Models.Chat.ToolCalls;
 using RSChatApp.Web.Services.Chat.Tools.Descriptors;
 
 namespace RSChatApp.Web.Services.Chat.Tools;
@@ -10,28 +9,20 @@ public class ToolRegistry
     private readonly Dictionary<ToolType, IToolDescriptor> _descriptorsByType = new();
     private readonly IToolDescriptor _unknownDescriptor = new UnknownToolDescriptor();
 
-    public ToolRegistry()
+    public ToolRegistry(IEnumerable<IToolDescriptor> descriptors)
     {
-        RegisterDescriptor(new SearchToolDescriptor(), 
-            "Search", "SearchAsync", "search");
-        
-        RegisterDescriptor(new TerminalToolDescriptor(), 
-            "TerminalTool_execute_command", "RsMcpServer_execute_command", "execute_command");
-        
-        RegisterDescriptor(new BrowserExecuteToolDescriptor(), 
-            "BrowserTool_executejavascript", "executeScript");
-        
-        RegisterDescriptor(new DocumentLookupToolDescriptor(), 
-            "GetDocumentPage", "DocumentLookupTool_GetDocumentPage");
+        foreach (var descriptor in descriptors)
+        {
+            RegisterDescriptor(descriptor);
+        }
     }
 
-    public void RegisterDescriptor(IToolDescriptor descriptor, params string[] toolNames)
+    public void RegisterDescriptor(IToolDescriptor descriptor)
     {
         _descriptorsByType[descriptor.Type] = descriptor;
-        foreach (var name in toolNames)
+        foreach (var name in descriptor.ToolNames)
         {
             _descriptorsByName[name] = descriptor;
-            _descriptorsByName[NormalizeToolName(name)] = descriptor;
         }
     }
 
@@ -47,32 +38,11 @@ public class ToolRegistry
             return descriptor;
         }
 
-        var normalized = NormalizeToolName(toolName);
-        if (_descriptorsByName.TryGetValue(normalized, out descriptor))
-        {
-            return descriptor;
-        }
-
         return _unknownDescriptor;
     }
 
     public IToolDescriptor GetDescriptor(ToolType type)
     {
         return _descriptorsByType.GetValueOrDefault(type, _unknownDescriptor);
-    }
-
-    private static string NormalizeToolName(string name)
-    {
-        // Remove namespace prefixes and async suffix
-        var parts = name.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        var lastPart = parts[^1];
-        
-        if (lastPart.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
-        {
-            lastPart = lastPart[..^5];
-        }
-
-        // Remove all non-alphanumeric and lowercase
-        return new string(lastPart.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
     }
 }
