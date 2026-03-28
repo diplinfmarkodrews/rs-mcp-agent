@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Client;
 using OpenAI;
+using RSChatApp.Application.Core.Chat;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
@@ -68,6 +69,7 @@ public static class DependencyInjection
             return builder.Build();
         }
         services.AddScoped<IChatClientFactory, ChatClientFactory>();
+        services.AddScoped<IAiChatClient, AiChatClientFacade>();
         services.AddKeyedScoped<IChatClient>(serviceKey, (Func<IServiceProvider, object?, IChatClient>)Factory);
         
         return services;
@@ -127,6 +129,12 @@ public static class DependencyInjection
             .Enrich.WithProperty("Application", builder.Environment.ApplicationName)
             .WriteTo.Console()
             .CreateLogger(), dispose: true);
+
+        return builder;
+    }
+
+    internal static WebApplicationBuilder AddOpenAIConfigs(this WebApplicationBuilder builder)
+    {
 
         return builder;
     }

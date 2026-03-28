@@ -4,9 +4,11 @@ using ModelContextProtocol.Server;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 
+[McpServerResourceType]
 public class TerminalResource
 {
-    [KernelFunction, McpServerResource, Description("List terminal commands of the reportserver")]
+    [McpServerResource, 
+     Description("List terminal commands of the reportserver")]
     public string ListTerminalCommands()
     {
         return TerminalCommands;

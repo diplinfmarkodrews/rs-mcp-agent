@@ -1,5 +1,4 @@
-using RSChatApp.Domain.Message;
-using RSChatApp.Domain.ValueObjects;
+using RSChatApp.Domain.Chat.Message;
 
 namespace RSChatApp.Application.Features.SendMessage;
 
@@ -9,7 +8,14 @@ public static class SendMessageHandler
         SendMessageCommand command,
         IEventStoreRepository<MessageAggregate> repository)
     {
-        var aggregate = MessageAggregate.Create(command.Id, command.SessionId, command.SenderId, command.Content, ChatRole.User);
+        var aggregate = MessageAggregate.Create(
+            command.Id,
+            command.SessionId,
+            command.SenderId,
+            command.Content,
+            command.Role,
+            command.MessageType,
+            command.ModelSettingsId);
 
         repository.Save(aggregate);
 

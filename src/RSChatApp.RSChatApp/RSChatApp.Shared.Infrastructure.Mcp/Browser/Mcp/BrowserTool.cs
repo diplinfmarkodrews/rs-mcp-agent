@@ -4,10 +4,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Interfaces;
-using RSChatApp.Shared.Infrastructure.Mcp.MetaData.Attributes;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.Browser.Mcp;
-
+[McpServerToolType]
 public class BrowserTool 
 {
     private readonly ILogger<BrowserTool> _logger;
@@ -23,7 +22,8 @@ public class BrowserTool
     /// <summary>
     /// Navigate to a specific URL
     /// </summary>
-    [KernelFunction, Description("Navigate to a specific URL.")]
+    [McpServerTool, 
+     Description("Navigate to a specific URL.")]
     public async Task<string> NavigateToUrlAsync(
         [Description("The URL to navigate to")] string url,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
@@ -60,7 +60,7 @@ public class BrowserTool
     /// <summary>
     /// Click on an element by selector
     /// </summary>
-    [KernelFunction, Description("Click on an element by CSS selector")]
+    [McpServerTool, Description("Click on an element by CSS selector")]
     public async Task<string> ClickElementAsync(
         [Description("CSS selector for the element to click")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
@@ -95,7 +95,7 @@ public class BrowserTool
     /// <summary>
     /// Type text into an input field
     /// </summary>
-    [KernelFunction, Description("Type text into an input field by CSS selector")]
+    [McpServerTool, Description("Type text into an input field by CSS selector")]
     public async Task<string> TypeTextAsync(
         [Description("CSS selector for the input field")] string selector,
         [Description("Text to type")] string text,
@@ -144,7 +144,7 @@ public class BrowserTool
     /// <summary>
     /// Get the text content of an element
     /// </summary>
-    [KernelFunction, Description("Get the text content of an element by CSS selector")]
+    [McpServerTool, Description("Get the text content of an element by CSS selector")]
     public async Task<string> GetElementTextAsync(
         [Description("CSS selector for the element")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
@@ -177,8 +177,7 @@ public class BrowserTool
     /// <summary>
     /// Take a screenshot of the current page
     /// </summary>
-    [KernelFunction, 
-     McpServerTool, 
+    [McpServerTool, 
      Description("Take a screenshot of the current page")
     ]
     public async Task<string> TakeScreenshotAsync(
@@ -217,8 +216,7 @@ public class BrowserTool
     /// <summary>
     /// Get the current page content as HTML
     /// </summary>
-    [KernelFunction, 
-     McpServerTool, 
+    [McpServerTool, 
      Description("Get the current page content as HTML")
     ]
     public async Task<string> GetPageContentAsync()
@@ -256,7 +254,7 @@ public class BrowserTool
     /// <summary>
     /// Wait for an element to appear on the page
     /// </summary>
-    [KernelFunction, Description("Wait for an element to appear on the page")]
+    [McpServerTool, Description("Wait for an element to appear on the page")]
     public async Task<string> WaitForElementAsync(
         [Description("CSS selector for the element to wait for")] string selector,
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
@@ -289,7 +287,7 @@ public class BrowserTool
     /// <summary>
     /// Scroll the page
     /// </summary>
-    [KernelFunction, Description("Scroll the page by specified amount or to element")]
+    [McpServerTool, Description("Scroll the page by specified amount or to element")]
     public async Task<string> ScrollPageAsync(
         [Description("Pixels to scroll vertically (positive = down, negative = up)")] int deltaY = 0,
         [Description("Pixels to scroll horizontally (positive = right, negative = left)")] int deltaX = 0,
@@ -336,7 +334,7 @@ public class BrowserTool
     /// <summary>
     /// Fill out a form field
     /// </summary>
-    [KernelFunction, Description("Fill out a form field by CSS selector")]
+    [McpServerTool, Description("Fill out a form field by CSS selector")]
     public async Task<string> FillFormFieldAsync(
         [Description("CSS selector for the form field")] string selector,
         [Description("Value to fill")] string value,
@@ -371,7 +369,7 @@ public class BrowserTool
     /// <summary>
     /// Select option from dropdown
     /// </summary>
-    [KernelFunction, Description("Select option from dropdown by CSS selector")]
+    [McpServerTool, Description("Select option from dropdown by CSS selector")]
     public async Task<string> SelectDropdownAsync(
         [Description("CSS selector for the dropdown/select element")] string selector,
         [Description("Value to select")] string value,
@@ -407,7 +405,7 @@ public class BrowserTool
     /// <summary>
     /// Execute JavaScript on the page
     /// </summary>
-    [KernelFunction, 
+    [McpServerTool, 
      Description("Execute JavaScript code on the page. " +
                  "The script can return a value which will be included in the result. ")
     ]
@@ -444,7 +442,7 @@ public class BrowserTool
     /// <summary>
     /// Get current page information
     /// </summary>
-    [KernelFunction, Description("Get current page information (URL, title, etc.)")]
+    [McpServerTool, Description("Get current page information (URL, title, etc.)")]
     public async Task<string> GetPageInfoAsync()
     {
         _logger.LogInformation("GetPageInfoAsync called");
@@ -484,7 +482,7 @@ public class BrowserTool
     /// <summary>
     /// Go back in browser history
     /// </summary>
-    [KernelFunction, Description("Go back in browser history")]
+    [McpServerTool, Description("Go back in browser history")]
     public async Task<string> GoBackAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
@@ -518,7 +516,7 @@ public class BrowserTool
     /// <summary>
     /// Go forward in browser history
     /// </summary>
-    [KernelFunction, Description("Go forward in browser history")]
+    [McpServerTool, Description("Go forward in browser history")]
     public async Task<string> GoForwardAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {
@@ -552,7 +550,7 @@ public class BrowserTool
     /// <summary>
     /// Refresh the current page
     /// </summary>
-    [KernelFunction, Description("Refresh the current page")]
+    [McpServerTool, Description("Refresh the current page")]
     public async Task<string> RefreshPageAsync(
         [Description("Optional timeout in milliseconds (default: 30000)")] int timeoutMs = 30000)
     {

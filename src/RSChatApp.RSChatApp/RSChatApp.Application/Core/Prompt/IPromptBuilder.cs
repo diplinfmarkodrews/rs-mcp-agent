@@ -1,8 +1,8 @@
-using RSChatApp.Application.Features.Message.Events;
+using RSChatApp.Application.Core.Chat.Dtos;
 
-namespace RSChatApp.Application.Services;
+namespace RSChatApp.Application.Core.Prompt;
 
 public interface IPromptBuilder
 {
-    Task<IReadOnlyList<ChatTurn>> BuildAsync(Guid sessionId, CancellationToken ct);
+    Task<IReadOnlyList<ChatMessageDto>> BuildAsync(Guid sessionId, CancellationToken ct);
 }

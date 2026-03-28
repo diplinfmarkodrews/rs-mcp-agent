@@ -1,7 +1,7 @@
 ﻿using RSChatApp.Common.Kernel;
 using RSChatApp.Domain.ValueObjects;
 
-namespace RSChatApp.Domain.Session.Events;
+namespace RSChatApp.Domain.Chat.Session.Events;
 
 public record SessionCreatedEvent : BaseEvent
 {
@@ -9,13 +9,13 @@ public record SessionCreatedEvent : BaseEvent
 
     public UserId UserId { get; init; }
 
-    public string Title { get; init; } = string.Empty;
+    public Guid? ParentSessionId { get; init; }
 
     public DateTime StartedAt { get; init; }
 
     public DateTime LastActivityAt { get; init; }
 
-    public static SessionCreatedEvent Create(Guid id, UserId userId, string title)
+    public static SessionCreatedEvent Create(Guid id, UserId userId, Guid? parentSessionId = null)
     {
         if (id == Guid.Empty) throw new DomainException("Session id cannot be empty.");
         if (userId.IsInitialized() == false) throw new DomainException("User id cannot be empty.");
@@ -26,7 +26,7 @@ public record SessionCreatedEvent : BaseEvent
         {
             Id = id,
             UserId = userId,
-            Title = title,
+            ParentSessionId = parentSessionId,
             StartedAt = now,
             LastActivityAt = now
         };

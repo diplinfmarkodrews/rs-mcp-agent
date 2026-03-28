@@ -1,5 +1,6 @@
 using Marten.Events.Projections;
 using RSChatApp.Application.Core.Message.Dtos;
+using RSChatApp.Domain.Chat.Message.Events;
 
 namespace RSChatApp.Infrastructure.Projections;
 
@@ -16,6 +17,8 @@ public class MessageProjection : EventProjection
                 SenderId = e.SenderId,
                 Content = e.Content,
                 Role = e.Role,
+                MessageType = e.MessageType,
+                ModelSettingsId = e.ModelSettingsId,
                 SentAt = e.SentAt
             });
         });

@@ -11,6 +11,9 @@ public class ToolRegistry
 
     public ToolRegistry(IEnumerable<IToolDescriptor> descriptors)
     {
+        if (descriptors is null)
+            throw new ArgumentNullException(nameof(descriptors));
+        
         foreach (var descriptor in descriptors)
         {
             RegisterDescriptor(descriptor);

@@ -164,7 +164,7 @@ builder.Services.AddSingleton<KernelPluginCollection>(serviceProvider =>
      pluginCollection.AddFromFunctions(nameof(TerminalTool),
             toolsRs.Select(t => t.AsKernelFunction()));
 
-     pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
+     // pluginCollection.AddFromType<TerminalResource>("TerminalResource", serviceProvider);
      
      if (mcpClientSettings.Clients is null)
          return pluginCollection;

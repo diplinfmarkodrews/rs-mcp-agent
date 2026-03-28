@@ -3,6 +3,10 @@ using JasperFx.Events.Projections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RSChatApp.Application.Services;
+using RSChatApp.Domain.Chat.Message.Events;
+using RSChatApp.Domain.Chat.ModelSettings;
+using RSChatApp.Domain.Chat.Session.Events;
+using RSChatApp.Domain.Chat.ToolCall;
 using RSChatApp.Infrastructure.EventStore;
 using RSChatApp.Infrastructure.Identity.Clients;
 using RSChatApp.Infrastructure.Identity.Services;
@@ -56,6 +60,15 @@ public static class DependencyInjection
             // Inline projections (synchronous, no daemon needed)
             opts.Projections.Add<ConversationProjection>(ProjectionLifecycle.Inline);
             opts.Projections.Add<MessageProjection>(ProjectionLifecycle.Inline);
+
+            // Marten document storage with indexes
+            opts.Schema.For<ToolCallDocument>()
+                .Index(x => x.SessionId)
+                .Index(x => x.MessageId)
+                .Index(x => x.CallId);
+
+            opts.Schema.For<ModelSettingsDocument>()
+                .Index(x => x.SessionId);
 
             return opts;
         })

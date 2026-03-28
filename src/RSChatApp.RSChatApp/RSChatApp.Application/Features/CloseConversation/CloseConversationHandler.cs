@@ -1,4 +1,4 @@
-using RSChatApp.Domain.Session;
+using RSChatApp.Domain.Chat.Session;
 
 namespace RSChatApp.Application.Features.CloseConversation;
 

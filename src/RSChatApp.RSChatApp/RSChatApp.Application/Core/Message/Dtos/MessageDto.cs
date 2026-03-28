@@ -10,9 +10,13 @@ public record MessageDto
 
     public UserId SenderId { get; init; }
 
-    public string Content { get; init; } = string.Empty;
+    public string? Content { get; init; }
 
     public ChatRole Role { get; init; }
+
+    public MessageType MessageType { get; init; }
+
+    public Guid? ModelSettingsId { get; init; }
 
     public DateTime SentAt { get; init; }
 

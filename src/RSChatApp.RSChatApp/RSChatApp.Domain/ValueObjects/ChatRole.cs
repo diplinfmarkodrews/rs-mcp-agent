@@ -1,6 +1,4 @@
-﻿using Ardalis.SmartEnum;
-
-namespace RSChatApp.Domain.ValueObjects;
+﻿namespace RSChatApp.Domain.ValueObjects;
 
 public class ChatRole : SmartEnum<ChatRole>
 {

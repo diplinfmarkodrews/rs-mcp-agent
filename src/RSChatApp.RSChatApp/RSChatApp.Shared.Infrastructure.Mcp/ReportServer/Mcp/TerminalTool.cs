@@ -1,19 +1,16 @@
 using System.ComponentModel;
-using System.Text;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
 using ModelContextProtocol.Server;
 using ReportServer.Abstraction;
 using ReportServer.Abstraction.Contracts.Terminal;
 using RSChatApp.Common;
-using RSChatApp.Shared.Infrastructure.Mcp.MetaData.Attributes;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.ReportServer.Mcp;
 
 /// <summary>
 /// MCP Server implementation for terminal commands using Microsoft.Extensions.AI MCP SDK
 /// </summary>
-
+[McpServerToolType]
 public class TerminalTool
 {
     private readonly ILogger<TerminalTool> _logger;
@@ -30,7 +27,8 @@ public class TerminalTool
     /// <summary>
     /// Executes a terminal command on the report server
     /// </summary>
-    [KernelFunction, McpServerTool, Description("Executes a terminal command on the report server. ")]
+    [McpServerTool, 
+     Description("Executes a terminal command on the report server. ")]
     public async Task<TerminalCommandResult> ExecuteCommandAsync(
         [Description("command to be executed in ReportServer terminal")]string command,
         [Description("session id to identify terminal session. Leave empty to start a new session!")]string sessionId = "",

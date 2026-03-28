@@ -1,5 +1,5 @@
 ﻿using RSChatApp.Common.Kernel;
 
-namespace RSChatApp.Domain.Session.Events;
+namespace RSChatApp.Domain.Chat.Session.Events;
 
 public record SessionDeletedEvent(Guid Id) : BaseEvent;
