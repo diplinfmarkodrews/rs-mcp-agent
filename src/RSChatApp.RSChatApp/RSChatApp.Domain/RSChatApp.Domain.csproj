@@ -18,6 +18,8 @@
 
     <ItemGroup>
       <Folder Include="Chat\" />
+      <Folder Include="Chat\ModelSettings\Events\" />
+      <Folder Include="Chat\ToolCall\Events\" />
     </ItemGroup>
 
 </Project>

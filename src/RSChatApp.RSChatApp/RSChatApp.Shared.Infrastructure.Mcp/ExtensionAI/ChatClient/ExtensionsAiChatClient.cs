@@ -7,14 +7,13 @@ namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 
 internal sealed class ExtensionsAiChatClient(IChatClient inner) : IAiChatClient
 {
-    public async IAsyncEnumerable<ChatResponseUpdateDto> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatMessageUpdateDto> GetStreamingResponseAsync(
         AiChatRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var messages = request.Messages
-            .Select(m => new ChatMessage(ChatRoleMapper.ToExtensionsAI(m.role), m.content))
-            .ToList()
-            .NormalizeMessagesForApi();
+        var messages = request.Message.Messages
+            .ToChatMessageList();
+            // .NormalizeMessagesForApi();
 
         await foreach (var update in inner.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
         {
@@ -25,22 +24,22 @@ internal sealed class ExtensionsAiChatClient(IChatClient inner) : IAiChatClient
             {
                 yield return content switch
                 {
-                    TextContent text => new ChatResponseUpdateDto(
+                    TextContent text => new ChatMessageUpdateDto(
                         TextDelta: text.Text,
-                        Role: role,
+                        Role: role.ToChatRole(),
                         FinishReason: finishReason),
 
-                    FunctionCallContent call => new ChatResponseUpdateDto(
-                        Role: role,
+                    FunctionCallContent call => new ChatMessageUpdateDto(
+                        Role: role.ToChatRole(),
                         ToolCall: new ToolCallInfo(call.Name, call.Arguments?.ToDictionary(
                             kvp => kvp.Key,
                             kvp => kvp.Value ?? (object)string.Empty) ?? new Dictionary<string, object>())),
 
-                    FunctionResultContent result => new ChatResponseUpdateDto(
-                        Role: role,
-                        ToolResult: new ToolResultInfo(result.CallId, result.Result?.ToString() ?? string.Empty)),
+                    FunctionResultContent result => new ChatMessageUpdateDto(
+                        Role: role.ToChatRole(),
+                        ToolResult: new ToolResultInfo(result.CallId, result.Result)),
 
-                    _ => new ChatResponseUpdateDto(Role: role, FinishReason: finishReason),
+                    _ => new ChatMessageUpdateDto(Role: role.ToChatRole(), FinishReason: finishReason),
                 };
             }
         }

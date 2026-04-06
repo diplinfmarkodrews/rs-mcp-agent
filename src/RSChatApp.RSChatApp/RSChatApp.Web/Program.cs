@@ -9,6 +9,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
 using RSChatApp.Infrastructure.Extensions;
+using RSChatApp.Application.Core.Chat.Events;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.Browser.Configuration;
@@ -302,7 +303,10 @@ builder.Services.AddScoped<JsTerminalDriver>();
 builder.Services.AddScoped<TerminalDriverFactory>();
 
 builder.Services.AddControllers();
-builder.Host.UseWolverine();
+builder.Host.UseWolverine(opts =>
+{
+    opts.LocalQueueFor<LlmTokenGeneratedEvent>().Sequential();
+});
 var app = builder.Build();
 
 app.UseRouting();

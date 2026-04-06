@@ -16,9 +16,15 @@ public record MessageDto
 
     public MessageType MessageType { get; init; }
 
+    public string? ChatMessageId { get; init; }
+
+    public string? AuthorName { get; init; }
+
     public Guid? ModelSettingsId { get; init; }
 
     public DateTime SentAt { get; init; }
+
+    public bool IsComplete { get; init; }
 
     public long Version { get; init; }
 }

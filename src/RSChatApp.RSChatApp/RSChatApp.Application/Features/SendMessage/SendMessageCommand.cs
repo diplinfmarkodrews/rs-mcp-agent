@@ -1,3 +1,4 @@
+using RSChatApp.Application.Core.Chat;
 using RSChatApp.Domain.ValueObjects;
 
 namespace RSChatApp.Application.Features.SendMessage;
@@ -8,6 +9,4 @@ public record SendMessageCommand(
     UserId SenderId,
     string? Content,
     ChatRole Role,
-    MessageType MessageType,
-    Guid? ModelSettingsId = null,
-    IEnumerable<string>? ActiveToolNames = null);
+    AiChatRequest  AiChatRequest);

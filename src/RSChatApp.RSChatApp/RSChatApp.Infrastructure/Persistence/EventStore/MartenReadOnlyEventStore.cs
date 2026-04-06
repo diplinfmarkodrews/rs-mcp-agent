@@ -1,4 +1,4 @@
-namespace RSChatApp.Infrastructure.EventStore;
+namespace RSChatApp.Infrastructure.Persistence.EventStore;
 
 public class MartenReadOnlyEventStore(IQuerySession session) : IReadOnlyEventStore
 {

@@ -1,7 +1,4 @@
-using Marten;
-using RSChatApp.Common.Kernel;
-
-namespace RSChatApp.Infrastructure.EventStore;
+namespace RSChatApp.Infrastructure.Persistence.EventStore;
 
 public class MartenEventStoreRepository<TA>(IDocumentSession session) : IEventStoreRepository<TA> where TA : BaseAggregate, new()
 {
@@ -9,7 +6,9 @@ public class MartenEventStoreRepository<TA>(IDocumentSession session) : IEventSt
     {
         try
         {
-            var eventStream = await session.Events.FetchForWriting<TA>(streamId, cancellationToken).ConfigureAwait(false);
+            var eventStream = await session.Events.FetchForWriting<TA>(streamId, cancellationToken)
+                .ConfigureAwait(false);
+            
             var aggregate = eventStream.Aggregate;
 
             aggregate?.Version = eventStream.CurrentVersion ?? 0;

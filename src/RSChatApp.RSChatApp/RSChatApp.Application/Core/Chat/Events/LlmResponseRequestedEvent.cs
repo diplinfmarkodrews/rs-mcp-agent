@@ -1,11 +1,11 @@
-using RSChatApp.Application.Core.Chat.Dtos;
 using RSChatApp.Domain.ValueObjects;
 
-namespace RSChatApp.Application.Features.Message.Events;
+namespace RSChatApp.Application.Core.Chat.Events;
 
 public record LlmResponseRequestedEvent(
      Guid RequestId,
      Guid SessionId,
+     Guid MessageId,
      UserId UserId,
-     IReadOnlyList<ChatMessageDto> Messages
+     AiChatRequest AiChatRequest
 );

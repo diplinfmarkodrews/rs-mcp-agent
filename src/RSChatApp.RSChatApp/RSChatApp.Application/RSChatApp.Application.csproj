@@ -9,7 +9,6 @@
 
     <ItemGroup>
       <Folder Include="Core\Message\" />
-      <Folder Include="Services\" />
     </ItemGroup>
 
     <ItemGroup>

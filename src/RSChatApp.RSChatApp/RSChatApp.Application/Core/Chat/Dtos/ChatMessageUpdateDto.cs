@@ -1,12 +1,16 @@
+using RSChatApp.Domain.ValueObjects;
+
 namespace RSChatApp.Application.Core.Chat.Dtos;
 
-public record ChatResponseUpdateDto(
+public record ChatMessageUpdateDto(
     string? TextDelta = null,
     string? FinishReason = null,
-    string? Role = null,
+    string? ChatMessageId = null,
+    string? AuthorName = null,
+    ChatRole Role = null,
     ToolCallInfo? ToolCall = null,
     ToolResultInfo? ToolResult = null);
 
 public record ToolCallInfo(string Name, Dictionary<string, object> Arguments);
 
-public record ToolResultInfo(string CallId, string Result);
+public record ToolResultInfo(string CallId, object Result);

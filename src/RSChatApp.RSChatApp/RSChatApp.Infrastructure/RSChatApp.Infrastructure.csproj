@@ -28,4 +28,8 @@
       <ProjectReference Include="..\RSChatApp.Shared.Infrastructure.Mcp\RSChatApp.Shared.Infrastructure.Mcp.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Persistence\" />
+    </ItemGroup>
+
 </Project>

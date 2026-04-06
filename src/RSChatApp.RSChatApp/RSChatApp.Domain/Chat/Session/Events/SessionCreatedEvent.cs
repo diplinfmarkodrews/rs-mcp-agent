@@ -17,11 +17,10 @@ public record SessionCreatedEvent : BaseEvent
 
     public static SessionCreatedEvent Create(Guid id, UserId userId, Guid? parentSessionId = null)
     {
+        // UserId is validated in ValueObject during assignment
         if (id == Guid.Empty) throw new DomainException("Session id cannot be empty.");
-        if (userId.IsInitialized() == false) throw new DomainException("User id cannot be empty.");
 
         var now = DateTime.UtcNow;
-
         return new SessionCreatedEvent
         {
             Id = id,

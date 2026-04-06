@@ -2,15 +2,19 @@ using JasperFx.Events.Daemon;
 using JasperFx.Events.Projections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RSChatApp.Application.Core.Chat;
 using RSChatApp.Application.Services;
 using RSChatApp.Domain.Chat.Message.Events;
 using RSChatApp.Domain.Chat.ModelSettings;
 using RSChatApp.Domain.Chat.Session.Events;
 using RSChatApp.Domain.Chat.ToolCall;
-using RSChatApp.Infrastructure.EventStore;
 using RSChatApp.Infrastructure.Identity.Clients;
 using RSChatApp.Infrastructure.Identity.Services;
+using RSChatApp.Infrastructure.Persistence.EventStore;
+using RSChatApp.Infrastructure.Persistence.Projections;
+using RSChatApp.Infrastructure.Persistence.Queries;
 using RSChatApp.Infrastructure.Prompt;
+using RSChatApp.Infrastructure.Recovery;
 using RSChatApp.Infrastructure.ReportServer.Clients;
 using Wolverine.Marten;
 
@@ -26,6 +30,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationClient, LegacyAuthenticationClient>();
         services.AddScoped<IRsTerminalClient, RsTerminalClient>();
         services.AddScoped<ILegacyAuthenticationService, LegacyAuthenticationService>();
+        services.AddSingleton<IToolCallConfirmationPolicy, DefaultToolCallConfirmationPolicy>();
+        services.AddSingleton<IActiveRequestRegistry, ActiveRequestRegistry>();
+        services.AddHostedService<ActiveRequestRecoveryHostedService>();
         
         services.ConfigureWolverineMarten(configuration);
         
@@ -54,6 +61,8 @@ public static class DependencyInjection
             // Marten event types
             opts.Events.AddEventType<SessionCreatedEvent>();
             opts.Events.AddEventType<MessageCreatedEvent>();
+            opts.Events.AddEventType<MessageUpdatedEvent>();
+            opts.Events.AddEventType<MessageCompletedEvent>();
             opts.Events.AddEventType<SessionUpdatedEvent>();
             opts.Events.AddEventType<SessionDeletedEvent>();
 
@@ -63,7 +72,7 @@ public static class DependencyInjection
 
             // Marten document storage with indexes
             opts.Schema.For<ToolCallDocument>()
-                .Index(x => x.SessionId)
+                .Duplicate(x => x.SessionId)
                 .Index(x => x.MessageId)
                 .Index(x => x.CallId);
 
@@ -89,6 +98,9 @@ public static class DependencyInjection
         // Event store abstractions
         services.AddScoped(typeof(IEventStoreRepository<>), typeof(MartenEventStoreRepository<>));
         services.AddScoped<IReadOnlyEventStore, MartenReadOnlyEventStore>();
+
+        // Chat message query (enriched read model)
+        services.AddScoped<IChatMessageQuery, MartenChatMessageQuery>();
     }
     
 }

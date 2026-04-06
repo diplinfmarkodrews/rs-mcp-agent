@@ -3,16 +3,26 @@ using RSChatApp.Domain.ValueObjects;
 
 namespace RSChatApp.Application.Core.Chat;
 
-public interface IAiChatClient : IDisposable
+public interface IAiChatClient
 {
-    IAsyncEnumerable<ChatResponseUpdateDto> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatMessageUpdateDto> GetStreamingResponseAsync(
         AiChatRequest request,
         CancellationToken cancellationToken = default);
 }
 
-public record AiChatRequest(string ServiceId, 
-    IEnumerable<ChatMessageDto> Messages, 
-    IEnumerable<string> ActiveToolNames,
+public record AiChatRequestMessage(List<ChatMessageDto> Messages);
+
+
+public record AiChatRequest(
+    Guid SessionId,
+    AiChatRequestMessage Message,
+    AiChatSettings Settings);
+  
+
+public record AiChatSettings(
+    string ServiceId, 
+    IEnumerable<string> ActiveToolNames, 
+    bool IsPrivate, 
+    bool IsLocal,
+    AiChatPromptExecutionSettings PromptExecutionSettings, 
     string? ModelId = null);
-    
-public record AiChatSettings(string ServiceId, IEnumerable<string> ActiveToolNames, bool IsPrivate, AiChatPromptExecutionSettings PromptExecutionSettings, string? ModelId = null);

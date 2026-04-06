@@ -1,6 +1,6 @@
 ﻿using RSChatApp.Domain.ValueObjects;
 
-namespace RSChatApp.Application.Features.Message.Events;
+namespace RSChatApp.Application.Core.Chat.Events;
 
 public record LlmResponseGaveUpEvent(
     Guid RequestId,

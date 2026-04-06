@@ -8,11 +8,11 @@ namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 
 public sealed class AiChatClientFacade(IServiceProvider serviceProvider, Kernel kernel) : IAiChatClient
 {
-    public IAsyncEnumerable<ChatResponseUpdateDto> GetStreamingResponseAsync(
+    public IAsyncEnumerable<ChatMessageUpdateDto> GetStreamingResponseAsync(
         AiChatRequest request,
         CancellationToken cancellationToken = default)
     {
-        var chatClient = serviceProvider.GetKeyedService<IChatClient>(request.ServiceId);
+        using var chatClient = serviceProvider.GetKeyedService<IChatClient>(request.Settings.ServiceId);
 
         IAiChatClient inner = chatClient is not null
             ? new ExtensionsAiChatClient(chatClient)
@@ -20,6 +20,5 @@ public sealed class AiChatClientFacade(IServiceProvider serviceProvider, Kernel 
 
         return inner.GetStreamingResponseAsync(request, cancellationToken);
     }
-
-    public void Dispose() { }
+    
 }

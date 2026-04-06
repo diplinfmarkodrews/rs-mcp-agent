@@ -8,17 +8,17 @@ namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 
 internal sealed class SemanticKernelChatClient(Kernel kernel) : IAiChatClient
 {
-    public async IAsyncEnumerable<ChatResponseUpdateDto> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatMessageUpdateDto> GetStreamingResponseAsync(
         AiChatRequest request,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var chatHistory = new ChatHistory();
-        foreach (var m in request.Messages)
-            chatHistory.AddMessage(m.role.ToSemanticKernel(), m.content);
+        foreach (var m in request.Message.Messages)
+            chatHistory.AddMessage(m.Role.ToSemanticKernel(), m.Content);
 
         var allowedFunctions = kernel.Plugins
             .SelectMany(p => p)
-            .Where(f => !request.ActiveToolNames.Any() || request.ActiveToolNames.Contains(f.Name))
+            .Where(f => !request.Settings.ActiveToolNames.Any() || request.Settings.ActiveToolNames.Contains(f.Name))
             .ToList();
 
         var settings = new PromptExecutionSettings
@@ -37,15 +37,16 @@ internal sealed class SemanticKernelChatClient(Kernel kernel) : IAiChatClient
             {
                 yield return item switch
                 {
-                    StreamingTextContent text => new ChatResponseUpdateDto(
+                    StreamingTextContent text => new ChatMessageUpdateDto(
                         TextDelta: text.Text,
-                        Role: role),
+                        Role: role.ToChatRole()),
 
-                    StreamingFunctionCallUpdateContent call when call.Name is not null => new ChatResponseUpdateDto(
-                        Role: role,
-                        ToolCall: new ToolCallInfo(call.Name, ParseArguments(call.Arguments))),
-                    
-                    _ => new ChatResponseUpdateDto(Role: role),
+                    StreamingFunctionCallUpdateContent call when call.Name is not null
+                        => new ChatMessageUpdateDto(
+                            Role: role.ToChatRole(),
+                            ToolCall: new ToolCallInfo(call.Name, ParseArguments(call.Arguments))),
+                    // SK doesn't expose FunctionCallUpdate results in stream api, meh
+                    _ => new ChatMessageUpdateDto(Role: role.ToChatRole()),
                 };
             }
         }

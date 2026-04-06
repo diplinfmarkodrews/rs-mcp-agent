@@ -1,10 +1,8 @@
-
-
 using RSChatApp.Application.Core.Message.Dtos;
 using RSChatApp.Domain.Chat.Message.Events;
 using RSChatApp.Domain.Chat.Session.Events;
 
-namespace RSChatApp.Infrastructure.Projections;
+namespace RSChatApp.Infrastructure.Persistence.Projections;
 
 public static class ConversationProjectionLogic
 {
@@ -38,8 +36,10 @@ public static class ConversationProjectionLogic
 
         if (@event.Title != null)
             updated = updated with { Title = @event.Title };
+        
         if (@event.Summary != null)
             updated = updated with { Summary = @event.Summary };
+        
         if (@event.Rating != null)
             updated = updated with { Rating = @event.Rating };
 

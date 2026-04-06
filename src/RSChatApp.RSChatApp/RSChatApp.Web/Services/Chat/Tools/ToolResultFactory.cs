@@ -74,7 +74,7 @@ public class ToolResultFactory
         string? result;
         switch (functionResult.GetValue<object>())
         {
-            case null: result = null; break; 
+            case null: result = null; break;
             case string s: result = s; break;
             case JsonElement e:
                 if (e.GetProperty("content")[0].TryGetProperty("text", out var value))
@@ -90,7 +90,7 @@ public class ToolResultFactory
                 break;
         }
         return result;
- 
+
     }
     private static bool IsErrorResult(string? result, ResultContentType contentType)
     {

@@ -3,7 +3,7 @@ using RSChatApp.Application.Core.Message.Dtos;
 using RSChatApp.Domain.Chat.Message.Events;
 using RSChatApp.Domain.Chat.Session.Events;
 
-namespace RSChatApp.Infrastructure.Projections;
+namespace RSChatApp.Infrastructure.Persistence.Projections;
 
 public class ConversationProjection : MultiStreamProjection<ConversationDto, Guid>
 {
