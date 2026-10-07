@@ -67,8 +67,17 @@ public class ReportServerGwtRpcClientBase : IDisposable
         // BaseAddress is http://localhost:8080/reportserver/
         // So we need to prepend "reportserver/" to get /reportserver/reportserver/<servicePath>
         var fullPath = $"reportserver/{servicePath}";
-        var content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc");
-        var response = await _httpClient.PostAsync(fullPath, content, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Post, fullPath)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc")
+        };
+        // Send the ReportServer session of the current caller (set per request by the authentication middleware).
+        // Fallback: the scoped cookie container, which the login flow fills via extractSessionCookie.
+        var callerSessionId = ReportServerSession.CurrentJsessionId.Value
+                              ?? _cookieContainer.GetCookies(_httpClient.BaseAddress!)[CookieSessionId]?.Value;
+        if (!string.IsNullOrEmpty(callerSessionId))
+            request.Headers.TryAddWithoutValidation("Cookie", $"{CookieSessionId}={callerSessionId}");
+        var response = await _httpClient.SendAsync(request, cancellationToken);
         
         // Read response body first before checking status - GWT RPC may return application errors with HTTP 200
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);

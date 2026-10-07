@@ -57,6 +57,7 @@ builder.Services.AddScoped<Kernel>((serviceProvider) => {
 });
 
 builder.Services.AddMcpServer()
+    .AddAuthorizationFilters()
     .WithTools<TerminalTool>()
     .WithResources<TerminalResource>()
     .WithHttpTransport();

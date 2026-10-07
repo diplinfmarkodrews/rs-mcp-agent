@@ -27,15 +27,13 @@ public static class HostExtension
                 // This hash identifies the specific compiled JavaScript permutation
                 client.DefaultRequestHeaders.Add("X-GWT-Permutation", "0960CCE3B17B0C25D12B6D12FA467931");
             })
-            .ConfigurePrimaryHttpMessageHandler(provider =>
-            {
-                var cookieProvider = provider.GetRequiredService<CookieContainerProvider>();
-                return new HttpClientHandler
+            .ConfigurePrimaryHttpMessageHandler(_ =>
+                // The pooled handler must not keep a process-wide cookie jar: the JSESSIONID is sent
+                // explicitly per request (see ReportServerGwtRpcClientBase.PostGwtRpcAsync).
+                new HttpClientHandler
                 {
-                    CookieContainer = cookieProvider.CookieContainer,
-                    UseCookies = true,
-                };
-            })
+                    UseCookies = false,
+                })
             .AddTransientHttpErrorPolicy(config => 
                 config.WaitAndRetryAsync(3, 
                     retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));

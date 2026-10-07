@@ -10,7 +10,7 @@ namespace ReportServer.RpcClient.Services;
 
 public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 {
-    private const string TerminalServiceHash = "BF140EBA9A84651D0CC50CCD75BC2C4F";
+    private const string TerminalServiceHash = "3F77E49DD28B2F8553E17EF03CCDE319";//"BF140EBA9A84651D0CC50CCD75BC2C4F";
     private readonly ILogger _logger;
 
     public RsGwtRpcTerminalClient(ILogger logger, HttpClient httpClient, CookieContainerProvider cookieProvider) 

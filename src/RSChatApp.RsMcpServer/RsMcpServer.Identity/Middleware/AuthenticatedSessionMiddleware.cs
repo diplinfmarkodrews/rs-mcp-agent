@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
+using ReportServer.RpcClient.Infrastructure;
+using RsMcpServer.Identity.Models.Authentication;
 using RsMcpServer.Identity.Services;
 
 namespace RsMcpServer.Identity.Middleware;
@@ -40,6 +42,10 @@ public class AuthenticatedSessionMiddleware
                 context.User = authContext.User;
                 _logger.LogDebug("Authentication successful: {Type} for {User}", 
                     authContext.Type, authContext.User.Identity?.Name);
+
+                // Make the caller's ReportServer session available to the RPC client for this request
+                if (authContext.Type == AuthenticationType.Legacy && !string.IsNullOrEmpty(authContext.SessionId))
+                    ReportServerSession.CurrentJsessionId.Value = authContext.SessionId;
             }
             else
             {
