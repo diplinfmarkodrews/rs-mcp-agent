@@ -1,5 +1,5 @@
-using System.Text;
 using Microsoft.Extensions.Logging;
+using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.Abstraction.Exceptions;
 using ReportServer.RpcClient.DTOs;
 using ReportServer.RpcClient.DTOs.Terminal;
@@ -113,7 +113,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                 var result = new CommandResultDto
                 {
                     Result = string.Join("\n", directoryList),
-                    Type = 1, // List type
+                    Type = (int)CommandResultType.Success,
                     Error = string.Empty,
                     Data = directoryList,
                     NewPrompt = ReportServerExtension.RsTerminalPrompt,
