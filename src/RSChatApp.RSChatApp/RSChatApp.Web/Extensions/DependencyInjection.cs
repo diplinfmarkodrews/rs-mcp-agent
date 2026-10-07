@@ -8,6 +8,7 @@ using RSChatApp.Application.Core.Chat;
 using RSChatApp.Infrastructure.Prompt;
 using RSChatApp.Infrastructure.UserInteraction;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
 using RSChatApp.Web.Configuration;
@@ -15,7 +16,6 @@ using RSChatApp.Web.HostedServices.McpTool;
 using RSChatApp.Web.Mcp.Tools;
 using RSChatApp.Web.Models.Auth;
 using RSChatApp.Web.Services.Authentication;
-using RSChatApp.Web.Services.Chat.Tools;
 using RsMcpServer.Identity.Models.Requests;
 using Serilog;
 

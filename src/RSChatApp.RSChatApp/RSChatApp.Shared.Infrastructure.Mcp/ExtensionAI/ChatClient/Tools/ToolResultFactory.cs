@@ -1,10 +1,11 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using RSChatApp.Domain.Chat.ToolCall;
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Models.Chat.ToolCalls;
 using FunctionResultContent = Microsoft.Extensions.AI.FunctionResultContent;
 
-namespace RSChatApp.Web.Services.Chat.Tools;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public class ToolResultFactory
 {
@@ -45,7 +46,21 @@ public class ToolResultFactory
             CompletedAt: DateTime.UtcNow
         );
     }
-    
+    // From persisted ToolCallDocument
+    public ToolResult Create(ToolCallDocument doc, ToolInvocation invocation)
+    {
+        var rawResult = GetResultAsObject(doc.Result);
+        var isError = doc.IsError || IsErrorResult(rawResult, invocation.ResultContentType);
+
+        return new ToolResult(
+            CallId: doc.CallId,
+            IsSuccess: !isError,
+            ContentType: isError ? ResultContentType.Error : invocation.ResultContentType,
+            Data: rawResult,
+            ErrorMessage: isError ? rawResult : null,
+            CompletedAt: doc.CompletedAt ?? DateTime.UtcNow
+        );
+    }
     
     private static string? GetResultAsString(FunctionResultContent functionResultContent)
     {
@@ -91,6 +106,17 @@ public class ToolResultFactory
         }
         return result;
 
+    }
+    private static string? GetResultAsObject(object? result)
+    {
+        return result switch
+        {
+            null => null,
+            string s => s,
+            JsonElement e when e.ValueKind == JsonValueKind.String => e.GetString(),
+            JsonElement e => e.GetRawText(),
+            _ => result.ToString()
+        };
     }
     private static bool IsErrorResult(string? result, ResultContentType contentType)
     {

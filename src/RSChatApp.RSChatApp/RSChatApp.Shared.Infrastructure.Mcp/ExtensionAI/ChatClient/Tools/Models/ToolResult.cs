@@ -1,6 +1,6 @@
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 
-namespace RSChatApp.Web.Models.Chat.ToolCalls;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public record ToolResult(
     string CallId,
@@ -10,3 +10,4 @@ public record ToolResult(
     string? ErrorMessage,
     DateTime CompletedAt
 );
+

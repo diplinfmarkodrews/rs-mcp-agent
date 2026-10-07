@@ -1,4 +1,4 @@
-using RSChatApp.Web.Models.Chat.ToolCalls;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 namespace RSChatApp.Web.Models.Chat.UserConfirmation;
 

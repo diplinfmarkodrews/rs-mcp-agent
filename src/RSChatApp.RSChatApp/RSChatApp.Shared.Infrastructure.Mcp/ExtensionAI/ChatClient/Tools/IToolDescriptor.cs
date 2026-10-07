@@ -1,7 +1,6 @@
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Models.Chat.ToolCalls;
 
-namespace RSChatApp.Web.Services.Chat.Tools;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public interface IToolDescriptor
 {

@@ -1,9 +1,9 @@
 using System.Text;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Shared.Infrastructure.Mcp.SemanticSearch.Mcp;
 using RSChatApp.Shared.Infrastructure.Mcp.StaticFileContent.Mcp;
-using RSChatApp.Web.Services.Chat.Tools;
 
 namespace RSChatApp.Web.HostedServices.McpTool;
 
@@ -53,7 +53,7 @@ public class McpToolCollectionRegistrationHostedService: IHostedService
                 }
             }
 
-        toolCollectionService.AllTools.AddRange(allTools);
+        toolCollectionService.AddTools(allTools);
         _startupLogger.LogInformation(
             "Register tools: {ToolCalls}",
             new StringBuilder().AppendJoin(",\n", allTools.Select(t => t.Name)));

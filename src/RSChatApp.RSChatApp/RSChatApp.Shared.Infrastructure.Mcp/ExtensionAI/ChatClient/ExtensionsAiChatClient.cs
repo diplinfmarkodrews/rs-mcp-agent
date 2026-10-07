@@ -1,11 +1,12 @@
 using Microsoft.Extensions.AI;
 using RSChatApp.Application.Core.Chat;
 using RSChatApp.Application.Core.Chat.Dtos;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.Processing;
 
 namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient;
 
-internal sealed class ExtensionsAiChatClient(IChatClient inner) : IAiChatClient
+internal sealed class ExtensionsAiChatClient(IChatClient inner, IToolCollectionService toolCollectionService) : IAiChatClient
 {
     public async IAsyncEnumerable<ChatMessageUpdateDto> GetStreamingResponseAsync(
         AiChatRequest request,
@@ -14,7 +15,11 @@ internal sealed class ExtensionsAiChatClient(IChatClient inner) : IAiChatClient
         var messages = request.Message.Messages
             .ToChatMessageList();
             // .NormalizeMessagesForApi();
-
+        var chatOptions = new ChatOptions()
+            {
+                // Tools = 
+            }
+            ;
         await foreach (var update in inner.GetStreamingResponseAsync(messages, cancellationToken: cancellationToken))
         {
             var role = update.Role?.Value;
@@ -31,7 +36,7 @@ internal sealed class ExtensionsAiChatClient(IChatClient inner) : IAiChatClient
 
                     FunctionCallContent call => new ChatMessageUpdateDto(
                         Role: role.ToChatRole(),
-                        ToolCall: new ToolCallInfo(call.Name, call.Arguments?.ToDictionary(
+                        ToolCall: new ToolCallInfo(call.Name, call.CallId, call.Arguments?.ToDictionary(
                             kvp => kvp.Key,
                             kvp => kvp.Value ?? (object)string.Empty) ?? new Dictionary<string, object>())),
 

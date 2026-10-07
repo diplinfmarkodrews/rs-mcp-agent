@@ -13,7 +13,7 @@
     @if (_toolSelectorVisible)
     {
         <div class="tool-selector-panel">
-            <ToolSelector OnSelectionChanged="@OnToolSelectionChangedAsync" />
+            @* <ToolSelector OnSelectionChanged="@OnToolSelectionChangedAsync" /> *@
         </div>
     }
 
@@ -31,7 +31,7 @@
 
     <div class="chat-container">
         <div class="chat-suggestions">
-            <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions"/>
+            @* <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@_chatSuggestions"/> *@
         </div>
         <div class="chat-input">
             <ChatInput OnSend="@AddUserMessageAsync" OnAbort="@CancelAnyCurrentResponse" @ref="@_chatInput"/>

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.SemanticKernel;
 using RSChatApp.Infrastructure.UserInteraction;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Web.Models.Chat.UserConfirmation;
-using RSChatApp.Web.Services.Chat.Tools;
 using FunctionResultContent = Microsoft.Extensions.AI.FunctionResultContent;
 
 namespace RSChatApp.Web.Filter.UserConfirmation;

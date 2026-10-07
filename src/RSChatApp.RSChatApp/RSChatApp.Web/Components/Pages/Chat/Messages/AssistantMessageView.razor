@@ -1,5 +1,4 @@
 @using RSChatApp.Web.Models.Chat.ToolCalls
-
 <div class="assistant-message-container">
     @if (!string.IsNullOrWhiteSpace(ProcessedMessage.TextContent))
     {
@@ -16,7 +15,7 @@
         </div>
     }
     
-    @foreach (var group in ProcessedMessage.ToolGroups)
+    @foreach (var group in ToolGroups)
     {
         <ToolGroupCard 
             Group="@group"
@@ -28,6 +27,9 @@
 @code {
     [Parameter, EditorRequired]
     public required ProcessedMessage ProcessedMessage { get; set; }
+    
+    [Parameter, EditorRequired]
+    public required List<ToolGroup> ToolGroups { get; set; }
     
     [Parameter]
     public EventCallback<ToolRerunRequest> OnToolRerun { get; set; }

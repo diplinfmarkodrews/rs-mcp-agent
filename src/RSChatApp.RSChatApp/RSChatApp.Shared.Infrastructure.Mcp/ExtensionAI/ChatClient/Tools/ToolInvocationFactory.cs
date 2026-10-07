@@ -1,8 +1,8 @@
 using Microsoft.SemanticKernel;
-using RSChatApp.Web.Models.Chat.ToolCalls;
+using RSChatApp.Domain.Chat.ToolCall;
 using FunctionCallContent = Microsoft.Extensions.AI.FunctionCallContent;
 
-namespace RSChatApp.Web.Services.Chat.Tools;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public class ToolInvocationFactory
 {
@@ -48,5 +48,24 @@ public class ToolInvocationFactory
             UiHints: descriptor.GetUiHints(parameters)
         );
         return result;
+    }
+
+    // From persisted ToolCallDocument
+    public ToolInvocation Create(ToolCallDocument doc)
+    {
+        var descriptor = _registry.GetDescriptor(doc.ToolName);
+        var parameters = doc.Arguments
+            .ToDictionary<KeyValuePair<string, object>, string, object?>(kvp => kvp.Key, kvp => kvp.Value);
+        return new ToolInvocation(
+            CallId: doc.CallId,
+            Type: descriptor.Type,
+            ResultContentType: descriptor.ResultContentType,
+            RawName: doc.ToolName,
+            DisplayName: descriptor.GetDisplayName(parameters),
+            Parameters: parameters,
+            Metadata: descriptor.ExtractMetadata(parameters),
+            Permissions: descriptor.GetPermissions(parameters),
+            UiHints: descriptor.GetUiHints(parameters)
+        );
     }
 }

@@ -1,10 +1,11 @@
 <div class="user-message">
-    @Message.Text
+    @Message.Content
 </div>
 
 @code {
     [Parameter, EditorRequired]
-    public required ChatMessage Message { get; set; }
+    public required ChatMessageDto Message { get; set; }
 }
 
+@using RSChatApp.Application.Core.Chat.Dtos
 @using ChatMessage = Microsoft.Extensions.AI.ChatMessage

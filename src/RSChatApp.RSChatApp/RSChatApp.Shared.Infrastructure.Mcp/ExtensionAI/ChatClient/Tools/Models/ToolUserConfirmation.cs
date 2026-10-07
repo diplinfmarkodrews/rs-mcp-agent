@@ -1,5 +1,4 @@
-namespace RSChatApp.Web.Models.Chat.ToolCalls;
-
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 public record ToolUserConfirmation(bool RequireToolCallUserConfirmation, bool RequireToolResultUserConfirmation)
 {
     public static ToolUserConfirmation None => new(

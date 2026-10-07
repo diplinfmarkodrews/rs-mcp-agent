@@ -30,6 +30,7 @@
     <Folder Include="Filter\" />
     <Folder Include="HostedServices\" />
     <Folder Include="Logs\" />
+    <Folder Include="Services\Chat\" />
     <Folder Include="wwwroot\Data\" />
     <Folder Include="Prompts\" />
   </ItemGroup>

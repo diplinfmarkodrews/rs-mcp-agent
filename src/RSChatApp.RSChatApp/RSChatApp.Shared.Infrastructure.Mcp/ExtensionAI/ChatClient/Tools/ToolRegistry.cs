@@ -1,7 +1,7 @@
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools.Descriptors;
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Services.Chat.Tools.Descriptors;
 
-namespace RSChatApp.Web.Services.Chat.Tools;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public class ToolRegistry
 {

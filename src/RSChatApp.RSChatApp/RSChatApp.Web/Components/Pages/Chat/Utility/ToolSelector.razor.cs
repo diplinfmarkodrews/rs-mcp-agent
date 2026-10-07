@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.AI;
-using RSChatApp.Web.Services.Chat.Tools;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Web.Storage.Utility;
 
 namespace RSChatApp.Web.Components.Pages.Chat.Utility;

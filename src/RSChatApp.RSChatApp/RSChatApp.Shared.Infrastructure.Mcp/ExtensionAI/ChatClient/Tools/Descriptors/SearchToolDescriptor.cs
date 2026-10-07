@@ -1,7 +1,7 @@
+using System.Text.Json;
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Models.Chat.ToolCalls;
 
-namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools.Descriptors;
 
 public class SearchToolDescriptor : IToolDescriptor
 {
@@ -75,7 +75,7 @@ public class SearchToolDescriptor : IToolDescriptor
         {
             null => string.Empty,
             string s => s,
-            System.Text.Json.JsonElement e when e.ValueKind == System.Text.Json.JsonValueKind.String => e.GetString() ?? string.Empty,
+            JsonElement e when e.ValueKind == JsonValueKind.String => e.GetString() ?? string.Empty,
             _ => value.ToString() ?? string.Empty
         };
     }

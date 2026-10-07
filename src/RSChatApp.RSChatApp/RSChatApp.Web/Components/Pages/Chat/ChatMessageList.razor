@@ -1,3 +1,5 @@
+@using RSChatApp.Application.Core.Chat.Dtos
+@using RSChatApp.Domain.ValueObjects
 @inject IJSRuntime JS
 
 <div class="message-list-container">
@@ -21,15 +23,15 @@
 
 @code {
     [Parameter]
-    public required IEnumerable<ChatMessage> Messages { get; set; }
+    public required IEnumerable<ChatMessageDto> Messages { get; set; }
 
     [Parameter]
-    public ChatMessage? InProgressMessage { get; set; }
+    public ChatMessageDto? InProgressMessage { get; set; }
 
     [Parameter]
     public RenderFragment? NoMessagesContent { get; set; }
 
-    private bool IsEmpty => !Messages.Any(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) && !string.IsNullOrEmpty(m.Text));
+    private bool IsEmpty => !Messages.Any(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) && !string.IsNullOrEmpty(m.Content));
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

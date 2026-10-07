@@ -1,4 +1,6 @@
+@using RSChatApp.Application.Core.Chat.Dtos
 @using RSChatApp.Application.Services
+@using RSChatApp.Domain.ValueObjects
 @using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient
 @inject ILogger<ChatSuggestions> Logger
 @inject IPromptService PromptService
@@ -17,12 +19,12 @@
 
 @code {
     private string Prompt => PromptService.GetPrompt(new SuggestionPromptRequest());
-    private IChatClient ChatClient;
+    // private IChatClient ChatClient;
     private string[]? suggestions;
     private CancellationTokenSource? cancellation;
 
     [Parameter]
-    public EventCallback<ChatMessage> OnSelected { get; set; }
+    public EventCallback<ChatMessageDto> OnSelected { get; set; }
 
     public void Clear()
     {
@@ -32,17 +34,17 @@
 
     protected override void OnInitialized()
     {
-        ChatClient = ChatClientFactory.Create(ChatClientServiceKeys.HelperModel);
+        // ChatClient = ChatClientFactory.Create(ChatClientServiceKeys.HelperModel);
         base.OnInitialized(); 
     }
 
-    public void Update(IReadOnlyList<ChatMessage> messages)
+    public void Update(IReadOnlyList<ChatMessageDto> messages)
     {
         // Runs in the background and handles its own cancellation/errors
         _ = UpdateSuggestionsAsync(messages);
     }
 
-    private async Task UpdateSuggestionsAsync(IReadOnlyList<ChatMessage> messages)
+    private async Task UpdateSuggestionsAsync(IReadOnlyList<ChatMessageDto> messages)
     {
         cancellation?.Cancel();
         cancellation = new CancellationTokenSource();
@@ -59,29 +61,29 @@
                 return;
             }
 
-            var response = await ChatClient.GetResponseAsync(
-                [.. reducedMessages, new(ChatRole.User, Prompt)],
-                cancellationToken: cancellation.Token);
+            // var response = await ChatClient.GetResponseAsync(
+            //     [.. reducedMessages, new(ChatRole.User, Prompt)],
+            //     cancellationToken: cancellation.Token);
+            //
+            // if (response is null || cancellation.Token.IsCancellationRequested)
+            // {
+            //     suggestions = null;
+            //     StateHasChanged();
+            //     return;
+            // }
+            //
+            // var responseMessages = new List<ChatMessageDto>();
+            // responseMessages.Add(response);
             
-            if (response is null || cancellation.Token.IsCancellationRequested)
-            {
-                suggestions = null;
-                StateHasChanged();
-                return;
-            }
-            
-            var responseMessages = new List<ChatMessage>();
-            responseMessages.AddMessages(response);
-            
-            var responseText = responseMessages.LastOrDefault()?.Text?.Trim();
-            if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
-            {
-                suggestions = ParseLinesFromResponse(responseText);
-            }
-            else
-            {
-                suggestions = null;
-            }
+            // var responseText = responseMessages.LastOrDefault()?.Content?.Trim();
+            // if (!string.IsNullOrEmpty(responseText) && responseText != "No suggestions")
+            // {
+            //     suggestions = ParseLinesFromResponse(responseText);
+            // }
+            // else
+            // {
+            //     suggestions = null;
+            // }
        
             StateHasChanged();
         }
@@ -108,7 +110,7 @@
         await OnSelected.InvokeAsync(new(ChatRole.User, text));
     }
 
-    private IEnumerable<ChatMessage> ReduceMessages(IReadOnlyList<ChatMessage> messages)
+    private IEnumerable<ChatMessageDto> ReduceMessages(IReadOnlyList<ChatMessageDto> messages)
     {
         // Get system messages
         var systemMessages = messages.TakeWhile(m => m.Role == ChatRole.System);
@@ -117,10 +119,8 @@
         var safeMessages = messages
             .Skip(systemMessages?.Count() ?? 0)
             .Where(m => (m.Role == ChatRole.User || m.Role == ChatRole.Assistant) &&
-                       !string.IsNullOrWhiteSpace(m.Text) && 
-                       m.Contents?.Count == 1 && 
-                       m.Contents.FirstOrDefault() is Microsoft.Extensions.AI.TextContent)
-            .Select(m => new ChatMessage(m.Role, m.Text))
+                       !string.IsNullOrWhiteSpace(m.Content))
+            .Select(m => new ChatMessageDto(m.Role, m.Content))
             .TakeLast(4);
         
         return systemMessages.Concat(safeMessages);

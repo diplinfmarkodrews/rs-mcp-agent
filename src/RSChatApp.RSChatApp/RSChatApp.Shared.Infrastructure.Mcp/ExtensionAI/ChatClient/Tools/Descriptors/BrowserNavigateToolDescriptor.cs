@@ -1,20 +1,17 @@
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
-using RSChatApp.Web.Models.Chat.ToolCalls;
 
-namespace RSChatApp.Web.Services.Chat.Tools.Descriptors;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools.Descriptors;
 
-public class BrowserExecuteToolDescriptor : IToolDescriptor
+public class BrowserNavigateToolDescriptor : IToolDescriptor
 {
-    public ToolType Type => ToolType.BrowserExecute;
+    public ToolType Type { get => ToolType.BrowserNavigate; }
     
-    public ResultContentType ResultContentType => ResultContentType.Terminal;
-
-    public string GetDisplayName(IReadOnlyDictionary<string, object?> parameters)
+    public ResultContentType ResultContentType => ResultContentType.Json;
+     public string GetDisplayName(IReadOnlyDictionary<string, object?> parameters)
     {
-        var script = FormatValue(parameters.GetValueOrDefault("script"))
-                  ?? FormatValue(parameters.GetValueOrDefault("code"));
+        var functionName = FormatValue(parameters.GetValueOrDefault("functionName"));
         
-        return $"Browser: {Truncate(script, 50)}";
+        return $"Browser: {Truncate(functionName, 50)}";
     }
 
     public ToolPermissions GetPermissions(IReadOnlyDictionary<string, object?> parameters)
@@ -48,7 +45,7 @@ public class BrowserExecuteToolDescriptor : IToolDescriptor
 
     public ToolUserConfirmation GetUserConfirmation(string? functionName = null)
     {
-        return ToolUserConfirmation.ToolCallAndResult;
+        return ToolUserConfirmation.ToolResultOnly;
     }
 
     public string GetIconSvg()
@@ -62,7 +59,7 @@ public class BrowserExecuteToolDescriptor : IToolDescriptor
 
     public IEnumerable<string> ToolNames
     {
-        get => ["BrowserTool_executejavascript", "executeScript"];
+        get => ["BrowserTool_naviagte"];
     }
 
     public string GetColorClass() => "tool-browser";

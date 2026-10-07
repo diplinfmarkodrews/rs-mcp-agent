@@ -1,8 +1,6 @@
+@using RSChatApp.Application.Core.Chat.Dtos
+@using RSChatApp.Domain.ValueObjects
 @using RSChatApp.Web.Models.Chat.ToolCalls
-@using RSChatApp.Web.Services.Chat
-@using RSChatApp.Web.Services.Chat.Tools
-
-
 @inject ToolCallProcessor ToolProcessor
 
 @if (Message.Role == ChatRole.User)
@@ -13,13 +11,14 @@ else if (Message.Role == ChatRole.Assistant && _processedMessage is not null)
 {
     <AssistantMessageView 
         ProcessedMessage="@_processedMessage"
+        ToolGroups="@(_toolGroups ?? new())"
         OnToolRerun="@HandleToolRerun"
         OnEditInEditor="@HandleEditInEditor" />
 }
 
 @code {
     [Parameter, EditorRequired]
-    public required ChatMessage Message { get; set; }
+    public required ChatMessageDto Message { get; set; }
     
     [Parameter]
     public bool InProgress { get; set; }
@@ -31,12 +30,14 @@ else if (Message.Role == ChatRole.Assistant && _processedMessage is not null)
     public EventCallback<EditInEditorRequest> OnEditInEditor { get; set; }
     
     private ProcessedMessage? _processedMessage;
+    private List<ToolGroup>? _toolGroups;
     
     protected override void OnParametersSet()
     {
         if (Message.Role == ChatRole.Assistant)
         {
             _processedMessage = ToolProcessor.ProcessMessage(Message);
+            _toolGroups = ToolGroup.GroupFromProcessed(_processedMessage);
         }
     }
     

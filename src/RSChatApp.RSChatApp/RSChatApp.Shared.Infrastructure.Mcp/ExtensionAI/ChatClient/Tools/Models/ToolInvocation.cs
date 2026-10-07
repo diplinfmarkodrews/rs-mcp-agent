@@ -1,6 +1,6 @@
 using RSChatApp.Shared.Infrastructure.Mcp.MetaData;
 
-namespace RSChatApp.Web.Models.Chat.ToolCalls;
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 
 public record ToolInvocation(
     string CallId,
@@ -13,3 +13,4 @@ public record ToolInvocation(
     ToolPermissions Permissions,
     ToolUiHints UiHints
 );
+

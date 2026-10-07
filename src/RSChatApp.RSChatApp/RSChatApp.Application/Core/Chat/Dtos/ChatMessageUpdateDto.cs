@@ -11,6 +11,6 @@ public record ChatMessageUpdateDto(
     ToolCallInfo? ToolCall = null,
     ToolResultInfo? ToolResult = null);
 
-public record ToolCallInfo(string Name, Dictionary<string, object> Arguments);
+public record ToolCallInfo(string Name, string CallId, Dictionary<string, object> Arguments);
 
 public record ToolResultInfo(string CallId, object Result);

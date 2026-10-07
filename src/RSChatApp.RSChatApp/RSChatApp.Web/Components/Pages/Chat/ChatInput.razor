@@ -22,8 +22,8 @@
     private string? _messageText;
     private bool _isProcessing = false;
     
-    [Parameter]
-    public EventCallback<ChatMessage> OnSend { get; set; }
+    // [Parameter]
+    // public EventCallback<ChatMessage> OnSend { get; set; }
     
     [Parameter]
     public EventCallback OnAbort { get; set; }
@@ -43,7 +43,8 @@
         {
             _messageText = null;
             _isProcessing = true;
-            await OnSend.InvokeAsync(new ChatMessage(ChatRole.User, text));           
+            // await OnSend.InvokeAsync(new ChatMessage(ChatRole.User, text));
+            StateHasChanged();
         }
     }
 

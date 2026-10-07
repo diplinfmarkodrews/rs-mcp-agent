@@ -44,7 +44,7 @@ internal sealed class SemanticKernelChatClient(Kernel kernel) : IAiChatClient
                     StreamingFunctionCallUpdateContent call when call.Name is not null
                         => new ChatMessageUpdateDto(
                             Role: role.ToChatRole(),
-                            ToolCall: new ToolCallInfo(call.Name, ParseArguments(call.Arguments))),
+                            ToolCall: new ToolCallInfo(call.Name, call.CallId, ParseArguments(call.Arguments))),
                     // SK doesn't expose FunctionCallUpdate results in stream api, meh
                     _ => new ChatMessageUpdateDto(Role: role.ToChatRole()),
                 };

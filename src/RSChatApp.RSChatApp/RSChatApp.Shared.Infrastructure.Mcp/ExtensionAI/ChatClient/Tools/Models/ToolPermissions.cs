@@ -1,5 +1,4 @@
-namespace RSChatApp.Web.Models.Chat.ToolCalls;
-
+namespace RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 public record ToolPermissions(
     bool CanRerun,
     bool CanEditResult,
@@ -13,7 +12,6 @@ public record ToolPermissions(
         CanCopy: true,
         CanExpand: true
     );
-
     public static ToolPermissions ReadOnly => new(
         CanRerun: false,
         CanEditResult: false,

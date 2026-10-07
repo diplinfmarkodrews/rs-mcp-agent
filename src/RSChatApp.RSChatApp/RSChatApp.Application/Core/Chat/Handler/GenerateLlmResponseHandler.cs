@@ -12,7 +12,7 @@ public class GenerateLlmResponseHandler(IAiChatClient aiChatClient, IActiveReque
         IMessageContext context,
         CancellationToken ct)
     {
-        var control = registry.Register(message.RequestId);
+        IPausableStreamControl control = registry.Register(message.RequestId);
         try
         {
             await HandleCore(message, context, control, ct);

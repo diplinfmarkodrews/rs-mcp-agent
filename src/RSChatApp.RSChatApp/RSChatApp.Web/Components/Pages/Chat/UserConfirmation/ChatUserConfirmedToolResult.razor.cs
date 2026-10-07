@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using RSChatApp.Web.Models.Chat.ToolCalls;
+using RSChatApp.Shared.Infrastructure.Mcp.ExtensionAI.ChatClient.Tools;
 using RSChatApp.Web.Models.Chat.UserConfirmation;
 
 namespace RSChatApp.Web.Components.Pages.Chat.UserConfirmation;
