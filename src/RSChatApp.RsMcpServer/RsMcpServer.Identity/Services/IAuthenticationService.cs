@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
+using ReportServer.RpcClient.Infrastructure;
 using RsMcpServer.Identity.Models.Authentication;
 
 namespace RsMcpServer.Identity.Services;
@@ -177,6 +178,9 @@ public class AuthenticationService : IAuthenticationService
                 return TokenAuthenticationResult.Failed("Invalid or expired token");
             }
             
+            // Validate the stored ReportServer session on behalf of this token's user
+            // (the refresh endpoint bypasses the authentication middleware, so set the session explicitly).
+            ReportServerSession.CurrentJsessionId.Value = session.User.FindFirst("JSESSIONID")?.Value;
             var authResult = await _reportServerClient.IsAuthenticatedAsync();
             if (authResult?.Data?.IsAuthenticated == false)
             {
