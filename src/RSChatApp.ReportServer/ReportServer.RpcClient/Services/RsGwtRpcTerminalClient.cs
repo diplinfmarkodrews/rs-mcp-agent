@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.Abstraction.Exceptions;
@@ -11,6 +12,8 @@ namespace ReportServer.RpcClient.Services;
 public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 {
     private const string TerminalServiceHash = "3F77E49DD28B2F8553E17EF03CCDE319";//"BF140EBA9A84651D0CC50CCD75BC2C4F";
+    // GWT type signatures in the string table, e.g. "java.util.ArrayList/4159755760"
+    private static readonly Regex GwtTypeSignature = new(@"^[\w.$]+/\d+$", RegexOptions.Compiled);
     private readonly ILogger _logger;
 
     public RsGwtRpcTerminalClient(ILogger logger, HttpClient httpClient, CookieContainerProvider cookieProvider) 
@@ -102,13 +105,10 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
             {
                 var stringTable = ExtractStringTable(response);
 
-                // Extract directory listing from string table
-                var directoryList = stringTable.Where(s =>
-                    !s.Contains("net.datenwerke") &&
-                    !s.Contains("java.") &&
-                    !string.IsNullOrWhiteSpace(s) &&
-                    s.Length > 2 &&
-                    !s.Contains("/")).ToList();
+                // Extract command output from string table: everything except GWT type signatures
+                var directoryList = stringTable
+                    .Where(s => !string.IsNullOrWhiteSpace(s) && !GwtTypeSignature.IsMatch(s))
+                    .ToList();
 
                 var result = new CommandResultDto
                 {
@@ -153,11 +153,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                 throw new ServerCallFailedException("Empty response from terminal close session");
             
             // Parse response - expect success indicator
-            if (response.StartsWith("//OK"))
-            {
-                return GwtRpcResponse<bool>.Successful(true);
-            }
-            else if (response.Contains("true") || response.Contains("1"))
+            if (response.StartsWith("//OK") || response.Contains("true") || response.Contains("1"))
             {
                 return GwtRpcResponse<bool>.Successful(true);
             }

@@ -14,11 +14,13 @@ public class ReportServerGwtRpcClientBase : IDisposable
     protected readonly HttpClient _httpClient;
     protected readonly string _moduleBaseUrl;
     protected readonly CookieContainer _cookieContainer;
+    private readonly CookieContainerProvider _cookieProvider;
 
     public ReportServerGwtRpcClientBase(HttpClient httpClient, 
         CookieContainerProvider cookieProvider)
     {
         _httpClient = httpClient;
+        _cookieProvider = cookieProvider;
         _cookieContainer = cookieProvider.CookieContainer;
         if (_httpClient.BaseAddress is null)
             throw new InvalidOperationException("BaseAddress not set in HTTP client.");
@@ -71,10 +73,22 @@ public class ReportServerGwtRpcClientBase : IDisposable
         {
             Content = new StringContent(payload, Encoding.UTF8, "text/x-gwt-rpc")
         };
-        // Send the ReportServer session of the current caller (set per request by the authentication middleware).
-        // Fallback: the scoped cookie container, which the login flow fills via extractSessionCookie.
-        var callerSessionId = ReportServerSession.CurrentJsessionId.Value
+        // Credentials of the current caller (set per request by the authentication middleware):
+        // Keycloak bearer token, else JSESSIONID. Fallback: the scoped cookie container filled by the login flow.
+        var bearerToken = ReportServerSession.CurrentBearerToken.Value;
+        var bearerKey = ReportServerSession.CurrentBearerKey.Value;
+        string? callerSessionId;
+        if (!string.IsNullOrEmpty(bearerToken))
+        {
+            // The ReportServer needs the bearer token AND its own JSESSIONID, which it issues on the first call.
+            request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {bearerToken}");
+            callerSessionId = bearerKey != null ? _cookieProvider.GetBearerSession(bearerKey) : null;
+        }
+        else
+        {
+            callerSessionId = ReportServerSession.CurrentJsessionId.Value
                               ?? _cookieContainer.GetCookies(_httpClient.BaseAddress!)[CookieSessionId]?.Value;
+        }
         if (!string.IsNullOrEmpty(callerSessionId))
             request.Headers.TryAddWithoutValidation("Cookie", $"{CookieSessionId}={callerSessionId}");
         var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -88,6 +102,14 @@ public class ReportServerGwtRpcClientBase : IDisposable
             response.EnsureSuccessStatusCode(); // This will throw with the HTTP error
         }
         
+        if (!string.IsNullOrEmpty(bearerToken) && bearerKey != null
+            && response.Headers.TryGetValues("Set-Cookie", out var issued))
+        {
+            var match = issued.Select(h => Regex.Match(h, $@"(?:^|\s){CookieSessionId}=([^;]+)")).FirstOrDefault(m => m.Success);
+            if (match != null)
+                _cookieProvider.SetBearerSession(bearerKey, match.Groups[1].Value);
+        }
+
         if (extractSessionCookie) 
         {
             // Extract JSESSIONID cookie from response and store it in the cookie container

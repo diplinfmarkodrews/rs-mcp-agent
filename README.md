@@ -366,27 +366,19 @@ Customization notes:
     }
   },
   "Keycloak": {
-    "Authority": "http://localhost:8080/realms/reportserver",
-    "ClientId": "reportserver-app",
-    "ClientSecret": "your-client-secret-here",
-    "Realm": "reportserver",
-    "Scopes": [
-      "openid",
-      "profile",
-      "email",
-      "roles"
-    ],
-    "RequireHttpsMetadata": false,
-    "TokenRefreshThreshold": "00:05:00"
+    "Authority": "http://localhost:8081/realms/reportserver",
+    "Audience": "",
+    "RequireHttpsMetadata": false
   },
-   "ReportServer": {  // 
-    "Url": "http://localhost:8080/reportserver/",
-    "SessionTimeout": "01:00:00",
-    "CookieDomain": "localhost",
-    "EnableSessionBridge": true
+  "ReportServer": {
+    "Url": "http://localhost:8080/reportserver/"
   }
 }
 ```
+
+`Keycloak:Authority` is the realm URL used to validate JWT bearer tokens; `Audience` is optional
+(empty = audience is not validated); `RequireHttpsMetadata` must be `false` for plain-http Keycloak.
+Legacy ReportServer sessions (Bearer GUID from `/api/auth/v1/login` or cookie) need no Keycloak settings.
 
 #### **Configuration Parameters Explained**
 

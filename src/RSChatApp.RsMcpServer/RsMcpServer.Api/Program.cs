@@ -30,7 +30,7 @@ var reportServerUrl = builder.Configuration["ReportServer:Url"]
 
 builder.Services.AddReportServerRpcClient(reportServerUrl);
 // Add Keycloak authentication with enhanced features
-builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment, setupSessionBridge: true);
+builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddLegacyAuthentication();
 
 builder.Services.AddOpenApi();
@@ -72,7 +72,7 @@ app.UseOpenAPISwaggerUI();
 // Map health check endpoints
 app.MapHealthChecks("/health");
 
-// This includes session, authentication, and authorization
+// session, authentication (Keycloak JWT | legacy token/cookie), authorization
 app.UseKeycloakAuthentication()
    .UseAuthenticatedSession();
     
@@ -83,8 +83,7 @@ app.MapMcp()
     .WithHttpLogging(HttpLoggingFields.All)
     .WithDescription("MCP Server for the Report Server")
     .WithOpenApi()
-    // .RequireAuthorization()
-    ; // Require authentication for MCP endpoints
+    ; // anonymous on purpose (tools/list); credentials are forwarded to the ReportServer per call
 
 if (app.Environment.IsDevelopment())
 {

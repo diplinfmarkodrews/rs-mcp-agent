@@ -13,7 +13,8 @@ public static class AuthenticationServiceExtensions
     /// </summary>
     public static IServiceCollection AddLegacyAuthentication(this IServiceCollection services)
     {
-        // Session store
+        // Session store (IMemoryCache, entries decay at session expiry)
+        services.AddMemoryCache();
         services.AddSingleton<ISessionStore, InMemorySessionStore>();
         
         // Main authentication service (contains all logic now)

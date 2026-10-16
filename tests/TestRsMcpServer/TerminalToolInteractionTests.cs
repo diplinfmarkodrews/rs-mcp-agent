@@ -55,77 +55,7 @@ public sealed class TerminalToolInteractionTests
             "Should log the command being executed");
     }
 
-    [TestMethod]
-    public async Task TestSessionBridgeService_GetSessionId_WithoutHttpContext()
-    {
-        // Arrange
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
-
-        // Act
-        var sessionId = await sessionBridge.GetSessionIdAsync();
-
-        // Assert
-        Assert.IsNull(sessionId, "Session ID should be null without HTTP context");
-        
-        // Verify that the appropriate warning was logged
-        Assert.IsTrue(_logMessages.Any(msg => msg.Contains("No active session found")), 
-            "Should log warning about no active session");
-    }
-
-    [TestMethod]
-    public async Task TestSessionBridgeService_GetBearerToken_WithoutSession()
-    {
-        // Arrange
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
-
-        // Act
-        var bearerToken = await sessionBridge.GetAuthenticationTokenAsync();
-
-        // Assert
-        Assert.IsNull(bearerToken, "Bearer token should be null without session");
-    }
-
-    [TestMethod]
-    public async Task TestSessionBridgeService_IsAuthenticated_WithoutSession()
-    {
-        // Arrange
-        var sessionBridge = _serviceProvider.GetRequiredService<ISessionBridgeService>();
-
-        // Act
-        var isAuthenticated = await sessionBridge.IsAuthenticatedAsync();
-
-        // Assert
-        Assert.IsFalse(isAuthenticated, "Should not be authenticated without session");
-    }
-
-    [TestMethod]
-    public async Task TestTokenManagementService_RefreshToken_WithoutRefreshToken()
-    {
-        // Arrange
-        var tokenService = _serviceProvider.GetRequiredService<ITokenManagementService>();
-
-        // Act
-        var refreshResult = await tokenService.RefreshTokenAsync();
-
-        // Assert
-        Assert.IsFalse(refreshResult.Success, "Refresh should fail without refresh token");
-        Assert.AreEqual("No refresh token available", refreshResult.Message);
-    }
-
     
-
-    [TestMethod]
-    public void TestLoggedMessages_ContainExpectedInformation()
-    {
-        // This test verifies that our logging infrastructure is working correctly
-        
-        // Act
-        _logger.LogInformation("Test message for verification");
-        
-        // Assert
-        Assert.IsTrue(_logMessages.Any(msg => msg.Contains("Test message for verification")), 
-            "Test logger should capture log messages");
-    }
 
     private IServiceProvider CreateTestServiceProvider()
     {
@@ -162,8 +92,6 @@ public sealed class TerminalToolInteractionTests
         services.AddScoped<IReportServerClient, MockReportServerClient>();
         
         // Add authentication services
-        services.AddScoped<ITokenManagementService, TokenManagementService>();
-        services.AddScoped<ISessionBridgeService, SessionBridgeService>();
         
         // Add Keycloak options
         services.Configure<Keycloak.AuthServices.Authentication.KeycloakAuthenticationOptions>(options =>

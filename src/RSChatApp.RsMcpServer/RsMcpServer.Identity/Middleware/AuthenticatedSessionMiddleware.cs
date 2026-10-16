@@ -1,93 +1,51 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using ReportServer.RpcClient.Infrastructure;
-using RsMcpServer.Identity.Models.Authentication;
 using RsMcpServer.Identity.Services;
 
 namespace RsMcpServer.Identity.Middleware;
 
 /// <summary>
-/// Middleware for handling both Legacy token and Keycloak authentication session management
+/// Makes the caller's credentials available to the ReportServer RPC client for the current request:
+/// the legacy JSESSIONID claim, or the Keycloak bearer token (the ReportServer's own JSESSIONID is tracked per Keycloak user).
+/// Anonymous requests stay anonymous.
 /// </summary>
 public class AuthenticatedSessionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<AuthenticatedSessionMiddleware> _logger;
 
-    public AuthenticatedSessionMiddleware(RequestDelegate next, ILogger<AuthenticatedSessionMiddleware> logger)
+    public AuthenticatedSessionMiddleware(RequestDelegate next) => _next = next;
+
+    public async Task InvokeAsync(HttpContext context)
     {
-        _next = next;
-        _logger = logger;
-    }
+        ReportServerSession.CurrentJsessionId.Value = null;
+        ReportServerSession.CurrentBearerToken.Value = null;
+        ReportServerSession.CurrentBearerKey.Value = null;
 
-    public async Task InvokeAsync(
-        HttpContext context, 
-        ISessionBridgeService sessionBridge)
-    {
-        // Skip authentication checks for certain paths
-        if (ShouldSkipAuthentication(context))
+        if (context.User.Identity?.IsAuthenticated == true)
         {
-            await _next(context);
-            return;
-        }
-
-        try
-        {
-            // Single entry point - let SessionBridge handle the complexity
-            var authContext = await sessionBridge.GetAuthenticationContextAsync();
-            
-            if (authContext.IsAuthenticated && authContext.User != null)
+            var jsessionId = context.User.FindFirst("JSESSIONID")?.Value;
+            if (!string.IsNullOrEmpty(jsessionId))
             {
-                context.User = authContext.User;
-                _logger.LogDebug("Authentication successful: {Type} for {User}", 
-                    authContext.Type, authContext.User.Identity?.Name);
-
-                // Make the caller's ReportServer session available to the RPC client for this request
-                if (authContext.Type == AuthenticationType.Legacy && !string.IsNullOrEmpty(authContext.SessionId))
-                    ReportServerSession.CurrentJsessionId.Value = authContext.SessionId;
+                ReportServerSession.CurrentJsessionId.Value = jsessionId;
             }
             else
             {
-                _logger.LogDebug("No authentication context available");
+                var token = BearerToken.FromHeader(context.Request.Headers.Authorization.ToString());
+                if (token != null && BearerToken.IsJwt(token))
+                {
+                    ReportServerSession.CurrentBearerToken.Value = token;
+                    ReportServerSession.CurrentBearerKey.Value = context.User.FindFirst("sub")?.Value;
+                }
             }
-
-            await _next(context);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in authentication middleware: {Message}", ex.Message);
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsync("Internal server error");
-        }
-    }
 
-    private static bool ShouldSkipAuthentication(HttpContext context)
-    {
-        var path = context.Request.Path.Value?.ToLowerInvariant();
-        
-        return path switch
-        {
-            var p when p?.StartsWith("/api/auth") == true => true,  // Auth endpoints
-            var p when p?.StartsWith("/auth") == true => true,      // Legacy auth paths
-            var p when p?.StartsWith("/health") == true => true,    // Health checks
-            var p when p?.StartsWith("/swagger") == true => true,   // Swagger UI
-            var p when p?.StartsWith("/openapi") == true => true,   // Swagger UI
-            var p when p?.StartsWith("/blocklyautomation") == true => true,   // Swagger UI
-            var p when p?.StartsWith("/api/health") == true => true, // API health
-            "/" => false,                                             // Root
-            _ => false
-        };
+        await _next(context);
     }
 }
 
-/// <summary>
-/// Extension methods for registering the authenticated session middleware
-/// </summary>
 public static class AuthenticatedSessionMiddlewareExtensions
 {
     public static IApplicationBuilder UseAuthenticatedSession(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<AuthenticatedSessionMiddleware>();
-    }
+        => builder.UseMiddleware<AuthenticatedSessionMiddleware>();
 }

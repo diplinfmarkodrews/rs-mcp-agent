@@ -41,7 +41,7 @@ public sealed class TestAuthentication
         services.AddSingleton<IHostEnvironment>(environment);
         
         // Add Keycloak authentication with session bridge
-        services.AddKeycloakAuthentication(configuration, environment, setupSessionBridge: true);
+        services.AddKeycloakAuthentication(configuration, environment);
         
         _serviceProvider = services.BuildServiceProvider();
     }

@@ -16,6 +16,7 @@ public static class HostExtension
         if (string.IsNullOrWhiteSpace(baseUrl))
             throw new ArgumentException("Base URL cannot be null or empty.", nameof(baseUrl));
         
+        services.AddMemoryCache();
         services.AddScoped<CookieContainerProvider>();
         services.AddHttpClient("ReportServerGwtRpcClient", client => 
             {
