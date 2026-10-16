@@ -134,7 +134,8 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 
             return new AuthenticationResultDto
             {
-                IsAuthenticated = true,
+                // Wrong credentials also answer //OK, but with an empty AuthenticateResultDto (no user object)
+                IsAuthenticated = gwtResponse.Contains("UserDtoDec/"),
                 SessionId = sessionId ?? string.Empty,
                 User = userData
             };

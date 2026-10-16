@@ -77,7 +77,10 @@ public static class AuthenticationEndpointsExtensions
             return Results.Ok(response);
         }
 
-        return Results.BadRequest(new LoginResponse(false, null, null, null, result.ErrorMessage));
+        var failed = new LoginResponse(false, null, null, null, result.ErrorMessage);
+        return string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password)
+            ? Results.BadRequest(failed)
+            : Results.Json(failed, statusCode: StatusCodes.Status401Unauthorized);
     }
 
     private static async Task<IResult> RefreshV1Async(

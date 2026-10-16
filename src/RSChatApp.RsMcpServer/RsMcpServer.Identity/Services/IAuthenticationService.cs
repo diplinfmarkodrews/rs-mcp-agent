@@ -72,7 +72,7 @@ public class AuthenticationService : IAuthenticationService
             {
                 _logger.LogWarning("Legacy authentication failed for user {Username}: {Error}", 
                     username, authResult.Error?.Message ?? "Authentication failed");
-                return TokenAuthenticationResult.Failed(authResult.Error?.Message ?? "Authentication failed");
+                return TokenAuthenticationResult.Failed(authResult.Error?.Message ?? "Invalid username or password");
             }
             _logger.LogDebug("Successfully authenticated for user {User}", JsonSerializer.Serialize(authResult.Data));
             var rsAuth = authResult.Data;
