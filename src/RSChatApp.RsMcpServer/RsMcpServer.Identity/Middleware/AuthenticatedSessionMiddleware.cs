@@ -35,7 +35,8 @@ public class AuthenticatedSessionMiddleware
                 if (token != null && BearerToken.IsJwt(token))
                 {
                     ReportServerSession.CurrentBearerToken.Value = token;
-                    ReportServerSession.CurrentBearerKey.Value = context.User.FindFirst("sub")?.Value;
+                    ReportServerSession.CurrentBearerKey.Value = context.User.FindFirst("sid")?.Value
+                                                                 ?? context.User.FindFirst("sub")?.Value;
                 }
             }
         }
