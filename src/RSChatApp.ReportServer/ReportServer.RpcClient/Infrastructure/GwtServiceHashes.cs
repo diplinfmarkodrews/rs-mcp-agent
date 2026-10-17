@@ -10,7 +10,7 @@ public enum GwtService
 
 /// <summary>
 /// Resolves GWT RPC service strong-name hashes for a configured ReportServer version.
-/// <see cref="Baseline"/> holds the hashes of the current version; older versions only list what differs.
+/// <see cref="Baseline"/> holds the hashes of the current version (6.1 and newer); older versions only list what differs.
 /// A key is either "Service" (whole service) or "Service.method" (single method override).
 /// </summary>
 public sealed class GwtServiceHashes
@@ -25,27 +25,28 @@ public sealed class GwtServiceHashes
         [nameof(GwtService.Terminal)] = "3F77E49DD28B2F8553E17EF03CCDE319",
     };
 
-    private static readonly Dictionary<string, Dictionary<string, string>> VersionOverrides = new()
+    // Overrides apply to all versions strictly below the given version; the first matching entry wins.
+    private static readonly (Version Below, Dictionary<string, string> Hashes)[] LegacyOverrides =
     {
-        ["6.1"] = new(),
-        ["6.0"] = new()
+        (new Version(6, 1), new()
         {
             [nameof(GwtService.Terminal)] = "BF140EBA9A84651D0CC50CCD75BC2C4F",
-        },
+        }),
     };
 
     private readonly Dictionary<string, string> _overrides;
 
     public GwtServiceHashes(string? version)
     {
-        Version = Normalize(string.IsNullOrWhiteSpace(version) ? DefaultVersion : version);
-        _overrides = VersionOverrides.TryGetValue(Version, out var o)
-            ? o
-            : throw new InvalidOperationException(
-                $"Unsupported ReportServer version '{version}'. Supported: {string.Join(", ", VersionOverrides.Keys)}");
+        var raw = string.IsNullOrWhiteSpace(version) ? DefaultVersion : version.Trim();
+        if (!Version.TryParse(raw, out var parsed))
+            throw new InvalidOperationException($"Invalid ReportServer version '{version}'. Expected e.g. '6.1' or '6.1.4'.");
+
+        Version = parsed;
+        _overrides = LegacyOverrides.FirstOrDefault(l => parsed < l.Below).Hashes ?? new();
     }
 
-    public string Version { get; }
+    public Version Version { get; }
 
     public string Get(GwtService service, string? method = null)
     {
@@ -53,12 +54,5 @@ public sealed class GwtServiceHashes
         if (method is not null && _overrides.TryGetValue($"{key}.{method}", out var methodHash))
             return methodHash;
         return _overrides.TryGetValue(key, out var hash) ? hash : Baseline[key];
-    }
-
-    // maps minors to majors "6.1.3" -> "6.1"
-    private static string Normalize(string version)
-    {
-        var parts = version.Trim().Split('.');
-        return parts.Length >= 2 ? $"{parts[0]}.{parts[1]}" : version.Trim();
     }
 }
