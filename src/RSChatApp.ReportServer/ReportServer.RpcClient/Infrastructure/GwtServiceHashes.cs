@@ -39,6 +39,9 @@ public sealed class GwtServiceHashes
     public GwtServiceHashes(string? version)
     {
         var raw = string.IsNullOrWhiteSpace(version) ? DefaultVersion : version.Trim();
+        // A missing minor counts as 0 ("6" -> "6.0")
+        if (!raw.Contains('.'))
+            raw += ".0";
         if (!Version.TryParse(raw, out var parsed))
             throw new InvalidOperationException($"Invalid ReportServer version '{version}'. Expected e.g. '6.1' or '6.1.4'.");
 
