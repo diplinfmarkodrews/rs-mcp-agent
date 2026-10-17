@@ -13,18 +13,19 @@ public class RsGwtRpcAuthenticationClient : ReportServerGwtRpcClientBase
 {
     private readonly ILogger<RsGwtRpcAuthenticationClient> _logger;
 
-    // Service hashes from traces
-    private const string LOGIN_SERVICE_HASH = "DFEDD0FBBBBBE222F217D04F50A95F56";
-    private const string SECURITY_SERVICE_HASH = "1D8BB90B3362E3AB16AD5D9EC9568CE7";
-    private const string CHALLENGE_SERVICE_HASH = "B6F10AD9852902823F606D81A985ACC7";
+    private readonly GwtServiceHashes _hashes;
+    private string LOGIN_SERVICE_HASH => _hashes.Get(GwtService.Login);
+    private string SECURITY_SERVICE_HASH => _hashes.Get(GwtService.Security);
+    private string CHALLENGE_SERVICE_HASH => _hashes.Get(GwtService.Challenge);
     
     // Constructor
-    public RsGwtRpcAuthenticationClient(ILogger<RsGwtRpcAuthenticationClient> logger, HttpClient httpClient, CookieContainerProvider cookieProvider)
+    public RsGwtRpcAuthenticationClient(ILogger<RsGwtRpcAuthenticationClient> logger, HttpClient httpClient, CookieContainerProvider cookieProvider, GwtServiceHashes hashes)
         : base(httpClient, cookieProvider)
     {
         if (_httpClient.BaseAddress is null)
             throw new InvalidOperationException("BaseAddress not set in HTTP client.");
         _logger = logger;
+        _hashes = hashes;
     }
 
     /// <summary>

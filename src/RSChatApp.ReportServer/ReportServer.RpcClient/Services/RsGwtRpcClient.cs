@@ -1,14 +1,11 @@
-using System.Text.Json;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ReportServer.Abstraction;
-using ReportServer.Abstraction.Contracts;
 using ReportServer.Abstraction.Contracts.Authentication;
 using ReportServer.Abstraction.Contracts.Terminal;
 using ReportServer.RpcClient.DTOs.Terminal;
 using ReportServer.RpcClient.Infrastructure;
 using RSChatApp.Common;
-
 
 namespace ReportServer.RpcClient.Services;
 
@@ -23,11 +20,11 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
 
     public ReportServerGwtRpcClient(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, 
         CookieContainerProvider cookieProvider, 
-        IMapper mapper) 
+        IMapper mapper, GwtServiceHashes hashes) 
         : base(httpClientFactory.CreateClient("ReportServerGwtRpcClient"), cookieProvider)
     {
-        _authenticationClient = new RsGwtRpcAuthenticationClient(loggerFactory.CreateLogger<RsGwtRpcAuthenticationClient>(),_httpClient, cookieProvider);
-        _terminalClient = new RsGwtRpcTerminalClient(loggerFactory.CreateLogger<RsGwtRpcTerminalClient>(), _httpClient, cookieProvider);
+        _authenticationClient = new RsGwtRpcAuthenticationClient(loggerFactory.CreateLogger<RsGwtRpcAuthenticationClient>(),_httpClient, cookieProvider, hashes);
+        _terminalClient = new RsGwtRpcTerminalClient(loggerFactory.CreateLogger<RsGwtRpcTerminalClient>(), _httpClient, cookieProvider, hashes);
         _fileServerClient = new RsGwtRpcFileServerClient(_httpClient, cookieProvider);
         _remoteServerClient = new RsGwtRpcRemoteServerClient(_httpClient, cookieProvider);
         _mapper = mapper;
@@ -98,7 +95,7 @@ public class ReportServerGwtRpcClient : ReportServerGwtRpcClientBase, IReportSer
         {
             return Result.Success($"{sessionId}: Session closed successfully.");
         }
-        return Result.Fail(response.Exception);
+        return Result.Fail(response.Exception ?? new Exception("Failed to close session."));
     }
 
     public async Task<Result<TerminalSessionInfo>> InitSessionAsync(AbstractNode? node = null, Dictionary<string, string>? mapper = null)

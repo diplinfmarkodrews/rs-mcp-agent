@@ -28,7 +28,7 @@ builder.Services.AddHealthChecks();
 var reportServerUrl = builder.Configuration["ReportServer:Url"] 
     ?? throw new InvalidOperationException("ReportServer:Url");
 
-builder.Services.AddReportServerRpcClient(reportServerUrl);
+builder.Services.AddReportServerRpcClient(reportServerUrl, builder.Configuration["ReportServer:Version"]);
 // Add Keycloak authentication with enhanced features
 builder.Services.AddKeycloakAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddLegacyAuthentication();

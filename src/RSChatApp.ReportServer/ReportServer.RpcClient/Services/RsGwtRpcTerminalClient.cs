@@ -11,15 +11,16 @@ namespace ReportServer.RpcClient.Services;
 
 public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
 {
-    private const string TerminalServiceHash = "3F77E49DD28B2F8553E17EF03CCDE319";//"BF140EBA9A84651D0CC50CCD75BC2C4F";
     // GWT type signatures in the string table, e.g. "java.util.ArrayList/4159755760"
     private static readonly Regex GwtTypeSignature = new(@"^[\w.$]+/\d+$", RegexOptions.Compiled);
     private readonly ILogger _logger;
+    private readonly GwtServiceHashes _hashes;
 
-    public RsGwtRpcTerminalClient(ILogger logger, HttpClient httpClient, CookieContainerProvider cookieProvider) 
+    public RsGwtRpcTerminalClient(ILogger logger, HttpClient httpClient, CookieContainerProvider cookieProvider, GwtServiceHashes hashes) 
         : base(httpClient, cookieProvider)
     {
         _logger = logger;
+        _hashes = hashes;
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
         try
         {
             // Based on trace #2: 7|0|6|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|initSession|net.datenwerke.treedb.client.treedb.dto.AbstractNodeDto/45121059|net.datenwerke.gxtdto.client.dtomanager.Dto2PosoMapper|1|2|3|4|2|5|6|0|0|
-            var payload = $"7|0|6|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|initSession|net.datenwerke.treedb.client.treedb.dto.AbstractNodeDto/45121059|net.datenwerke.gxtdto.client.dtomanager.Dto2PosoMapper|1|2|3|4|2|5|6|0|0|";
+            var payload = $"7|0|6|{_moduleBaseUrl}|{_hashes.Get(GwtService.Terminal, "initSession")}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|initSession|net.datenwerke.treedb.client.treedb.dto.AbstractNodeDto/45121059|net.datenwerke.gxtdto.client.dtomanager.Dto2PosoMapper|1|2|3|4|2|5|6|0|0|";
 
             var response = await PostGwtRpcAsync("terminal", payload);
 
@@ -92,7 +93,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
                 return GwtRpcResponse<CommandResultDto>.Fail(new InvalidDataException("Command is required"));
 
             // Based on trace #1: 7|0|7|http://localhost:8090/reportserver/|C363EE187A6E3AED00BD381336F9868C|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|58bf8974-255d-444c-b74e-02999d4983ba|ls|1|2|3|4|2|5|5|6|7|
-            var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|{sessionId}|{command}|1|2|3|4|2|5|5|6|7|";
+            var payload = $"7|0|7|{_moduleBaseUrl}|{_hashes.Get(GwtService.Terminal, "execute")}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|execute|java.lang.String/2004016611|{sessionId}|{command}|1|2|3|4|2|5|5|6|7|";
 
             var response = await PostGwtRpcAsync("terminal", payload, false, cancellationToken);
 
@@ -146,7 +147,7 @@ public class RsGwtRpcTerminalClient : ReportServerGwtRpcClientBase
             if (string.IsNullOrEmpty(sessionId))
                 return GwtRpcResponse<bool>.Fail(new InvalidOperationException("Session ID cannot be null or empty"));
 
-            var payload = $"7|0|7|{_moduleBaseUrl}|{TerminalServiceHash}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|closeSession|java.lang.String|{sessionId}|1|2|3|4|1|5|6|7|";
+            var payload = $"7|0|7|{_moduleBaseUrl}|{_hashes.Get(GwtService.Terminal, "closeSession")}|net.datenwerke.rs.terminal.client.terminal.rpc.TerminalRpcService|closeSession|java.lang.String|{sessionId}|1|2|3|4|1|5|6|7|";
 
             var response = await PostGwtRpcAsync("terminal", payload);
             if (string.IsNullOrEmpty(response))

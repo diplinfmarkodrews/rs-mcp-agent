@@ -11,11 +11,13 @@ public static class HostExtension
 {
     public static IServiceCollection AddReportServerRpcClient(
         this IServiceCollection services,
-        string baseUrl)
+        string baseUrl,
+        string? reportServerVersion = null)
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
             throw new ArgumentException("Base URL cannot be null or empty.", nameof(baseUrl));
         
+        services.AddSingleton(new GwtServiceHashes(reportServerVersion));
         services.AddMemoryCache();
         services.AddScoped<CookieContainerProvider>();
         services.AddHttpClient("ReportServerGwtRpcClient", client => 
